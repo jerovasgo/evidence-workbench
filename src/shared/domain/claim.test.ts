@@ -46,4 +46,12 @@ describe('VerifiedClaimSchema', () => {
     };
     expect(() => VerifiedClaimSchema.parse(unverified)).toThrow();
   });
+
+  it('rejects a claim with quoteFound = true but support = unknown (no support-judge verdict yet)', () => {
+    const unconfirmed = {
+      ...baseClaim,
+      verification: { ...baseClaim.verification, support: 'unknown' as const },
+    };
+    expect(() => VerifiedClaimSchema.parse(unconfirmed)).toThrow();
+  });
 });

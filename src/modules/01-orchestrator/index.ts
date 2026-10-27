@@ -8,4 +8,7 @@ export * from './data/runs-repository';
 export * from './agents/scenario-structurer';
 export * from './pipeline/create-run';
 export * from './pipeline/run-retrieval';
+export * from './pipeline/extract-and-verify-pool';
+export * from './pipeline/build-receipt';
 export * from './server/runtime';
+export * from './server/pending-run-context';

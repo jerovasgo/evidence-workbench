@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { AgentTraceEvent } from '@/shared/agents';
+import { ClaimSchema, type Claim } from '@/shared/domain';
 import type { MetaClient } from '@/shared/meta';
 import type { BudgetGuard } from '@/shared/security';
 import { StageResultSchema } from '@/shared/domain';
@@ -13,32 +14,36 @@ import {
   executeSearchPlan,
   planSearch,
   type CandidateSource,
+  type CrossrefClient,
   type EuropePmcClient,
   type PubmedClient,
   type SourceClassification,
 } from '@/modules/02-retrieval';
 import { structureScenario } from '../agents/scenario-structurer';
 import { ScenarioStructureSchema, type ScenarioStructure } from '../schemas/scenario-structure';
+import { extractAndVerifyPool, type PoolSourceOutcome } from './extract-and-verify-pool';
 
-// Module 01 request lifecycle: "structure (T0) -> [plan -> retrieve -> curate]".
-// This is the first slice of that bracket: structure (P2) -> plan (P3, module 02) ->
-// retrieve (module 02 connectors) -> dedupe (module 02 curation) -> classify (P4,
-// module 02). Deliberately NOT included here, logged as a known gap in SECURITY.md:
+// Module 01 request lifecycle: "structure (T0) -> [plan -> retrieve -> curate] ->
+// extract -> verify". Covers structure (P2) -> plan (P3) -> retrieve (module 02
+// connectors) -> dedupe (module 02 curation) -> classify (P4) -> extract+verify
+// (P5 + deterministic checks, module 03, via `extract-and-verify-pool.ts`).
+// Deliberately NOT included here, logged as a known gap in SECURITY.md:
 // version-resolution/diversity-selection/coverage-report (module 02 curation) — they
 // need candidates grouped by issuer+topic, which nothing in the codebase computes yet
 // and isn't a well-defined piece to invent without further design; scoring (module
-// 02's `score.ts`) likewise isn't wired in here, for the same reason: it folds in
-// level/currency/applicability weights this stage doesn't yet have enough structured
-// input to compute. `classification`'s `metadataAndText` is metadata-only (title/
-// issuer/year/family) — no abstract/full text, since fetching full text per
-// candidate before dedup/classify would be its own (expensive) stage; this makes
-// `source-classifier`'s confidence lower than it would be with real abstract text,
-// an honest Day-1 limitation, not a silent one.
+// 02's `score.ts`) likewise isn't wired in here, for the same reason. `classify`'s
+// `metadataAndText` is metadata-only (title/issuer/year/family) — no abstract/full
+// text, since fetching full text per candidate before dedup/classify would be its
+// own (expensive) stage; this makes `source-classifier`'s confidence lower than it
+// would be with real abstract text, an honest Day-1 limitation, not a silent one.
 //
 // Each stage returns the shared `StageResultSchema` envelope (shared/domain/run.ts)
 // so a stage can fail or go partial without aborting the ones after it that still
 // have usable input (module 01: "a stage timeout yields partial, not a failed run,
-// when usable output exists").
+// when usable output exists"). `deps.onStageEvent` is the time-to-first-token hook:
+// it fires as each stage completes AND, during `extract`, as each source's claims
+// come back — the caller (the SSE route) uses this to stream progress instead of
+// waiting for the whole function to resolve once.
 
 export interface StageResult<T> {
   stage: string;
@@ -60,6 +65,12 @@ function toStageResult<T>(schema: z.ZodType<T>, raw: unknown): StageResult<T> {
 }
 
 const MAX_SOURCES_PER_CLASSIFY_CALL = 40;
+type StageName = 'structure' | 'plan' | 'retrieve' | 'classify' | 'extract';
+
+export type RunRetrievalStageEvent =
+  | { type: 'stage_started'; stage: StageName }
+  | { type: 'stage_result'; stage: StageName; status: StageResult<unknown>['status']; metrics: StageResult<unknown>['metrics'] }
+  | { type: 'source_extracted'; sourceId: string; outcome: PoolSourceOutcome };
 
 export interface RunRetrievalInput {
   runId: string;
@@ -72,15 +83,20 @@ export interface RunRetrievalInput {
 export interface RunRetrievalDeps {
   metaClient: MetaClient;
   budgetGuard: BudgetGuard;
+  crossref: CrossrefClient;
   p0Preamble: string;
   p2PromptTemplate: string;
   p3PromptTemplate: string;
   p4PromptTemplate: string;
+  p5PromptTemplate: string;
   pubmed: PubmedClient;
   europePmc: EuropePmcClient;
   maxConcurrency?: number;
   perQueryTimeoutMs?: number;
+  maxExtractSources?: number;
+  maxExtractConcurrency?: number;
   onTrace?: (event: AgentTraceEvent) => void;
+  onStageEvent?: (event: RunRetrievalStageEvent) => void;
 }
 
 export interface RunRetrievalResult {
@@ -88,6 +104,7 @@ export interface RunRetrievalResult {
   plan: StageResult<z.infer<typeof SearchPlanSchema>>;
   retrieval: StageResult<CandidateSource[]>;
   classification: StageResult<SourceClassification[]>;
+  extraction: StageResult<Claim[]>;
 }
 
 function buildMetadataAndText(candidate: CandidateSource): string {
@@ -100,6 +117,7 @@ function buildMetadataAndText(candidate: CandidateSource): string {
 
 export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRetrievalDeps): Promise<RunRetrievalResult> {
   // --- structure (P2) ---
+  deps.onStageEvent?.({ type: 'stage_started', stage: 'structure' });
   const structureStarted = Date.now();
   const structureAgentResult = await structureScenario(
     input.runId,
@@ -127,6 +145,7 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
         reasons: [structureAgentResult.detail],
         metrics: { ms: structureMs, costUsd: 0 },
       });
+  deps.onStageEvent?.({ type: 'stage_result', stage: 'structure', status: structure.status, metrics: structure.metrics });
 
   // --- plan (P3) --- degrades to the router's condition hint + free text when
   // structure failed, rather than aborting the whole pipeline (module 01: continue
@@ -134,6 +153,7 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
   const planCondition = input.routerCondition ?? structure.value?.population ?? input.freeText;
   const planSetting = structure.value?.setting !== 'unknown' ? structure.value?.setting : input.routerSetting;
 
+  deps.onStageEvent?.({ type: 'stage_started', stage: 'plan' });
   const planStarted = Date.now();
   const planAgentResult = await planSearch(
     input.runId,
@@ -155,8 +175,10 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
         reasons: [planAgentResult.detail],
         metrics: { ms: planMs, costUsd: 0 },
       });
+  deps.onStageEvent?.({ type: 'stage_result', stage: 'plan', status: plan.status, metrics: plan.metrics });
 
   // --- retrieve + dedupe (module 02) --- only runs if a plan exists.
+  deps.onStageEvent?.({ type: 'stage_started', stage: 'retrieve' });
   const candidateArraySchema = z.array(CandidateSourceSchema);
   let retrieval: StageResult<CandidateSource[]>;
 
@@ -196,8 +218,10 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
       },
     });
   }
+  deps.onStageEvent?.({ type: 'stage_result', stage: 'retrieve', status: retrieval.status, metrics: retrieval.metrics });
 
   // --- classify (P4 + applyPubmedTypeOverride) --- only runs if there are candidates.
+  deps.onStageEvent?.({ type: 'stage_started', stage: 'classify' });
   const classificationArraySchema = z.array(SourceClassificationSchema);
   let classification: StageResult<SourceClassification[]>;
 
@@ -243,6 +267,77 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
       });
     }
   }
+  deps.onStageEvent?.({ type: 'stage_result', stage: 'classify', status: classification.status, metrics: classification.metrics });
 
-  return { structure, plan, retrieval, classification };
+  // --- extract + verify (P5 + deterministic checks, module 03) --- only runs if
+  // there are candidates; classification is used for prioritization only (missing/
+  // failed classification just means no kind-based prioritization, not a blocker).
+  deps.onStageEvent?.({ type: 'stage_started', stage: 'extract' });
+  const extractArraySchema = z.array(ClaimSchema);
+  let extraction: StageResult<Claim[]>;
+
+  if (!retrieval.value || retrieval.value.length === 0) {
+    extraction = toStageResult(extractArraySchema, {
+      stage: 'extract',
+      status: 'abstain',
+      reasons: ['No candidates to extract from'],
+      metrics: { ms: 0, costUsd: 0 },
+    });
+  } else {
+    const extractStarted = Date.now();
+    const pool = await extractAndVerifyPool(
+      {
+        runId: input.runId,
+        candidates: retrieval.value,
+        classifications: classification.value ?? [],
+        subQuestions: structure.value?.subQuestions ?? [],
+        maxSources: deps.maxExtractSources,
+        maxConcurrency: deps.maxExtractConcurrency,
+      },
+      {
+        metaClient: deps.metaClient,
+        budgetGuard: deps.budgetGuard,
+        crossref: deps.crossref,
+        europePmc: deps.europePmc,
+        p0Preamble: deps.p0Preamble,
+        p5PromptTemplate: deps.p5PromptTemplate,
+        onTrace: deps.onTrace,
+        onSourceDone: (sourceId, outcome) => deps.onStageEvent?.({ type: 'source_extracted', sourceId, outcome }),
+      },
+    );
+    const extractMs = Date.now() - extractStarted;
+
+    const noFullText = pool.perSource.filter((s) => s.outcome.status === 'no_full_text').length;
+    const extractionFailed = pool.perSource.filter((s) => s.outcome.status === 'extraction_failed').length;
+    const okOutcomes = pool.perSource.flatMap((s) => (s.outcome.status === 'ok' ? [s.outcome] : []));
+    const droppedClaims = okOutcomes.flatMap((o) => o.dropped);
+    const retractedDropped = droppedClaims.filter((d) => d.reason === 'source is retracted or withdrawn').length;
+    const hasIssues = noFullText > 0 || extractionFailed > 0;
+
+    extraction = toStageResult(extractArraySchema, {
+      stage: 'extract',
+      status: pool.claims.length === 0 ? (pool.perSource.length > 0 ? 'partial' : 'abstain') : hasIssues ? 'partial' : 'ok',
+      value: pool.claims,
+      reasons: hasIssues
+        ? pool.perSource
+            .filter((s) => s.outcome.status !== 'ok')
+            .map((s) => `${s.sourceId}: ${s.outcome.status === 'extraction_failed' ? s.outcome.reason : 'no full text available'}`)
+        : undefined,
+      metrics: {
+        ms: extractMs,
+        costUsd: pool.costUsd,
+        counts: {
+          sourcesAttempted: pool.perSource.length,
+          claimsKept: pool.claims.length,
+          claimsDropped: droppedClaims.length,
+          retracted: retractedDropped,
+          noFullText,
+          extractionFailed,
+        },
+      },
+    });
+  }
+  deps.onStageEvent?.({ type: 'stage_result', stage: 'extract', status: extraction.status, metrics: extraction.metrics });
+
+  return { structure, plan, retrieval, classification, extraction };
 }

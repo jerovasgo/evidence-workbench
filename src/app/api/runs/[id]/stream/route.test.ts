@@ -1,0 +1,119 @@
+import { describe, expect, it, vi } from 'vitest';
+import { createPendingRunContextStore, type RunRecord, type RunsRepository } from '@/modules/01-orchestrator';
+import type { MetaClient, RespondResult } from '@/shared/meta';
+import { createInMemoryBudgetGuard } from '@/shared/security';
+
+function fakeRespondResult(parsed: unknown): RespondResult {
+  return {
+    id: 'resp_x',
+    text: JSON.stringify(parsed),
+    parsed,
+    webSearchResults: [],
+    usage: { inputTokens: 10, cachedInputTokens: 0, outputTokens: 10, totalTokens: 20 },
+    costUsd: 0.001,
+    raw: {},
+  };
+}
+
+function fakeRunsRepository(overrides: Partial<RunsRepository> = {}): RunsRepository {
+  return { createRun: vi.fn(), getRun: vi.fn(async () => null), updateRunStatus: vi.fn(), ...overrides };
+}
+
+const routingRun: RunRecord = {
+  id: 'run_1',
+  userId: null,
+  isPrecomputed: true,
+  intent: 'algorithm',
+  status: 'routing',
+  createdAt: '2026-10-27T00:00:00.000Z',
+};
+
+function mockRuntime(metaClient: MetaClient, runsRepository: RunsRepository, pendingRunContext = createPendingRunContextStore()) {
+  return {
+    runsRepository,
+    metaClient,
+    budgetGuard: createInMemoryBudgetGuard({ runCostCapUsd: 1, dailyBudgetUsd: 20 }),
+    crossref: { lookup: vi.fn().mockResolvedValue(null) },
+    p0Preamble: 'P0',
+    p2PromptTemplate: 'Structure: {{free_text}} / {{condition}} / {{setting}}',
+    p3PromptTemplate: 'Plan for {{condition}} / {{sub_questions}} / {{setting}} / {{country}}',
+    p4PromptTemplate: 'Classify: {{sources_json}}',
+    p5PromptTemplate: 'Extract: {{source_title}} / {{sub_questions}} / {{passages}}',
+    pubmed: { search: vi.fn().mockResolvedValue({ pmids: [] }), fetchSummaries: vi.fn().mockResolvedValue([]) },
+    europePmc: { search: vi.fn().mockResolvedValue([]), fetchFullText: vi.fn().mockResolvedValue(null) },
+    pendingRunContext,
+  };
+}
+
+vi.mock(import('@/modules/01-orchestrator'), async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, getServerRuntime: vi.fn() };
+});
+
+async function loadGetWithRuntime(runtime: ReturnType<typeof mockRuntime>) {
+  const { getServerRuntime } = await import('@/modules/01-orchestrator');
+  vi.mocked(getServerRuntime).mockReturnValue(runtime as never);
+  const { GET } = await import('./route');
+  return GET;
+}
+
+async function readAllEvents(res: Response): Promise<Record<string, unknown>[]> {
+  const text = await res.text();
+  return text
+    .split('\n\n')
+    .filter((chunk) => chunk.startsWith('data: '))
+    .map((chunk) => JSON.parse(chunk.slice('data: '.length)));
+}
+
+describe('GET /api/runs/[id]/stream', () => {
+  it('returns 404 when the run does not exist', async () => {
+    const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
+    const GET = await loadGetWithRuntime(mockRuntime(metaClient, fakeRunsRepository()));
+
+    const res = await GET(new Request('http://localhost/api/runs/missing/stream'), { params: Promise.resolve({ id: 'missing' }) });
+    expect(res.status).toBe(404);
+  });
+
+  it('streams a single done event for a run that already finished', async () => {
+    const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
+    const finishedRun: RunRecord = { ...routingRun, status: 'done' };
+    const GET = await loadGetWithRuntime(mockRuntime(metaClient, fakeRunsRepository({ getRun: vi.fn(async () => finishedRun) })));
+
+    const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
+    const events = await readAllEvents(res);
+
+    expect(events).toEqual([{ type: 'done', runId: 'run_1', status: 'done' }]);
+    expect(metaClient.respond).not.toHaveBeenCalled();
+  });
+
+  it('emits an error and done(failed) when no pending context is available for a routing run', async () => {
+    const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
+    const runsRepository = fakeRunsRepository({ getRun: vi.fn(async () => routingRun) });
+    const GET = await loadGetWithRuntime(mockRuntime(metaClient, runsRepository)); // empty pending store
+
+    const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
+    const events = await readAllEvents(res);
+
+    expect(events[0]).toMatchObject({ type: 'error', runId: 'run_1' });
+    expect(events[1]).toEqual({ type: 'done', runId: 'run_1', status: 'failed' });
+  });
+
+  it('streams stage events, a band_ready, a receipt_ready and a final done for a routing run with pending context', async () => {
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult({ setting: 'bogus' })); // invalid for every stage's schema
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const runsRepository = fakeRunsRepository({ getRun: vi.fn(async () => routingRun) });
+    const pendingRunContext = createPendingRunContextStore();
+    pendingRunContext.put('run_1', { freeText: 'suspected ACS', routerCondition: 'suspected ACS' });
+
+    const GET = await loadGetWithRuntime(mockRuntime(metaClient, runsRepository, pendingRunContext));
+    const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
+    const events = await readAllEvents(res);
+
+    expect(events[0]).toEqual({ type: 'stage_started', runId: 'run_1', stage: 'structure' });
+    expect(events.some((e) => e.type === 'band_ready')).toBe(true);
+    expect(events.some((e) => e.type === 'receipt_ready')).toBe(true);
+    expect(events.at(-1)).toMatchObject({ type: 'done', runId: 'run_1' });
+    expect(runsRepository.updateRunStatus).toHaveBeenCalledWith('run_1', expect.any(String));
+    // Consumed once — a second take() would return null (pending context's own test covers that directly).
+  });
+});

@@ -6,7 +6,7 @@ import type { MetaClient } from '@/shared/meta';
 import { RouterOutputSchema, type Intent, type RouterOutput } from '../schemas/router';
 import type { BudgetGuard } from '@/shared/security';
 import { checkForIdentifiers, type IdentifierFinding } from '../validators/identifiers';
-import type { EuropePmcClient, PubmedClient } from '@/modules/02-retrieval';
+import type { CrossrefClient, EuropePmcClient, PubmedClient } from '@/modules/02-retrieval';
 import { runRetrievalPipeline, type RunRetrievalResult } from './run-retrieval';
 
 // Module 01 request lifecycle, first slice:
@@ -107,12 +107,19 @@ export async function createRun(request: CreateRunRequest, deps: CreateRunDeps):
 // different pipelines (modules 08/09, not built yet); `out_of_scope` never gets here.
 const INTENTS_NEEDING_RETRIEVAL = new Set<Intent>(['algorithm', 'evidence_map', 'comparison', 'fact_lookup']);
 
+/** Exported so both this module's batch composition and the SSE route agree on which intents need it. */
+export function intentNeedsRetrieval(intent: Intent): boolean {
+  return INTENTS_NEEDING_RETRIEVAL.has(intent);
+}
+
 export interface CreateRunAndRetrieveDeps extends CreateRunDeps {
   p2PromptTemplate: string;
   p3PromptTemplate: string;
   p4PromptTemplate: string;
+  p5PromptTemplate: string;
   pubmed: PubmedClient;
   europePmc: EuropePmcClient;
+  crossref: CrossrefClient;
 }
 
 export type CreateRunAndRetrieveOutcome =
@@ -120,14 +127,23 @@ export type CreateRunAndRetrieveOutcome =
   | { status: 'routed'; run: RunRecord; routerOutput: RouterOutput; retrieval?: RunRetrievalResult };
 
 /**
- * Composes `createRun` (routing, cheap and fast) with `runRetrievalPipeline`
- * (structure -> plan -> retrieve -> classify, module 02) for intents that need it.
+ * Composes `createRun` (routing, cheap and fast) with the full synchronous,
+ * batch form of `runRetrievalPipeline` (structure -> plan -> retrieve -> classify ->
+ * extract, modules 02/03) for intents that need it. `POST /api/runs` no longer calls
+ * this for interactive requests — it stashes a `PendingRunContext` instead and lets
+ * `GET /api/runs/:id/stream` (SSE) run the pipeline with progressive events for a
+ * low time-to-first-token (see that route's own comment). This function remains for
+ * callers that genuinely want one awaited result with no incremental feedback — a
+ * future precompute/batch job for the evaluation conditions (SPEC §9), or a test.
+ *
  * Kept as a separate function, not folded into `createRun` itself, so `createRun`'s
  * existing unit tests and its own narrower contract (routing only) stay unchanged.
  *
  * Day-1 simplification, logged in SECURITY.md/DECISIONS.md: this runs the whole
- * retrieval chain synchronously inside the same request as `createRun` — a live
- * smoke test measured ~13-14s end to end, which risks Vercel's function time limit
+ * retrieval chain synchronously inside one call — a live smoke test measured
+ * ~13-14s end to end before the extract stage existed (now longer, extraction alone
+ * measured ~9-10s per source). Not a Vercel timeout risk (Hobby's limit is 300s
+ * default *and* max, docs/DAY0-VERIFICATION.md §4) but still no incremental feedback
  * (module 01's own "Build notes": long stages must be resumable chunks or run in a
  * worker; that doesn't exist yet). No `stage_outputs` persistence happens here either
  * (no repository for that table exists yet) — a crashed request today loses the
@@ -140,7 +156,7 @@ export async function createRunAndRetrieve(
   const outcome = await createRun(request, deps);
   if (outcome.status !== 'routed') return outcome;
   if (outcome.run.status === 'abstained') return outcome; // out_of_scope: nothing to retrieve
-  if (!INTENTS_NEEDING_RETRIEVAL.has(outcome.routerOutput.intent)) return outcome;
+  if (!intentNeedsRetrieval(outcome.routerOutput.intent)) return outcome;
 
   const retrieval = await runRetrievalPipeline(
     {

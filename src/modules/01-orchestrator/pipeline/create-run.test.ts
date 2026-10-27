@@ -32,6 +32,7 @@ function fakeRunsRepository(overrides: Partial<RunsRepository> = {}): RunsReposi
       return run;
     }),
     getRun: vi.fn(async () => null),
+    updateRunStatus: vi.fn(),
     ...overrides,
   };
 }

@@ -5,3 +5,8 @@ export * from './validators/quote';
 export * from './validators/existence';
 export * from './validators/retraction';
 export * from './validators/safety-critical';
+export * from './schemas/extraction';
+export * from './passages/window-text';
+export * from './agents/claim-extractor';
+export * from './pipeline/verify-claim';
+export * from './pipeline/extract-and-verify-source';

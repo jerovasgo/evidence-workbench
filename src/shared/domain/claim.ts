@@ -57,11 +57,17 @@ export const ClaimSchema = z.object({
 export type Claim = z.infer<typeof ClaimSchema>;
 
 /**
- * SPEC §8 invariant: every displayed Claim has quoteFound = true. This is enforced by
- * validators (module 03), not here — this helper only narrows the type for code that
- * already holds a verified claim.
+ * SPEC §8 / docs/architecture/03-claim-extraction-and-verification.md "Final states":
+ * `verified` requires quoteFound AND support = 'supports' — not just a quote match.
+ * Module 03's own `support-judge` agent (T2) isn't built yet, so nothing it produces
+ * today can satisfy `support: 'supports'`; everything that passes the deterministic
+ * checks instead carries `support: 'unknown'`, which per the architecture doc belongs
+ * "available only in the evidence drawer marked 'not confirmed'", never in a main
+ * view — this refine is what makes that distinction enforceable at the type level
+ * once a view module tries to accept `VerifiedClaim[]` only.
  */
-export const VerifiedClaimSchema = ClaimSchema.refine((claim) => claim.verification.quoteFound, {
-  message: 'A VerifiedClaim must have verification.quoteFound = true',
-});
+export const VerifiedClaimSchema = ClaimSchema.refine(
+  (claim) => claim.verification.quoteFound && claim.verification.support === 'supports',
+  { message: "A VerifiedClaim must have verification.quoteFound = true and verification.support = 'supports'" },
+);
 export type VerifiedClaim = z.infer<typeof VerifiedClaimSchema>;

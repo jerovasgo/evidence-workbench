@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
-import { createRunAndRetrieve, CreateRunRequestSchema, getServerRuntime } from '@/modules/01-orchestrator';
+import { createRun, CreateRunRequestSchema, getServerRuntime, intentNeedsRetrieval } from '@/modules/01-orchestrator';
 
-// Module 01: "Route handlers are thin: validate -> enqueue -> stream." All real logic
-// lives in modules/01-orchestrator/pipeline/{create-run,run-retrieval}.ts, unit-tested
-// there without Next.js at all; this file only parses the request, wires the
-// process-wide runtime in, and maps the pipeline's outcome to an HTTP response.
-// `createRunAndRetrieve` runs structure/plan/retrieve/classify synchronously for
-// intents that need it (module 02) before this handler responds — see that
-// function's own comment for the Vercel-timeout caveat this carries today.
+// Module 01: "Route handlers are thin: validate -> enqueue -> stream." All real
+// logic lives in modules/01-orchestrator/pipeline/{create-run,run-retrieval}.ts,
+// unit-tested there without Next.js at all. This handler calls `createRun` only —
+// routing, cheap and fast (a live smoke test measured ~1-4s). For time-to-first-
+// token: it does NOT run structure/plan/retrieve/extract/verify itself. For an
+// intent that needs those (module 01's pipeline table), it stashes the free text in
+// `pendingRunContext` (in-memory, single-use, keyed by the new run's id) and the
+// client is expected to immediately open `GET /api/runs/:id/stream` (SSE), which
+// runs the rest of the pipeline and streams progress as it happens — see that
+// route's own comment for why a two-step POST-then-stream flow, not one call.
 
 export async function POST(request: Request): Promise<Response> {
   let body: unknown;
@@ -23,7 +26,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const runtime = getServerRuntime();
-  const outcome = await createRunAndRetrieve(parsed.data, runtime);
+  const outcome = await createRun(parsed.data, runtime);
 
   switch (outcome.status) {
     case 'rejected_identifiers':
@@ -45,23 +48,24 @@ export async function POST(request: Request): Promise<Response> {
         { error: 'Could not classify the request', runId: outcome.run.id, reason: outcome.reason },
         { status: 502 },
       );
-    case 'routed':
+    case 'routed': {
+      const needsStream = outcome.run.status !== 'abstained' && intentNeedsRetrieval(outcome.routerOutput.intent);
+      if (needsStream) {
+        runtime.pendingRunContext.put(outcome.run.id, {
+          freeText: parsed.data.freeText,
+          routerCondition: outcome.routerOutput.condition,
+          routerSetting: outcome.routerOutput.setting,
+        });
+      }
       return NextResponse.json(
         {
           runId: outcome.run.id,
           intent: outcome.routerOutput.intent,
           status: outcome.run.status,
-          // Stage statuses/metrics only — never scenario text (CLAUDE.md rule 3).
-          retrieval: outcome.retrieval
-            ? {
-                structure: { status: outcome.retrieval.structure.status },
-                plan: { status: outcome.retrieval.plan.status },
-                retrieve: { status: outcome.retrieval.retrieval.status, counts: outcome.retrieval.retrieval.metrics.counts },
-                classify: { status: outcome.retrieval.classification.status },
-              }
-            : undefined,
+          streamUrl: needsStream ? `/api/runs/${outcome.run.id}/stream` : undefined,
         },
         { status: 201 },
       );
+    }
   }
 }

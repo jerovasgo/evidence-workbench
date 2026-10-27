@@ -105,31 +105,60 @@ This file tracks what is actually built, not the full target state in `docs/arch
   concurrent load even within NCBI's documented 3/s-without-key limit; the pipeline
   correctly dropped only the affected queries and returned the rest. `server/runtime.ts`
   now passes `NCBI_API_KEY` (if configured) to the PubMed client to raise that limit.
-- **Retrieval pipeline** (`src/modules/01-orchestrator/pipeline/run-retrieval.ts`):
+- **Retrieval + extraction pipeline** (`src/modules/01-orchestrator/pipeline/run-retrieval.ts`):
   chains structure (P2) -> plan (P3) -> retrieve -> dedupe -> classify (P4 +
-  `applyPubmedTypeOverride`) into one function, with each stage returning the shared
-  `StageResultSchema` envelope (`shared/domain/run.ts`) so a stage can fail or go
-  partial (e.g. a failed plan still lets classification abstain cleanly, rather than
-  throwing) without losing output from stages that already succeeded. Wired into
-  `POST /api/runs` via a new `createRunAndRetrieve` composition
-  (`src/modules/01-orchestrator/pipeline/create-run.ts`) for the intents module 01's
-  pipeline table says need it (`algorithm`/`evidence_map`/`comparison`/`fact_lookup`);
-  `createRun` itself is unchanged, so its existing unit tests and narrower contract
-  (routing only) stayed intact. Live-tested end to end on 2026-10-27, both as a direct
-  function call and through the real `next dev` route (`POST /api/runs`) against the
-  real Meta API, PubMed and Europe PMC — returned 201 with per-stage statuses and
-  retrieval counts; the test run row was deleted from `BenchBark` afterward. **Known
-  Day-1 limitation, not a silent one:** this runs the whole chain synchronously inside
-  the same request as routing (measured ~13-14s end to end live). Corrected after
-  re-checking `docs/DAY0-VERIFICATION.md` §4 (verified against Vercel's own docs):
-  function duration is **not** actually at risk yet — Hobby's limit is 300s default
-  *and* maximum, well above 13-14s. The real cost today is (a) no incremental
-  feedback for the clinician during that wait (module 01's SSE `band_ready` design
-  exists exactly for this), and (b) no resumability — module 01's resumable-run
-  design (`stage_outputs` persistence) isn't built, so a crashed/disconnected request
-  loses the retrieval result entirely and must restart from scratch, burning cost
-  again. This will matter more, including for the 300s ceiling, once extract/verify/
-  grade/synthesize stages are added on top.
+  `applyPubmedTypeOverride`) -> extract+verify (P5 + deterministic checks, module 03,
+  via `extract-and-verify-pool.ts`) into one function, with each stage returning the
+  shared `StageResultSchema` envelope (`shared/domain/run.ts`) so a stage can fail or
+  go partial without losing output from stages that already succeeded.
+- **Time-to-first-token orchestration** (user-requested, 2026-10-27): `POST /api/runs`
+  no longer runs this pipeline itself — it only routes (fast; a live smoke test
+  measured ~200ms) and stashes the free text in a new in-memory, single-use
+  `pendingRunContext` store (`src/modules/01-orchestrator/server/pending-run-context.ts`,
+  same per-process caveat as the budget guard) keyed by the new run's id. The new
+  `GET /api/runs/:id/stream` (SSE, `src/app/api/runs/[id]/stream/route.ts`) is what
+  actually runs the pipeline, streaming a `stage_started`/`stage_progress` event per
+  stage and per source as `extract` processes sources in parallel (bounded
+  concurrency, prioritized guideline/systematic-review/RCT first,
+  `extract-and-verify-pool.ts`), then one `band_ready` (claims), one `receipt_ready`
+  (a real `Receipt` built by `build-receipt.ts`), and a final `done`, persisted via a
+  new `RunsRepository.updateRunStatus`. Live-tested end to end on 2026-10-27 through
+  the real `next dev` routes against the real Meta API/PubMed/Europe PMC: first SSE
+  byte arrived in ~100ms, stages streamed progressively over ~31s total (structure
+  2.5s, plan 4.8s, retrieve 1.1s, classify 19.3s, extract 1.8s for 10 sources — all
+  lacked fetchable open-access full text in this run, an honest real-world gap, not a
+  bug, tracked below), ending in `receipt_ready` + `done`; the run's persisted status
+  (`partial`) was confirmed in Postgres and the test row deleted afterward.
+  `createRunAndRetrieve` (the old single-call synchronous composition) is kept, not
+  deleted, for a future precompute/batch job or test that genuinely wants one
+  awaited result with no incremental feedback — `POST /api/runs` no longer calls it.
+  **Corrected an earlier overstatement in this file:** re-checking
+  `docs/DAY0-VERIFICATION.md` §4 (Vercel's own docs) shows Hobby's function duration
+  limit is 300s default *and* maximum — not actually at risk from a ~13-30s pipeline.
+  The real cost of the OLD synchronous design was no incremental feedback and no
+  resumability, not a hard timeout; this is exactly what the SSE work above now
+  addresses for the feedback half. Resumability (persisted `stage_outputs`, so a
+  stream reconnect after the in-memory context expires can pick up where it left off
+  instead of erroring) is still not built — tracked below.
+- **Claim extraction and verification** (module 03, P5 `claim-extractor` +
+  `verify-claim.ts`): one agent call per source (passages windowed to ~1,200 tokens
+  by `window-text.ts`, a deterministic paragraph-based chunker) proposes claims with
+  verbatim quotes; code then runs the deterministic checks from
+  `docs/architecture/03-claim-extraction-and-verification.md` — quote-found (exact or
+  bounded OCR-fuzzy), locator-valid (claimed `passageId` must be a real passage),
+  not-retracted (`checkRetraction`, once per source), numbers-preserved, the dose
+  rule (an unverified dose is softened to "per local protocol", not dropped), and the
+  safety-critical keyword raise. Live-tested 2026-10-27 against a realistic guideline
+  excerpt: extracted 3 correct claims (aspirin dose, oxygen non-recommendation,
+  reperfusion timing) with quotes matching verbatim and `safetyCritical` correctly
+  raised on the aspirin claim. **Honest, documented gap, not a silent one:**
+  `support-judge` (T2, the 8th verification step) isn't built, so no claim produced
+  here can reach `support: 'supports'` — every kept claim carries
+  `verification.support: 'unknown'`, and `shared/domain/claim.ts`'s
+  `VerifiedClaimSchema` was tightened (it only checked `quoteFound` before) to refuse
+  such a claim as `verified`. A future UI must treat this module's output as
+  drawer-only ("not confirmed"), never a main-view "verified" claim, until
+  `support-judge` exists.
 - **Retrieval connectors** (`src/modules/02-retrieval/tools/pubmed.ts`, `europe-pmc.ts`, `crossref.ts`,
   `fetch-url-text.ts`, wired into the tool registry by `register-retrieval-tools.ts`):
   all three REST APIs (PubMed E-utilities, Europe PMC, Crossref) are public and
@@ -167,12 +196,27 @@ This file tracks what is actually built, not the full target state in `docs/arch
   dedup/classify would be its own (expensive) stage; this is an honest Day-1
   simplification, not a silent one, and likely lowers classification confidence versus
   real abstract text.
-- No `stage_outputs` persistence or SSE streaming: `runRetrievalPipeline` runs
-  synchronously inside the `POST /api/runs` request and returns only a per-stage status
-  summary; a crashed/timed-out request loses the retrieval result entirely rather than
-  resuming from it (module 01's resumable-run design isn't built). This also means the
-  ~13-14s measured live latency for `algorithm`/etc. intents is a real risk against
-  Vercel's function time limit until streaming/chunked execution exists.
+- No `stage_outputs` persistence: `GET /api/runs/:id/stream` (SSE) gives real
+  incremental feedback now, but a stream that's reconnected after the in-memory
+  `pendingRunContext` has already been consumed (or the server restarted) gets an
+  `error` event, not a resumed stream from where it left off — module 01's
+  resumable-run design needs persisted per-stage output to do that, and it isn't
+  built. A client that disconnects mid-stream loses the in-flight retrieval; the
+  spent cost is not recovered.
+- `support-judge` (module 03, T2) isn't built: every claim this pipeline produces
+  carries `verification.support: 'unknown'`, never `'supports'` — nothing here can
+  satisfy `VerifiedClaimSchema`. No view/UI should treat this module's `Claim[]`
+  output as display-ready; it belongs in an evidence drawer marked "not confirmed"
+  once a UI exists. There is also no per-sub-question "abstain" decision at this
+  layer (module 03's own threshold rule: "≥1 verified claim from a guideline/SR, else
+  abstain") — that decision belongs to a view/synthesize stage, not built.
+- Full-text coverage for extraction is Europe-PMC-open-access-only: a live run
+  against a real ACS question found 0/10 prioritized sources had fetchable full text
+  (confirmed real, not a connector bug — `fetch-full-text.ts`'s own comment already
+  flags this as expected for non-open-access PubMed records). Extraction quality
+  today is bounded by how much of the retrieved pool happens to be open access;
+  `fetch_url_text`'s empty-by-default guideline-domain allow-list (noted above) would
+  help once configured, since many guidelines are gated behind it, not Europe PMC.
 - No Auth UI/flow built — the RLS policies and `getRunForViewer` are ready for
   `auth.uid()`-bearing sessions, but there is no sign-up/sign-in page yet, so every
   request today is effectively anonymous.

@@ -27,3 +27,4 @@ export * from './classification/pubmed-type-override';
 export * from './agents/search-planner';
 export * from './agents/source-classifier';
 export * from './retrieval/execute-plan';
+export * from './retrieval/fetch-full-text';

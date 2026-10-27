@@ -27,6 +27,13 @@ function fakeSelectClient(data: unknown, error: unknown = null) {
   return { client: { from } as unknown as SupabaseClient, from, select, eq, maybeSingle };
 }
 
+function fakeUpdateClient(error: unknown = null) {
+  const eq = vi.fn().mockResolvedValue({ error });
+  const update = vi.fn().mockReturnValue({ eq });
+  const from = vi.fn().mockReturnValue({ update });
+  return { client: { from } as unknown as SupabaseClient, from, update, eq };
+}
+
 describe('createSupabaseRunsRepository.createRun', () => {
   it('inserts snake_case columns and maps the returned row back to RunRecord', async () => {
     const { client, from, insert } = fakeInsertClient(sampleRow);
@@ -82,5 +89,25 @@ describe('createSupabaseRunsRepository.getRun', () => {
     const repo = createSupabaseRunsRepository(client);
 
     await expect(repo.getRun('run_1')).rejects.toThrow(/connection reset/);
+  });
+});
+
+describe('createSupabaseRunsRepository.updateRunStatus', () => {
+  it('updates the status column for the given id', async () => {
+    const { client, from, update, eq } = fakeUpdateClient();
+    const repo = createSupabaseRunsRepository(client);
+
+    await repo.updateRunStatus('run_1', 'done');
+
+    expect(from).toHaveBeenCalledWith('runs');
+    expect(update).toHaveBeenCalledWith({ status: 'done' });
+    expect(eq).toHaveBeenCalledWith('id', 'run_1');
+  });
+
+  it('throws with the Postgres error message on failure', async () => {
+    const { client } = fakeUpdateClient({ message: 'connection reset' });
+    const repo = createSupabaseRunsRepository(client);
+
+    await expect(repo.updateRunStatus('run_1', 'done')).rejects.toThrow(/connection reset/);
   });
 });

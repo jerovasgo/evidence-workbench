@@ -35,20 +35,20 @@ const privateRun: RunRecord = {
 
 describe('GET /api/runs/[id]', () => {
   it('returns 404 when the run does not exist', async () => {
-    const GET = await loadGetWithRepository({ createRun: vi.fn(), getRun: vi.fn(async () => null) });
+    const GET = await loadGetWithRepository({ createRun: vi.fn(), getRun: vi.fn(async () => null), updateRunStatus: vi.fn() });
     const res = await GET(new Request('http://localhost/api/runs/missing'), { params: Promise.resolve({ id: 'missing' }) });
     expect(res.status).toBe(404);
   });
 
   it('returns 200 for a precomputed run (every anonymous viewer can read it)', async () => {
-    const GET = await loadGetWithRepository({ createRun: vi.fn(), getRun: vi.fn(async () => precomputedRun) });
+    const GET = await loadGetWithRepository({ createRun: vi.fn(), getRun: vi.fn(async () => precomputedRun), updateRunStatus: vi.fn() });
     const res = await GET(new Request('http://localhost/api/runs/run_1'), { params: Promise.resolve({ id: 'run_1' }) });
     expect(res.status).toBe(200);
     expect((await res.json()).run.id).toBe('run_1');
   });
 
   it('returns 403 for a private run, since no auth is wired yet and the viewer is always anonymous', async () => {
-    const GET = await loadGetWithRepository({ createRun: vi.fn(), getRun: vi.fn(async () => privateRun) });
+    const GET = await loadGetWithRepository({ createRun: vi.fn(), getRun: vi.fn(async () => privateRun), updateRunStatus: vi.fn() });
     const res = await GET(new Request('http://localhost/api/runs/run_2'), { params: Promise.resolve({ id: 'run_2' }) });
     expect(res.status).toBe(403);
   });

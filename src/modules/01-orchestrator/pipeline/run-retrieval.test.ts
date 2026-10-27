@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { EuropePmcClient, PubmedClient } from '@/modules/02-retrieval';
+import type { CrossrefClient, EuropePmcClient, PubmedClient } from '@/modules/02-retrieval';
 import type { MetaClient, RespondResult } from '@/shared/meta';
 import { createInMemoryBudgetGuard } from '@/shared/security';
 import { runRetrievalPipeline } from './run-retrieval';
@@ -24,14 +24,20 @@ function fakeEuropePmc(overrides: Partial<EuropePmcClient> = {}): EuropePmcClien
   return { search: vi.fn().mockResolvedValue([]), fetchFullText: vi.fn().mockResolvedValue(null), ...overrides };
 }
 
+function fakeCrossref(overrides: Partial<CrossrefClient> = {}): CrossrefClient {
+  return { lookup: vi.fn().mockResolvedValue(null), ...overrides };
+}
+
 function baseDeps(metaClient: MetaClient, overrides: Partial<Parameters<typeof runRetrievalPipeline>[1]> = {}) {
   return {
     metaClient,
     budgetGuard: createInMemoryBudgetGuard({ runCostCapUsd: 1, dailyBudgetUsd: 20 }),
+    crossref: fakeCrossref(),
     p0Preamble: 'P0',
     p2PromptTemplate: 'Structure: {{free_text}} / {{condition}} / {{setting}}',
     p3PromptTemplate: 'Plan for {{condition}} / {{sub_questions}} / {{setting}} / {{country}}',
     p4PromptTemplate: 'Classify: {{sources_json}}',
+    p5PromptTemplate: 'Extract: {{source_title}} / {{sub_questions}} / {{passages}}',
     pubmed: fakePubmed(),
     europePmc: fakeEuropePmc(),
     ...overrides,

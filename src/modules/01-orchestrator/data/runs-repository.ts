@@ -25,6 +25,12 @@ export interface CreateRunInput {
 export interface RunsRepository {
   createRun(input: CreateRunInput): Promise<RunRecord>;
   getRun(id: string): Promise<RunRecord | null>;
+  /**
+   * Module 01 state machine: `queued -> routing -> running -> (partial|done|abstained|failed)`.
+   * Needed so a run doesn't stay stuck at `routing` forever once the SSE stream
+   * (`GET /api/runs/:id/stream`) finishes running the rest of the pipeline.
+   */
+  updateRunStatus(id: string, status: RunRecord['status']): Promise<void>;
 }
 
 interface RunRow {
@@ -75,6 +81,14 @@ export function createSupabaseRunsRepository(client: SupabaseClient): RunsReposi
         throw new Error(`getRun failed: ${error.message}`);
       }
       return data ? mapRow(data as RunRow) : null;
+    },
+
+    async updateRunStatus(id, status) {
+      const { error } = await client.from('runs').update({ status }).eq('id', id);
+
+      if (error) {
+        throw new Error(`updateRunStatus failed: ${error.message}`);
+      }
     },
   };
 }

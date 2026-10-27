@@ -29,6 +29,7 @@ function fakeRunsRepository(): RunsRepository {
       return run;
     }),
     getRun: vi.fn(async () => null),
+    updateRunStatus: vi.fn(),
   };
 }
 
@@ -43,8 +44,11 @@ function mockRuntime(metaClient: MetaClient, dailyBudgetUsd = 20) {
     p2PromptTemplate: 'Structure: {{free_text}} / {{condition}} / {{setting}}',
     p3PromptTemplate: 'Plan for {{condition}} / {{sub_questions}} / {{setting}} / {{country}}',
     p4PromptTemplate: 'Classify: {{sources_json}}',
+    p5PromptTemplate: 'Extract: {{source_title}} / {{sub_questions}} / {{passages}}',
     pubmed: { search: vi.fn(), fetchSummaries: vi.fn() },
     europePmc: { search: vi.fn(), fetchFullText: vi.fn() },
+    crossref: { lookup: vi.fn() },
+    pendingRunContext: { put: vi.fn(), take: vi.fn() },
   };
 }
 
@@ -113,10 +117,11 @@ describe('POST /api/runs', () => {
     expect(res.status).toBe(429);
   });
 
-  it('returns 201 with the runId and intent on a successful routing', async () => {
+  it('returns 201 fast, with a streamUrl, and stashes pending context for an intent that needs retrieval', async () => {
     const respond = vi.fn().mockResolvedValue(fakeRespondResult({ intent: 'algorithm', confidence: 'high' }));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
-    const POST = await loadPostWithRuntime(mockRuntime(metaClient));
+    const runtime = mockRuntime(metaClient);
+    const POST = await loadPostWithRuntime(runtime);
 
     const res = await POST(
       new Request('http://localhost/api/runs', {
@@ -128,14 +133,30 @@ describe('POST /api/runs', () => {
     const json = await res.json();
     expect(json.intent).toBe('algorithm');
     expect(typeof json.runId).toBe('string');
-    // 'algorithm' needs retrieval; the canned router response is invalid against
-    // structure/plan's schemas, so those stages abstain gracefully rather than throw.
-    expect(json.retrieval).toEqual({
-      structure: { status: 'failed' },
-      plan: { status: 'failed' },
-      retrieve: { status: 'failed', counts: undefined },
-      classify: { status: 'abstain' },
-    });
+    expect(json.streamUrl).toBe(`/api/runs/${json.runId}/stream`);
+    // Only one respond() call (routing) — this handler must not run structure/plan/
+    // retrieve/classify/extract itself anymore; that is the SSE route's job.
+    expect(respond).toHaveBeenCalledTimes(1);
+    expect(runtime.pendingRunContext.put).toHaveBeenCalledWith(
+      json.runId,
+      expect.objectContaining({ freeText: 'What is first-line treatment for suspected ACS?' }),
+    );
+  });
+
+  it('does not stash pending context or set streamUrl for an out_of_scope (abstained) result', async () => {
+    const respond = vi
+      .fn()
+      .mockResolvedValue(fakeRespondResult({ intent: 'out_of_scope', confidence: 'high', reject: { reason: 'x' } }));
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const runtime = mockRuntime(metaClient);
+    const POST = await loadPostWithRuntime(runtime);
+
+    const res = await POST(
+      new Request('http://localhost/api/runs', { method: 'POST', body: JSON.stringify({ freeText: 'x', userId: null }) }),
+    );
+    const json = await res.json();
+    expect(json.streamUrl).toBeUndefined();
+    expect(runtime.pendingRunContext.put).not.toHaveBeenCalled();
   });
 
   it('returns 502 when the router agent fails to produce valid output', async () => {

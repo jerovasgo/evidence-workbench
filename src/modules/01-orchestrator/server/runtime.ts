@@ -4,7 +4,8 @@ import { createMetaClient, type MetaClient } from '@/shared/meta';
 import { loadPromptBody } from '@/shared/prompts';
 import { createInMemoryBudgetGuard, type BudgetGuard } from '@/shared/security';
 import { createServiceRoleClient } from '@/shared/supabase';
-import { createEuropePmcClient, createPubmedClient, type EuropePmcClient, type PubmedClient } from '@/modules/02-retrieval';
+import { createCrossrefClient, createEuropePmcClient, createPubmedClient, type CrossrefClient, type EuropePmcClient, type PubmedClient } from '@/modules/02-retrieval';
+import { createPendingRunContextStore, type PendingRunContextStore } from './pending-run-context';
 
 // One runtime per server process, built lazily on first request and reused after
 // that — this is what keeps the budget guard's daily counter meaningful across
@@ -22,8 +23,11 @@ export interface ServerRuntime {
   p2PromptTemplate: string;
   p3PromptTemplate: string;
   p4PromptTemplate: string;
+  p5PromptTemplate: string;
   pubmed: PubmedClient;
   europePmc: EuropePmcClient;
+  crossref: CrossrefClient;
+  pendingRunContext: PendingRunContextStore;
 }
 
 let singleton: ServerRuntime | null = null;
@@ -65,6 +69,8 @@ export function buildServerRuntime(): ServerRuntime {
   const ncbiApiKey = process.env.NCBI_API_KEY || undefined;
   const pubmed = createPubmedClient({ apiKey: ncbiApiKey });
   const europePmc = createEuropePmcClient();
+  const crossref = createCrossrefClient();
+  const pendingRunContext = createPendingRunContextStore();
 
   const promptsDir = path.join(process.cwd(), 'prompts');
   const loadPrompt = (name: string) => loadPromptBody(path.join(promptsDir, name));
@@ -73,6 +79,7 @@ export function buildServerRuntime(): ServerRuntime {
   const p2PromptTemplate = loadPrompt('P2-scenario-structurer.md');
   const p3PromptTemplate = loadPrompt('P3-search-planner.md');
   const p4PromptTemplate = loadPrompt('P4-source-classifier.md');
+  const p5PromptTemplate = loadPrompt('P5-claim-extractor.md');
 
   return {
     metaClient,
@@ -84,8 +91,11 @@ export function buildServerRuntime(): ServerRuntime {
     p2PromptTemplate,
     p3PromptTemplate,
     p4PromptTemplate,
+    p5PromptTemplate,
     pubmed,
     europePmc,
+    crossref,
+    pendingRunContext,
   };
 }
 
