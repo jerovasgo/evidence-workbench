@@ -4,6 +4,7 @@ import { createMetaClient, type MetaClient } from '@/shared/meta';
 import { loadPromptBody } from '@/shared/prompts';
 import { createInMemoryBudgetGuard, type BudgetGuard } from '@/shared/security';
 import { createServiceRoleClient } from '@/shared/supabase';
+import { createEuropePmcClient, createPubmedClient, type EuropePmcClient, type PubmedClient } from '@/modules/02-retrieval';
 
 // One runtime per server process, built lazily on first request and reused after
 // that — this is what keeps the budget guard's daily counter meaningful across
@@ -18,6 +19,11 @@ export interface ServerRuntime {
   dailyBudgetUsd: number;
   p0Preamble: string;
   p1PromptTemplate: string;
+  p2PromptTemplate: string;
+  p3PromptTemplate: string;
+  p4PromptTemplate: string;
+  pubmed: PubmedClient;
+  europePmc: EuropePmcClient;
 }
 
 let singleton: ServerRuntime | null = null;
@@ -52,11 +58,35 @@ export function buildServerRuntime(): ServerRuntime {
   const runsRepository = createSupabaseRunsRepository(supabase);
   const budgetGuard = createInMemoryBudgetGuard({ runCostCapUsd, dailyBudgetUsd });
 
-  const promptsDir = path.join(process.cwd(), 'prompts');
-  const p0Preamble = loadPromptBody(path.join(promptsDir, 'P0-preamble.md'));
-  const p1PromptTemplate = loadPromptBody(path.join(promptsDir, 'P1-intent-router.md'));
+  // NCBI_API_KEY is optional: without it PubMed is limited to 3 req/s (module 02's
+  // pubmed.ts); a live smoke test of the full retrieval pipeline showed occasional
+  // HTTP 429s from esummary even within that documented limit under concurrent
+  // queries, so a key (raises the limit to ~9/s) is worth configuring for the demo.
+  const ncbiApiKey = process.env.NCBI_API_KEY || undefined;
+  const pubmed = createPubmedClient({ apiKey: ncbiApiKey });
+  const europePmc = createEuropePmcClient();
 
-  return { metaClient, budgetGuard, runsRepository, dailyBudgetUsd, p0Preamble, p1PromptTemplate };
+  const promptsDir = path.join(process.cwd(), 'prompts');
+  const loadPrompt = (name: string) => loadPromptBody(path.join(promptsDir, name));
+  const p0Preamble = loadPrompt('P0-preamble.md');
+  const p1PromptTemplate = loadPrompt('P1-intent-router.md');
+  const p2PromptTemplate = loadPrompt('P2-scenario-structurer.md');
+  const p3PromptTemplate = loadPrompt('P3-search-planner.md');
+  const p4PromptTemplate = loadPrompt('P4-source-classifier.md');
+
+  return {
+    metaClient,
+    budgetGuard,
+    runsRepository,
+    dailyBudgetUsd,
+    p0Preamble,
+    p1PromptTemplate,
+    p2PromptTemplate,
+    p3PromptTemplate,
+    p4PromptTemplate,
+    pubmed,
+    europePmc,
+  };
 }
 
 export function getServerRuntime(): ServerRuntime {

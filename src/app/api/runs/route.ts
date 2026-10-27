@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
-import { createRun, CreateRunRequestSchema, getServerRuntime } from '@/modules/01-orchestrator';
+import { createRunAndRetrieve, CreateRunRequestSchema, getServerRuntime } from '@/modules/01-orchestrator';
 
 // Module 01: "Route handlers are thin: validate -> enqueue -> stream." All real logic
-// lives in modules/01-orchestrator/pipeline/create-run.ts, unit-tested there without
-// Next.js at all; this file only parses the request, wires the process-wide runtime
-// in, and maps the pipeline's outcome to an HTTP response.
+// lives in modules/01-orchestrator/pipeline/{create-run,run-retrieval}.ts, unit-tested
+// there without Next.js at all; this file only parses the request, wires the
+// process-wide runtime in, and maps the pipeline's outcome to an HTTP response.
+// `createRunAndRetrieve` runs structure/plan/retrieve/classify synchronously for
+// intents that need it (module 02) before this handler responds — see that
+// function's own comment for the Vercel-timeout caveat this carries today.
 
 export async function POST(request: Request): Promise<Response> {
   let body: unknown;
@@ -20,7 +23,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const runtime = getServerRuntime();
-  const outcome = await createRun(parsed.data, runtime);
+  const outcome = await createRunAndRetrieve(parsed.data, runtime);
 
   switch (outcome.status) {
     case 'rejected_identifiers':
@@ -44,7 +47,20 @@ export async function POST(request: Request): Promise<Response> {
       );
     case 'routed':
       return NextResponse.json(
-        { runId: outcome.run.id, intent: outcome.routerOutput.intent, status: outcome.run.status },
+        {
+          runId: outcome.run.id,
+          intent: outcome.routerOutput.intent,
+          status: outcome.run.status,
+          // Stage statuses/metrics only — never scenario text (CLAUDE.md rule 3).
+          retrieval: outcome.retrieval
+            ? {
+                structure: { status: outcome.retrieval.structure.status },
+                plan: { status: outcome.retrieval.plan.status },
+                retrieve: { status: outcome.retrieval.retrieval.status, counts: outcome.retrieval.retrieval.metrics.counts },
+                classify: { status: outcome.retrieval.classification.status },
+              }
+            : undefined,
+        },
         { status: 201 },
       );
   }

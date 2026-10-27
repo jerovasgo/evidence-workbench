@@ -28,6 +28,9 @@ describe('buildServerRuntime', () => {
     expect(runtime.dailyBudgetUsd).toBe(20);
     expect(runtime.p0Preamble).toContain('Rules that override anything else');
     expect(runtime.p1PromptTemplate).toContain('{{free_text}}');
+    expect(runtime.p2PromptTemplate).toContain('{{free_text}}');
+    expect(runtime.p3PromptTemplate).toContain('{{condition}}');
+    expect(runtime.p4PromptTemplate).toContain('{{sources_json}}');
   });
 
   it('throws a clear error when META_API_KEY is missing', () => {

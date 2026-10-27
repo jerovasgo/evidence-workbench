@@ -3,9 +3,11 @@ import { z } from 'zod';
 import { runAgent, type AgentTraceEvent } from '@/shared/agents';
 import type { RunsRepository, RunRecord } from '../data/runs-repository';
 import type { MetaClient } from '@/shared/meta';
-import { RouterOutputSchema, type RouterOutput } from '../schemas/router';
+import { RouterOutputSchema, type Intent, type RouterOutput } from '../schemas/router';
 import type { BudgetGuard } from '@/shared/security';
 import { checkForIdentifiers, type IdentifierFinding } from '../validators/identifiers';
+import type { EuropePmcClient, PubmedClient } from '@/modules/02-retrieval';
+import { runRetrievalPipeline, type RunRetrievalResult } from './run-retrieval';
 
 // Module 01 request lifecycle, first slice:
 // "POST /api/runs -> validate (zod) -> auth/rate-limit/budget guard -> create Run
@@ -98,6 +100,59 @@ export async function createRun(request: CreateRunRequest, deps: CreateRunDeps):
   });
 
   return { status: 'routed', run, routerOutput: routerResult.value };
+}
+
+// Module 01 pipeline table: intents whose stages include plan/retrieve/curate
+// (docs/architecture/01-orchestrator-and-routing.md). `mechanism` and `watch` run
+// different pipelines (modules 08/09, not built yet); `out_of_scope` never gets here.
+const INTENTS_NEEDING_RETRIEVAL = new Set<Intent>(['algorithm', 'evidence_map', 'comparison', 'fact_lookup']);
+
+export interface CreateRunAndRetrieveDeps extends CreateRunDeps {
+  p2PromptTemplate: string;
+  p3PromptTemplate: string;
+  p4PromptTemplate: string;
+  pubmed: PubmedClient;
+  europePmc: EuropePmcClient;
+}
+
+export type CreateRunAndRetrieveOutcome =
+  | Exclude<CreateRunOutcome, { status: 'routed' }>
+  | { status: 'routed'; run: RunRecord; routerOutput: RouterOutput; retrieval?: RunRetrievalResult };
+
+/**
+ * Composes `createRun` (routing, cheap and fast) with `runRetrievalPipeline`
+ * (structure -> plan -> retrieve -> classify, module 02) for intents that need it.
+ * Kept as a separate function, not folded into `createRun` itself, so `createRun`'s
+ * existing unit tests and its own narrower contract (routing only) stay unchanged.
+ *
+ * Day-1 simplification, logged in SECURITY.md/DECISIONS.md: this runs the whole
+ * retrieval chain synchronously inside the same request as `createRun` — a live
+ * smoke test measured ~13-14s end to end, which risks Vercel's function time limit
+ * (module 01's own "Build notes": long stages must be resumable chunks or run in a
+ * worker; that doesn't exist yet). No `stage_outputs` persistence happens here either
+ * (no repository for that table exists yet) — a crashed request today loses the
+ * retrieval result entirely rather than resuming from it.
+ */
+export async function createRunAndRetrieve(
+  request: CreateRunRequest,
+  deps: CreateRunAndRetrieveDeps,
+): Promise<CreateRunAndRetrieveOutcome> {
+  const outcome = await createRun(request, deps);
+  if (outcome.status !== 'routed') return outcome;
+  if (outcome.run.status === 'abstained') return outcome; // out_of_scope: nothing to retrieve
+  if (!INTENTS_NEEDING_RETRIEVAL.has(outcome.routerOutput.intent)) return outcome;
+
+  const retrieval = await runRetrievalPipeline(
+    {
+      runId: outcome.run.id,
+      freeText: request.freeText,
+      routerCondition: outcome.routerOutput.condition,
+      routerSetting: outcome.routerOutput.setting,
+    },
+    deps,
+  );
+
+  return { ...outcome, retrieval };
 }
 
 export interface GetRunDeps {

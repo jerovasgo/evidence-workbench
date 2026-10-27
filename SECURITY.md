@@ -89,6 +89,41 @@ This file tracks what is actually built, not the full target state in `docs/arch
   DNS-rebinding attack against an allow-listed hostname is not closed by this check
   alone. Response bodies are read under a hard byte cap regardless of what
   `Content-Length` claims.
+- **Scenario structurer** (`src/modules/01-orchestrator/agents/scenario-structurer.ts`, P2):
+  live-tested against the real Meta API on 2026-10-27 for a real ACS scenario — produced
+  population, setting, 5 sub-questions and `genericParameters.ageGroup` correctly on the
+  first try. Its `subQuestions` output now feeds `search-planner` (P3) for real, replacing
+  the simplified stand-in noted in `prompts/P3-search-planner.md`.
+- **Retrieve step** (`src/modules/02-retrieval/retrieval/execute-plan.ts`): executes a
+  `SearchPlan` against the live PubMed/Europe PMC connectors with bounded concurrency
+  (default 4) and a per-query timeout (default 8s), mapping results into
+  `CandidateSource[]`. Only `pubmed`/`europe_pmc` queries are executable; `guideline`/
+  `web`/`local` queries are recorded as skipped (not faked), tracked below under Known
+  gaps. A connector failure on one query is recorded and the plan continues (CLAUDE.md
+  rule 12 / module 01: "one source times out -> continue without it") — live-tested
+  2026-10-27 end to end, which caught a real HTTP 429 from PubMed `esummary` under
+  concurrent load even within NCBI's documented 3/s-without-key limit; the pipeline
+  correctly dropped only the affected queries and returned the rest. `server/runtime.ts`
+  now passes `NCBI_API_KEY` (if configured) to the PubMed client to raise that limit.
+- **Retrieval pipeline** (`src/modules/01-orchestrator/pipeline/run-retrieval.ts`):
+  chains structure (P2) -> plan (P3) -> retrieve -> dedupe -> classify (P4 +
+  `applyPubmedTypeOverride`) into one function, with each stage returning the shared
+  `StageResultSchema` envelope (`shared/domain/run.ts`) so a stage can fail or go
+  partial (e.g. a failed plan still lets classification abstain cleanly, rather than
+  throwing) without losing output from stages that already succeeded. Wired into
+  `POST /api/runs` via a new `createRunAndRetrieve` composition
+  (`src/modules/01-orchestrator/pipeline/create-run.ts`) for the intents module 01's
+  pipeline table says need it (`algorithm`/`evidence_map`/`comparison`/`fact_lookup`);
+  `createRun` itself is unchanged, so its existing unit tests and narrower contract
+  (routing only) stayed intact. Live-tested end to end on 2026-10-27, both as a direct
+  function call and through the real `next dev` route (`POST /api/runs`) against the
+  real Meta API, PubMed and Europe PMC — returned 201 with per-stage statuses and
+  retrieval counts; the test run row was deleted from `BenchBark` afterward. **Known
+  Day-1 limitation, not a silent one:** this runs the whole chain synchronously inside
+  the same request as routing (measured ~13-14s end to end live), which risks Vercel's
+  function time limit — module 01's resumable/streamed execution (SSE, `stage_outputs`
+  persistence) isn't built yet, so a crashed request loses the retrieval result
+  entirely rather than resuming from it.
 - **Retrieval connectors** (`src/modules/02-retrieval/tools/pubmed.ts`, `europe-pmc.ts`, `crossref.ts`,
   `fetch-url-text.ts`, wired into the tool registry by `register-retrieval-tools.ts`):
   all three REST APIs (PubMed E-utilities, Europe PMC, Crossref) are public and
@@ -108,12 +143,30 @@ This file tracks what is actually built, not the full target state in `docs/arch
 - No rate limiting, CSP, or output-side prompt-injection suite yet (module 10 items for
   later days). The identifier pre-filter is built; the full 20-fixture injection suite
   is not.
-- The retrieval connectors are unit-tested against recorded fixtures and were each
-  smoke-tested once against the live public API; they are not yet wired into a
-  `search-planner`/`retrieval-scout` agent or the orchestrator, so no end-to-end
-  "ask a question → get a sourced pool" path exists yet. `fetch_url_text`'s allow-list
-  is empty by default — nothing is fetchable until a real guideline-domain list is
-  configured.
+- An end-to-end "ask a question → get a sourced pool" path now exists
+  (`POST /api/runs` for `algorithm`/`evidence_map`/`comparison`/`fact_lookup` intents),
+  but only for the `pubmed`/`europe_pmc` query families. `guideline` and `web` queries
+  from the search plan are recorded as skipped, not executed: `web` needs the Meta
+  API's own `web_search` tool wired through an agent (not a plain fetch, which is all
+  `execute-plan.ts` does); `guideline`/`local` need `fetch_url_text`'s domain allow-list
+  configured (still empty by default) and a local-protocol document pool (module 10/
+  documents feature), neither of which exists yet.
+- Curation stops at dedupe (`deduplicateCandidates`). `resolveVersions`,
+  `selectTopNWithDiversity` and `buildCoverageReport` (module 02 curation) are built
+  and unit-tested but not wired into `run-retrieval.ts` — they need candidates grouped
+  by issuer+topic first, and nothing in the codebase computes that grouping yet; module
+  02's scoring (`scoring/score.ts`) is likewise unwired for the same reason. Source
+  classification (`source-classifier`, P4) runs on title/issuer/year/family metadata
+  only — no abstract or full text, since fetching full text per candidate before
+  dedup/classify would be its own (expensive) stage; this is an honest Day-1
+  simplification, not a silent one, and likely lowers classification confidence versus
+  real abstract text.
+- No `stage_outputs` persistence or SSE streaming: `runRetrievalPipeline` runs
+  synchronously inside the `POST /api/runs` request and returns only a per-stage status
+  summary; a crashed/timed-out request loses the retrieval result entirely rather than
+  resuming from it (module 01's resumable-run design isn't built). This also means the
+  ~13-14s measured live latency for `algorithm`/etc. intents is a real risk against
+  Vercel's function time limit until streaming/chunked execution exists.
 - No Auth UI/flow built — the RLS policies and `getRunForViewer` are ready for
   `auth.uid()`-bearing sessions, but there is no sign-up/sign-in page yet, so every
   request today is effectively anonymous.

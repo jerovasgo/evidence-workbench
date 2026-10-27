@@ -43,6 +43,9 @@ export const CandidateSourceSchema = z.object({
   isOpenAccess: z.boolean().optional(),
   relevance: z.number().min(0).max(1).optional(),
   quality: z.number().min(0).max(1).optional(),
+  /** PubMed publication types, carried through so `applyPubmedTypeOverride` can use
+   *  them after classification; only ever populated for `family: 'pubmed'`. */
+  pubTypes: z.array(z.string()).optional(),
 });
 export type CandidateSource = z.infer<typeof CandidateSourceSchema>;
 

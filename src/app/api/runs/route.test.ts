@@ -40,6 +40,11 @@ function mockRuntime(metaClient: MetaClient, dailyBudgetUsd = 20) {
     dailyBudgetUsd,
     p0Preamble: 'P0 preamble',
     p1PromptTemplate: 'Classify: {{free_text}}',
+    p2PromptTemplate: 'Structure: {{free_text}} / {{condition}} / {{setting}}',
+    p3PromptTemplate: 'Plan for {{condition}} / {{sub_questions}} / {{setting}} / {{country}}',
+    p4PromptTemplate: 'Classify: {{sources_json}}',
+    pubmed: { search: vi.fn(), fetchSummaries: vi.fn() },
+    europePmc: { search: vi.fn(), fetchFullText: vi.fn() },
   };
 }
 
@@ -123,6 +128,14 @@ describe('POST /api/runs', () => {
     const json = await res.json();
     expect(json.intent).toBe('algorithm');
     expect(typeof json.runId).toBe('string');
+    // 'algorithm' needs retrieval; the canned router response is invalid against
+    // structure/plan's schemas, so those stages abstain gracefully rather than throw.
+    expect(json.retrieval).toEqual({
+      structure: { status: 'failed' },
+      plan: { status: 'failed' },
+      retrieve: { status: 'failed', counts: undefined },
+      classify: { status: 'abstain' },
+    });
   });
 
   it('returns 502 when the router agent fails to produce valid output', async () => {

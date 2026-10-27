@@ -4,10 +4,11 @@ import type { MetaClient } from '@/shared/meta';
 import type { BudgetGuard } from '@/shared/security';
 import { SearchPlanSchema, type SearchPlan } from '../schemas/retrieval';
 
-// Module 02 `search-planner` agent (P3). Module 01's `scenario-structurer` (P2) is
-// not built yet, so the input here is a simplified stand-in (condition + optional
-// sub-questions) rather than the full structured-scenario object module 02 describes
-// — callers pass what they have today; this narrows further once P2 exists.
+// Module 02 `search-planner` agent (P3). `subQuestions` normally comes from module
+// 01's `scenario-structurer` (P2) output; this schema intentionally stays narrower
+// than that full structured-scenario object (no population/genericParameters) since
+// search-planner only needs condition + sub-questions + setting/country to plan
+// queries.
 
 export const SearchPlannerInputSchema = z.object({
   condition: z.string().min(1),

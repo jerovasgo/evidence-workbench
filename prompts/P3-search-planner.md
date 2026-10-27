@@ -43,9 +43,11 @@ Rules:
 ## Notes
 
 - Output validated against `SearchPlanSchema` (`src/modules/02-retrieval/schemas/retrieval.ts`).
-- `{{sub_questions}}` is a JSON array of strings (possibly empty) — module 01's
-  `scenario-structurer` (P2) is not built yet, so callers may pass just the raw
-  condition with an empty sub-questions array until it exists.
+- `{{sub_questions}}` is a JSON array of strings (possibly empty), normally the
+  `subQuestions` field from module 01's `scenario-structurer` (P2) output
+  (`prompts/P2-scenario-structurer.md`). A caller without a structured scenario yet
+  (e.g. a unit test, or a precomputed/watch run that skips P2 per module 01) may
+  still pass just the raw condition with an empty array.
 - A live smoke test against the real Meta API should confirm the token budget above;
   the router agent's (P1) sketched budget needed raising once reasoning-token usage
   was measured live (`docs/DAY0-VERIFICATION.md`) — treat this one the same way.
