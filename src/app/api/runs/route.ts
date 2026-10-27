@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createRun, CreateRunRequestSchema } from '@/lib/pipeline/create-run';
-import { getServerRuntime } from '@/lib/server/runtime';
+import { createRun, CreateRunRequestSchema, getServerRuntime } from '@/modules/01-orchestrator';
 
 // Module 01: "Route handlers are thin: validate -> enqueue -> stream." All real logic
-// lives in src/lib/pipeline/create-run.ts, unit-tested there without Next.js at all;
-// this file only parses the request, wires the process-wide runtime in, and maps the
-// pipeline's outcome to an HTTP response.
+// lives in modules/01-orchestrator/pipeline/create-run.ts, unit-tested there without
+// Next.js at all; this file only parses the request, wires the process-wide runtime
+// in, and maps the pipeline's outcome to an HTTP response.
 
 export async function POST(request: Request): Promise<Response> {
   let body: unknown;

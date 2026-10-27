@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { RunRecord, RunsRepository } from '@/lib/data/runs-repository';
-import type { MetaClient, RespondResult } from '@/lib/meta/client';
-import { createInMemoryBudgetGuard } from '@/lib/security/budget-guard';
+import type { RunRecord, RunsRepository } from '@/modules/01-orchestrator';
+import type { MetaClient, RespondResult } from '@/shared/meta';
+import { createInMemoryBudgetGuard } from '@/shared/security';
 
 function fakeRespondResult(parsed: unknown): RespondResult {
   return {
@@ -43,10 +43,15 @@ function mockRuntime(metaClient: MetaClient, dailyBudgetUsd = 20) {
   };
 }
 
-vi.mock('@/lib/server/runtime', () => ({ getServerRuntime: vi.fn() }));
+// Partial mock: createRun/CreateRunRequestSchema must stay real (that's what these
+// tests exercise); only getServerRuntime is replaced with a per-test fake runtime.
+vi.mock(import('@/modules/01-orchestrator'), async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, getServerRuntime: vi.fn() };
+});
 
 async function loadPostWithRuntime(runtime: ReturnType<typeof mockRuntime>) {
-  const { getServerRuntime } = await import('@/lib/server/runtime');
+  const { getServerRuntime } = await import('@/modules/01-orchestrator');
   vi.mocked(getServerRuntime).mockReturnValue(runtime as never);
   const { POST } = await import('./route');
   return POST;

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getRunForViewer } from '@/lib/pipeline/create-run';
-import { getServerRuntime } from '@/lib/server/runtime';
+import { getRunForViewer, getServerRuntime } from '@/modules/01-orchestrator';
 
 // Day-1 limitation: there is no sign-in flow yet (module 11 builds it), so every
 // viewer is treated as anonymous (viewerUserId = null) — only precomputed runs are

@@ -357,23 +357,38 @@ the API**: use Postgres full-text + long-context reading, and our own job table.
 Muse Spark Open (Baseten) is optional and only if organizers confirm it counts as Meta API use.
 Do not put "Meta"/"Muse" in the product name or domain.
 
-**Repository layout (single Next.js app; simpler than a monorepo for 9 days):**
+**Repository layout — revised 2026-10-27 (logged in `docs/DECISIONS.md`) to a modular
+monolith: still one Next.js app/deploy (simpler than a monorepo for 9 days), but each
+architecture module's code lives in its own folder with a single `index.ts` public
+API; nothing outside that folder imports its internals. See
+`docs/architecture/00-overview.md` "Module boundaries" for the rule and
+`scripts/check-module-boundaries.mjs` (run by `pnpm lint`) for its enforcement.
 
 ```text
-/src/app                 routes, UI, SSE endpoints
-/src/lib/pipeline        stages (route, structure, plan, retrieve, curate, extract, grade, relate, verify, synthesize)
-/src/lib/validators      deterministic checks (quote, graph invariants, dose rule, xref lookups)
-/src/lib/scoring         source score and governance table
-/src/lib/schemas         zod schemas (section 8)
-/src/lib/meta            Meta Model API client
-/src/lib/render          layouts and glyphs (algorithm, map, matrix, mechanism)
-/src/lib/security        encryption, rate limiting, budget guard
+/src/app                 routes, UI, SSE endpoints (module 11)
+/src/shared/domain       SPEC §8 core entities used by 3+ modules: Source, Passage, Claim, Grade, Relation, Run, Receipt
+/src/shared/meta         Meta Model API client
+/src/shared/agents       the runAgent harness every module's agents call through
+/src/shared/security     module 10 (cross-cutting): encryption, budget guard, SSRF URL guard
+/src/shared/supabase     server-only Supabase client factory
+/src/shared/prompts      /prompts/P<n>.md loader
+/src/shared/tools        the tool registry mechanism (allow-lists); real tool implementations live in their owning module
+/src/modules/01-orchestrator   router schema, identifier pre-filter, create-run pipeline, runs repository, per-process runtime
+/src/modules/02-retrieval      PubMed/Europe PMC/Crossref/fetch_url_text connectors, curation, scoring
+/src/modules/03-extraction-verification   quote/existence/retraction/safety-critical validators
+/src/modules/06-algorithm      AlgorithmGraph schema + graph invariants
+/src/modules/07-map-matrix     MapNode/Matrix schema
+/src/modules/08-mechanism      MechanismGraph schema
+/src/modules/09-watches        JobSpec schema
 /prompts                 P0–P18 with versions and test banks
 /evals                   gold set, planted divergences, baseline comparison
 /data/synthetic          synthetic protocols and scenarios (nothing real)
 /supabase/migrations     schema + RLS
 /docs                    SPEC.md, DECISIONS.md, PROMPTS.md
 ```
+
+Modules 04 (grading), 05 (governance), and 12 (evaluation) don't have a folder yet —
+add `/src/modules/<NN-name>` for each when it's first built, following the same shape.
 
 **Environment variables:** `META_API_KEY`, `META_API_BASE_URL`, `SUPABASE_URL`,
 `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (server only), `APP_ENCRYPTION_KEY` (32 bytes,

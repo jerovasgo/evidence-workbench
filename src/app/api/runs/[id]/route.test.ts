@@ -1,10 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { RunRecord, RunsRepository } from '@/lib/data/runs-repository';
+import type { RunRecord, RunsRepository } from '@/modules/01-orchestrator';
 
-vi.mock('@/lib/server/runtime', () => ({ getServerRuntime: vi.fn() }));
+// Partial mock: getRunForViewer must stay real (that's what these tests exercise);
+// only getServerRuntime is replaced with a per-test fake repository.
+vi.mock(import('@/modules/01-orchestrator'), async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, getServerRuntime: vi.fn() };
+});
 
 async function loadGetWithRepository(runsRepository: RunsRepository) {
-  const { getServerRuntime } = await import('@/lib/server/runtime');
+  const { getServerRuntime } = await import('@/modules/01-orchestrator');
   vi.mocked(getServerRuntime).mockReturnValue({ runsRepository } as never);
   const { GET } = await import('./route');
   return GET;

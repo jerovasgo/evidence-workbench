@@ -150,6 +150,31 @@ Receipt. Traces store ids and hashes, never content. A dev-only `/runs/[id]` pag
 No autonomous browsing beyond allow-listed fetches; no agent that edits the repo or data at runtime;
 no patient-specific reasoning; no model-generated layout; no cross-user data access.
 
+## Module boundaries (added 2026-10-27, `docs/DECISIONS.md`)
+
+One Next.js app/deploy (SPEC §12 already decided against a monorepo), but organized as
+a **modular monolith**: each architecture module is a folder under `src/modules/<NN-name>/`
+with exactly one `index.ts` that is its public API; cross-cutting infrastructure used
+by three or more modules (Meta client, the `runAgent` harness, module 10's security
+primitives, the Supabase client factory, the prompt loader, the tool-registry
+mechanism, and the SPEC §8 core entities — Source/Passage/Claim/Grade/Relation/Run/
+Receipt — that most modules reference) lives under `src/shared/<package>/`, same rule.
+
+- A file **outside** a package only ever imports its bare specifier (`@/modules/02-retrieval`,
+  `@/shared/meta`) — never a path into its internals (`@/modules/02-retrieval/tools/pubmed`).
+  Files **inside** a package use ordinary relative imports to their own siblings.
+- `shared/*` must never import from `modules/*` (dependency direction runs one way:
+  modules depend on shared, never the reverse). `modules/*` may depend on another
+  module's public API (e.g. module 03's existence check imports `CrossrefClient`'s type
+  from module 02) — that is the intended way two modules interconnect.
+- Enforced by `scripts/check-module-boundaries.mjs`, run as part of `pnpm lint`. A
+  custom script, not a third-party ESLint plugin: the obvious plugin's own config DSL
+  (capture groups, policy precedence) was inconsistently documented even across its own
+  docs pages, and a ~100-line script here is fully verifiable with no new dependency.
+- Modules without a folder yet (04 grading, 05 governance, 12 evaluation) get one the
+  day they're first built, following the same shape — `schemas/`, the module's own
+  logic folders, one `index.ts`.
+
 ## Prompt numbering (resolves the P-numbers used across the module files)
 
 Full draft text is in `docs/PROMPTS.md` (P0–P15, Spanish notes, prompts written for English output
