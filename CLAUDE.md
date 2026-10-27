@@ -91,11 +91,18 @@ section 4 (Evidence Matrix), section 6 (three components), section 8 (data model
 - **Definition of done for a task:** types pass, tests pass, lint passes, no secrets, spec section
   referenced in the commit message, and (for UI) keyboard and reduced-motion checked.
 
-## Commands (fill in on Day 1 after scaffolding)
+## Commands
 
 ```text
-pnpm install | pnpm dev | pnpm test | pnpm lint | pnpm typecheck | pnpm eval
+pnpm install   # pnpm isn't on PATH on this machine; use `corepack pnpm <cmd>` instead of bare `pnpm`
+pnpm test      # vitest run — schemas, Meta client, runAgent, tool registry (60 tests as of 2026-10-27)
+pnpm lint      # eslint .
+pnpm typecheck # tsc --noEmit
 ```
+
+`pnpm dev`, `pnpm build` and `pnpm eval` are not wired yet — no Next.js app or `/evals` runner
+exists in `/src` yet. Add them when the UI shell (module 11) and evaluation harness (module 12)
+are scaffolded.
 
 ## Priorities if time runs short
 
