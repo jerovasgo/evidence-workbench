@@ -120,10 +120,16 @@ This file tracks what is actually built, not the full target state in `docs/arch
   real Meta API, PubMed and Europe PMC — returned 201 with per-stage statuses and
   retrieval counts; the test run row was deleted from `BenchBark` afterward. **Known
   Day-1 limitation, not a silent one:** this runs the whole chain synchronously inside
-  the same request as routing (measured ~13-14s end to end live), which risks Vercel's
-  function time limit — module 01's resumable/streamed execution (SSE, `stage_outputs`
-  persistence) isn't built yet, so a crashed request loses the retrieval result
-  entirely rather than resuming from it.
+  the same request as routing (measured ~13-14s end to end live). Corrected after
+  re-checking `docs/DAY0-VERIFICATION.md` §4 (verified against Vercel's own docs):
+  function duration is **not** actually at risk yet — Hobby's limit is 300s default
+  *and* maximum, well above 13-14s. The real cost today is (a) no incremental
+  feedback for the clinician during that wait (module 01's SSE `band_ready` design
+  exists exactly for this), and (b) no resumability — module 01's resumable-run
+  design (`stage_outputs` persistence) isn't built, so a crashed/disconnected request
+  loses the retrieval result entirely and must restart from scratch, burning cost
+  again. This will matter more, including for the 300s ceiling, once extract/verify/
+  grade/synthesize stages are added on top.
 - **Retrieval connectors** (`src/modules/02-retrieval/tools/pubmed.ts`, `europe-pmc.ts`, `crossref.ts`,
   `fetch-url-text.ts`, wired into the tool registry by `register-retrieval-tools.ts`):
   all three REST APIs (PubMed E-utilities, Europe PMC, Crossref) are public and
