@@ -42,16 +42,24 @@ This file tracks what is actually built, not the full target state in `docs/arch
 - **Budget guard** (`src/lib/security/budget-guard.ts`): in-memory per-run/daily cost
   caps, checked before every `runAgent` model call. Not yet backed by the Postgres
   `budget_ledger` table from a server route — that wiring is a follow-up.
-- **Secrets:** `META_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` live only in `.env.local`
-  (gitignored, confirmed with `git check-ignore`); never printed in chat or logs.
+- **Secrets:** `META_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `APP_ENCRYPTION_KEY`
+  live only in `.env.local` (gitignored, confirmed with `git check-ignore`); never
+  printed in chat or logs. `APP_ENCRYPTION_KEY` confirmed to decode to the required 32
+  bytes.
+- **Field-level encryption** (`src/lib/security/encryption.ts`): AES-256-GCM with a
+  random 96-bit nonce per call, authenticated data = `userId|recordId` (module 10) so
+  a ciphertext copied to another row or read under another user's id fails to decrypt
+  rather than silently returning the wrong plaintext. Key is versioned
+  (`EncryptedBlob.v`) through an `EncryptionKeyring` so a future key rotation adds a
+  version without changing this module's shape. 11 vitest tests cover round-trip,
+  ciphertext/tag tampering, cross-user and cross-record AAD mismatches, and a
+  rotation-gap (no key for that version) failure. Not yet wired into any route handler
+  that actually writes to `documents`/`watch_definitions`.
 
 ## Known gaps (not built yet)
 
-- No AES-256-GCM field encryption implementation yet — `documents`/`watch_definitions`
-  store an `encrypted_blob` JSONB column shaped for it (`{v, nonce, ciphertext, tag}`),
-  but the encrypt/decrypt code in `src/lib/security/` does not exist yet.
-- No server route handlers, so the service-role key, budget guard and RLS policies are
-  not yet exercised end-to-end from an actual request.
+- No server route handlers, so the service-role key, budget guard, RLS policies, and
+  the encryption module above are not yet exercised end-to-end from an actual request.
 - No CI workflow: lint/typecheck/test run locally only; the RLS test suite above is a
   manual SQL script, not a CI gate.
 - No rate limiting, CSP, or identifier filter yet (module 10 items for later days).
