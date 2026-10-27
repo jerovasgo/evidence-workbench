@@ -55,7 +55,11 @@ export class ToolNotImplementedError extends Error {
 }
 
 export interface ToolRegistry {
-  register(def: ToolDefinition): void;
+  // Generic so a concrete ToolDefinition<TIn, TOut> (where `run` only accepts that
+  // specific TIn) can be registered without a contravariant function-parameter
+  // mismatch against the erased ToolDefinition (= ToolDefinition<unknown, unknown>)
+  // callers get back from getForAgent/listForAgent.
+  register<TIn, TOut>(def: ToolDefinition<TIn, TOut>): void;
   /** Throws ToolNotOnAllowListError if toolName is not in allowList. Never resolves an orchestrator-only tool. */
   getForAgent(toolName: ToolName, allowList: readonly ToolName[]): ToolDefinition;
   listForAgent(allowList: readonly ToolName[]): ToolDefinition[];
@@ -66,7 +70,7 @@ export function createToolRegistry(): ToolRegistry {
 
   return {
     register(def) {
-      tools.set(def.name, def);
+      tools.set(def.name, def as unknown as ToolDefinition);
     },
     getForAgent(toolName, allowList) {
       if (!allowList.includes(toolName)) {

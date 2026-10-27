@@ -72,6 +72,25 @@ This file tracks what is actually built, not the full target state in `docs/arch
   undocumented `strict: true` requirement, and a too-small reasoning/token budget.
   `GET /api/runs/[id]` currently treats every viewer as anonymous (no auth flow exists
   yet), so only precomputed runs are reachable through it for now.
+- **SSRF guard** (`src/lib/security/url-guard.ts`): `fetch_url_text` (module 02) only
+  fetches `https` URLs on an explicit domain allow-list, rejects literal
+  private/loopback hostnames, and re-checks every redirect hop against the same
+  allow-list (module 10: "no private IP ranges, no redirects to disallowed hosts").
+  Known gap, documented in the code: it does not re-resolve DNS at fetch time, so a
+  DNS-rebinding attack against an allow-listed hostname is not closed by this check
+  alone. Response bodies are read under a hard byte cap regardless of what
+  `Content-Length` claims.
+- **Retrieval connectors** (`src/lib/tools/pubmed.ts`, `europe-pmc.ts`, `crossref.ts`,
+  `fetch-url-text.ts`, wired into the tool registry by `register-retrieval-tools.ts`):
+  all three REST APIs (PubMed E-utilities, Europe PMC, Crossref) are public and
+  unauthenticated; field shapes were verified against live responses, not only docs
+  (one real mismatch found and fixed — see `docs/DECISIONS.md`, Europe PMC's `pubType`).
+  PubMed respects NCBI's 3 req/s-without-key limit (`src/lib/tools/rate-limiter.ts`)
+  and a 24h in-memory cache (`ttl-cache.ts`, same per-process caveat as the budget
+  guard). Module 03's remaining deterministic checks — `checkSourceExists` (DOI via
+  Crossref / PMID via PubMed / URL via 2xx), `checkRetraction` (Crossref update-to +
+  PubMed publication type + a withdrawal-banner text pattern), and the
+  `safetyCritical` keyword-escalation rule — are built on top of these connectors.
 
 ## Known gaps (not built yet)
 
@@ -80,6 +99,12 @@ This file tracks what is actually built, not the full target state in `docs/arch
 - No rate limiting, CSP, or output-side prompt-injection suite yet (module 10 items for
   later days). The identifier pre-filter is built; the full 20-fixture injection suite
   is not.
+- The retrieval connectors are unit-tested against recorded fixtures and were each
+  smoke-tested once against the live public API; they are not yet wired into a
+  `search-planner`/`retrieval-scout` agent or the orchestrator, so no end-to-end
+  "ask a question → get a sourced pool" path exists yet. `fetch_url_text`'s allow-list
+  is empty by default — nothing is fetchable until a real guideline-domain list is
+  configured.
 - No Auth UI/flow built — the RLS policies and `getRunForViewer` are ready for
   `auth.uid()`-bearing sessions, but there is no sign-up/sign-in page yet, so every
   request today is effectively anonymous.
