@@ -1,4 +1,4 @@
-import { levenshteinDistance } from './levenshtein.js';
+import { levenshteinDistance } from './levenshtein';
 
 // Module 03 deterministic verification, step 2 ("Quote found") and step 5 ("Numbers").
 // CLAUDE.md non-negotiable rule: "A claim is displayed only if ... the quote appears

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { AlgorithmGraph } from '../schemas/algorithm.js';
-import { deriveProvenance, validateAlgorithmGraph } from './algorithm.js';
+import type { AlgorithmGraph } from '../schemas/algorithm';
+import { deriveProvenance, validateAlgorithmGraph } from './algorithm';
 
 function node(overrides: Partial<AlgorithmGraph['nodes'][number]> & { id: string; type: AlgorithmGraph['nodes'][number]['type'] }) {
   return {

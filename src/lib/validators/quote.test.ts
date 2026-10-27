@@ -4,7 +4,7 @@ import {
   checkNumbersPreserved,
   findQuoteInPassage,
   normalizeForMatch,
-} from './quote.js';
+} from './quote';
 
 describe('normalizeForMatch', () => {
   it('folds case, collapses whitespace, and normalizes smart quotes', () => {

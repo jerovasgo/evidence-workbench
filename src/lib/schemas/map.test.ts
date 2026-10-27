@@ -6,7 +6,7 @@ import {
   nestMapNodes,
   type FlatMapNode,
   type MapNode,
-} from './map.js';
+} from './map';
 
 describe('MapNodeSchema', () => {
   it('accepts a nested tree', () => {

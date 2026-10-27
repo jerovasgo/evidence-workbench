@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "evidence-workbench-dev",
+      "runtimeExecutable": "corepack",
+      "runtimeArgs": ["pnpm", "exec", "next", "dev"],
+      "port": 3000
+    }
+  ]
+}

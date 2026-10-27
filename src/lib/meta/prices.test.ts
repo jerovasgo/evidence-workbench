@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { estimateCostUsd } from './prices.js';
+import { estimateCostUsd } from './prices';
 
 describe('estimateCostUsd', () => {
   it('computes cost for muse-spark-1.3 with no cache hit', () => {

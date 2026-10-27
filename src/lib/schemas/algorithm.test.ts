@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AlgorithmGraphSchema } from './algorithm.js';
+import { AlgorithmGraphSchema } from './algorithm';
 
 describe('AlgorithmGraphSchema', () => {
   it('accepts a small graph with a red flag and a disposition', () => {

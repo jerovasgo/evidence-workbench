@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInMemoryBudgetGuard } from './budget-guard.js';
+import { createInMemoryBudgetGuard } from './budget-guard';
 
 describe('createInMemoryBudgetGuard', () => {
   it('allows spending under both the per-run cap and the daily budget', () => {

@@ -1,4 +1,4 @@
-import type { AlgorithmEdge, AlgorithmGraph } from '../schemas/algorithm.js';
+import type { AlgorithmEdge, AlgorithmGraph } from '../schemas/algorithm';
 
 // Module 06 invariants (docs/architecture/06-algorithm-generator.md): "all must pass,
 // else repair once, else abstain the whole view with an explanation." Invariant 5

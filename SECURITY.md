@@ -22,6 +22,11 @@ This file tracks what is actually built, not the full target state in `docs/arch
   `authenticated`; `documents`/`watch_definitions`/`audit_log` are granted to
   `authenticated` only; `budget_ledger` has no grant to either, so a client query
   against it fails with `insufficient_privilege` before RLS is even evaluated.
+- **`service_role` grants** (`supabase/migrations/0003_service_role_grants.sql`):
+  `service_role` has `BYPASSRLS` but, in this project, was never given a table-level
+  grant either — found by an actual `next dev` smoke test, where every server-side
+  write failed with "permission denied for table runs" until this migration explicitly
+  granted SELECT/INSERT/UPDATE/DELETE on all ten tables to `service_role`.
 - **Hardened a pre-existing function:** `public.rls_auto_enable()` (an event-trigger
   helper that auto-enables RLS on new tables, not created by this project) was
   reachable as a public RPC because it is `SECURITY DEFINER`. Revoked `EXECUTE` from
@@ -55,13 +60,29 @@ This file tracks what is actually built, not the full target state in `docs/arch
   ciphertext/tag tampering, cross-user and cross-record AAD mismatches, and a
   rotation-gap (no key for that version) failure. Not yet wired into any route handler
   that actually writes to `documents`/`watch_definitions`.
+- **First route handlers** (`src/app/api/runs/route.ts` POST, `src/app/api/runs/[id]/route.ts`
+  GET): the module 01 request lifecycle's first slice — validate (zod) → identifier
+  pre-filter (CLAUDE.md rule 3, `src/lib/validators/identifiers.ts`) → daily-budget
+  kill switch → `router` agent (P1) → persist via the service-role Supabase client.
+  Handlers are thin; the real logic (`src/lib/pipeline/create-run.ts`) is unit-tested
+  against fakes. Also exercised against the **real** Meta API and the real Supabase
+  project with `next dev` + `curl` on 2026-10-27 (all test rows/users cleaned up
+  afterward) — see `docs/DECISIONS.md` for what that live run caught: a Turbopack
+  module-resolution issue, the missing `service_role` grants above, the Meta API's
+  undocumented `strict: true` requirement, and a too-small reasoning/token budget.
+  `GET /api/runs/[id]` currently treats every viewer as anonymous (no auth flow exists
+  yet), so only precomputed runs are reachable through it for now.
 
 ## Known gaps (not built yet)
 
-- No server route handlers, so the service-role key, budget guard, RLS policies, and
-  the encryption module above are not yet exercised end-to-end from an actual request.
 - No CI workflow: lint/typecheck/test run locally only; the RLS test suite above is a
   manual SQL script, not a CI gate.
-- No rate limiting, CSP, or identifier filter yet (module 10 items for later days).
-- No Auth UI/flow built — the RLS policies are ready for `auth.uid()`-bearing sessions,
-  but there is no sign-up/sign-in page yet.
+- No rate limiting, CSP, or output-side prompt-injection suite yet (module 10 items for
+  later days). The identifier pre-filter is built; the full 20-fixture injection suite
+  is not.
+- No Auth UI/flow built — the RLS policies and `getRunForViewer` are ready for
+  `auth.uid()`-bearing sessions, but there is no sign-up/sign-in page yet, so every
+  request today is effectively anonymous.
+- The budget guard is in-memory per server process (resets on restart, not shared
+  across instances); the Postgres `budget_ledger` table exists but nothing writes to
+  it yet.

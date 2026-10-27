@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createMetaClient, MetaApiError } from './client.js';
+import { createMetaClient, MetaApiError } from './client';
 
 function jsonResponse(status: number, body: unknown): Response {
   return {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MechanismGraphSchema } from './mechanism.js';
+import { MechanismGraphSchema } from './mechanism';
 
 describe('MechanismGraphSchema', () => {
   it('accepts a minimal beta1-adrenergic to cAMP graph', () => {

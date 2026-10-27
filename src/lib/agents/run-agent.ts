@@ -1,7 +1,7 @@
 import type { z } from 'zod';
-import type { InputRole, MetaClient, ReasoningEffort, RespondResult } from '../meta/client.js';
-import type { BudgetGuard } from '../security/budget-guard.js';
-import { toStructuredOutputFormat } from './json-schema.js';
+import type { InputRole, MetaClient, ReasoningEffort, RespondResult } from '../meta/client';
+import type { BudgetGuard } from '../security/budget-guard';
+import { stripNullFields, toStructuredOutputFormat } from './json-schema';
 
 // Shared agent harness (docs/architecture/00-overview.md). Every agent call in the
 // pipeline goes through this function so behaviour is uniform and testable: build
@@ -11,11 +11,16 @@ import { toStructuredOutputFormat } from './json-schema.js';
 
 export type AgentTier = 'T0' | 'T1' | 'T2';
 
-/** T0/T1/T2 differ only by reasoning.effort; single-model decision (docs/DAY0-VERIFICATION.md). */
+/**
+ * T0/T1/T2 differ only by reasoning.effort; single-model decision (docs/DAY0-VERIFICATION.md).
+ * T0 uses 'minimal', not 'low': a live smoke test (router/P1 with 'low') timed out
+ * against a 4s limit; CLAUDE.md lists 'minimal' first for cheap steps, and it is
+ * the faster of the two documented T0 options.
+ */
 export function tierToReasoningEffort(tier: AgentTier): ReasoningEffort {
   switch (tier) {
     case 'T0':
-      return 'low';
+      return 'minimal';
     case 'T1':
       return 'medium';
     case 'T2':
@@ -121,7 +126,7 @@ export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<Agen
     return finish(toFailure(err));
   }
 
-  const firstValidation = params.outputSchema.safeParse(first.parsed);
+  const firstValidation = params.outputSchema.safeParse(stripNullFields(first.parsed));
   if (firstValidation.success) {
     return finish(toSuccess(firstValidation.data, first.costUsd, first.usage.totalTokens));
   }
@@ -145,7 +150,7 @@ export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<Agen
     return finish(toFailure(err, first.costUsd));
   }
 
-  const secondValidation = params.outputSchema.safeParse(repair.parsed);
+  const secondValidation = params.outputSchema.safeParse(stripNullFields(repair.parsed));
   if (secondValidation.success) {
     return finish(toSuccess(secondValidation.data, first.costUsd + repair.costUsd, first.usage.totalTokens + repair.usage.totalTokens));
   }

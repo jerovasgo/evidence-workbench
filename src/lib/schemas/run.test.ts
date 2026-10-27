@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ReceiptSchema, RunEventSchema, RunSchema } from './run.js';
+import { ReceiptSchema, RunEventSchema, RunSchema } from './run';
 
 describe('ReceiptSchema', () => {
   it('accepts a receipt with zero abstentions', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ClaimSchema, VerifiedClaimSchema } from './claim.js';
+import { ClaimSchema, VerifiedClaimSchema } from './claim';
 
 const baseClaim = {
   id: 'claim_1',

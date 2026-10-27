@@ -8,7 +8,7 @@ import {
   ToolNotOnAllowListError,
   TOOL_NAMES,
   type ToolDefinition,
-} from './registry.js';
+} from './registry';
 
 function fakeTool(name: (typeof TOOL_NAMES)[number]): ToolDefinition {
   return {

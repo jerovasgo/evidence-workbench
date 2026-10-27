@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PassageSchema, SourceSchema } from './source.js';
+import { PassageSchema, SourceSchema } from './source';
 
 describe('SourceSchema', () => {
   const base = {

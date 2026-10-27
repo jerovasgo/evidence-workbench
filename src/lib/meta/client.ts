@@ -1,4 +1,4 @@
-import { estimateCostUsd } from './prices.js';
+import { estimateCostUsd } from './prices';
 
 // Wraps the Meta Model API Responses endpoint (docs/DAY0-VERIFICATION.md). This is the
 // ONLY place in the codebase allowed to call api.meta.ai — CLAUDE.md §"Stack (decided)".

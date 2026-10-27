@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { describe, expect, it, vi } from 'vitest';
-import type { MetaClient, RespondResult } from '../meta/client.js';
-import { createInMemoryBudgetGuard } from '../security/budget-guard.js';
-import { runAgent } from './run-agent.js';
+import type { MetaClient, RespondResult } from '../meta/client';
+import { createInMemoryBudgetGuard } from '../security/budget-guard';
+import { runAgent } from './run-agent';
 
 const SentimentSchema = z.object({ sentiment: z.enum(['positive', 'negative']) });
 
@@ -175,12 +175,12 @@ describe('runAgent', () => {
     expect(result).toEqual({ ok: false, reason: 'api_error', detail: expect.any(String) });
   });
 
-  it('maps T0/T1/T2 to low/medium/high reasoning effort', async () => {
+  it('maps T0/T1/T2 to minimal/medium/high reasoning effort', async () => {
     const respond = vi.fn().mockResolvedValue(fakeRespondResult({ sentiment: 'positive' }));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
 
     for (const [tier, effort] of [
-      ['T0', 'low'],
+      ['T0', 'minimal'],
       ['T1', 'medium'],
       ['T2', 'high'],
     ] as const) {

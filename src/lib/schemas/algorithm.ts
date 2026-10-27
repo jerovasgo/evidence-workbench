@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ConditionSchema } from './claim.js';
+import { ConditionSchema } from './claim';
 
 export const AlgorithmNodeSchema = z.object({
   id: z.string(),

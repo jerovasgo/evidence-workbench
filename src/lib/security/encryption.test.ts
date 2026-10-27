@@ -8,7 +8,7 @@ import {
   encryptField,
   EncryptionKeyError,
   loadEncryptionKey,
-} from './encryption.js';
+} from './encryption';
 
 const testKey = randomBytes(32);
 

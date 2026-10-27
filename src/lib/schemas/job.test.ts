@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { JobSpecSchema } from './job.js';
+import { JobSpecSchema } from './job';
 
 describe('JobSpecSchema', () => {
   it('accepts a daily watch with no patient data in any field', () => {

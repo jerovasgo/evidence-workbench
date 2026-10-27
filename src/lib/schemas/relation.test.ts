@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RelationSchema } from './relation.js';
+import { RelationSchema } from './relation';
 
 describe('RelationSchema', () => {
   it('accepts a plain agreement relation with no divergence', () => {
