@@ -40,18 +40,19 @@ This file tracks what is actually built, not the full target state in `docs/arch
   table-level access to every private/secret table. Run manually on 2026-10-27 against
   the live `BenchBark` project — passed. **Not yet wired into CI** (no GitHub Actions
   workflow exists in this repo yet); module 10 calls for that, tracked as a follow-up.
-- **Deterministic validators** (`src/lib/validators/`): quote verbatim-match (with a
-  bounded OCR-noise fallback), numbers-preserved check, dose rule, and the module-06
-  algorithm-graph invariants (acyclic except a `reassess` back-edge, single start, red
-  flags first, terminal leaves, claim citations, no orphans, node cap). 91 vitest tests.
-- **Budget guard** (`src/lib/security/budget-guard.ts`): in-memory per-run/daily cost
+- **Deterministic validators** (`src/modules/03-extraction-verification/validators/`): quote verbatim-match (with a
+  bounded OCR-noise fallback), numbers-preserved check, dose rule; plus, in
+  `src/modules/06-algorithm/validators/`, the graph invariants (acyclic except a
+  `reassess` back-edge, single start, red flags first, terminal leaves, claim
+  citations, no orphans, node cap).
+- **Budget guard** (`src/shared/security/budget-guard.ts`): in-memory per-run/daily cost
   caps, checked before every `runAgent` model call. Not yet backed by the Postgres
   `budget_ledger` table from a server route — that wiring is a follow-up.
 - **Secrets:** `META_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `APP_ENCRYPTION_KEY`
   live only in `.env.local` (gitignored, confirmed with `git check-ignore`); never
   printed in chat or logs. `APP_ENCRYPTION_KEY` confirmed to decode to the required 32
   bytes.
-- **Field-level encryption** (`src/lib/security/encryption.ts`): AES-256-GCM with a
+- **Field-level encryption** (`src/shared/security/encryption.ts`): AES-256-GCM with a
   random 96-bit nonce per call, authenticated data = `userId|recordId` (module 10) so
   a ciphertext copied to another row or read under another user's id fails to decrypt
   rather than silently returning the wrong plaintext. Key is versioned
@@ -62,17 +63,25 @@ This file tracks what is actually built, not the full target state in `docs/arch
   that actually writes to `documents`/`watch_definitions`.
 - **First route handlers** (`src/app/api/runs/route.ts` POST, `src/app/api/runs/[id]/route.ts`
   GET): the module 01 request lifecycle's first slice — validate (zod) → identifier
-  pre-filter (CLAUDE.md rule 3, `src/lib/validators/identifiers.ts`) → daily-budget
-  kill switch → `router` agent (P1) → persist via the service-role Supabase client.
-  Handlers are thin; the real logic (`src/lib/pipeline/create-run.ts`) is unit-tested
-  against fakes. Also exercised against the **real** Meta API and the real Supabase
-  project with `next dev` + `curl` on 2026-10-27 (all test rows/users cleaned up
-  afterward) — see `docs/DECISIONS.md` for what that live run caught: a Turbopack
-  module-resolution issue, the missing `service_role` grants above, the Meta API's
-  undocumented `strict: true` requirement, and a too-small reasoning/token budget.
-  `GET /api/runs/[id]` currently treats every viewer as anonymous (no auth flow exists
-  yet), so only precomputed runs are reachable through it for now.
-- **SSRF guard** (`src/lib/security/url-guard.ts`): `fetch_url_text` (module 02) only
+  pre-filter (CLAUDE.md rule 3) → daily-budget kill switch → `router` agent (P1) →
+  persist via the service-role Supabase client. Handlers are thin; the real logic
+  (`src/modules/01-orchestrator/`) is unit-tested against fakes. Also exercised
+  against the **real** Meta API and the real Supabase project with `next dev` + `curl`
+  on 2026-10-27 (all test rows/users cleaned up afterward) — see `docs/DECISIONS.md`
+  for what that live run caught: a Turbopack module-resolution issue, the missing
+  `service_role` grants above, the Meta API's undocumented `strict: true` requirement,
+  and a too-small reasoning/token budget. `GET /api/runs/[id]` currently treats every
+  viewer as anonymous (no auth flow exists yet), so only precomputed runs are
+  reachable through it for now.
+- **Retrieval agents** (`src/modules/02-retrieval/agents/`: `search-planner` P3,
+  `source-classifier` P4): both live-tested against the real Meta API on 2026-10-27
+  (a real ACS question produced a 7-query plan under the cap, with an adversarial and
+  a currency query as required; a real guideline vs. a blog post were classified
+  correctly, including the code-only `applyPubmedTypeOverride` rule that forces `kind`
+  from decisive PubMed publication types). Not yet wired into any route handler or the
+  orchestrator — module 01's `scenario-structurer` (P2) they'd normally take input
+  from isn't built yet.
+- **SSRF guard** (`src/shared/security/url-guard.ts`): `fetch_url_text` (module 02) only
   fetches `https` URLs on an explicit domain allow-list, rejects literal
   private/loopback hostnames, and re-checks every redirect hop against the same
   allow-list (module 10: "no private IP ranges, no redirects to disallowed hosts").
@@ -80,12 +89,12 @@ This file tracks what is actually built, not the full target state in `docs/arch
   DNS-rebinding attack against an allow-listed hostname is not closed by this check
   alone. Response bodies are read under a hard byte cap regardless of what
   `Content-Length` claims.
-- **Retrieval connectors** (`src/lib/tools/pubmed.ts`, `europe-pmc.ts`, `crossref.ts`,
+- **Retrieval connectors** (`src/modules/02-retrieval/tools/pubmed.ts`, `europe-pmc.ts`, `crossref.ts`,
   `fetch-url-text.ts`, wired into the tool registry by `register-retrieval-tools.ts`):
   all three REST APIs (PubMed E-utilities, Europe PMC, Crossref) are public and
   unauthenticated; field shapes were verified against live responses, not only docs
   (one real mismatch found and fixed — see `docs/DECISIONS.md`, Europe PMC's `pubType`).
-  PubMed respects NCBI's 3 req/s-without-key limit (`src/lib/tools/rate-limiter.ts`)
+  PubMed respects NCBI's 3 req/s-without-key limit (`src/modules/02-retrieval/tools/rate-limiter.ts`)
   and a 24h in-memory cache (`ttl-cache.ts`, same per-process caveat as the budget
   guard). Module 03's remaining deterministic checks — `checkSourceExists` (DOI via
   Crossref / PMID via PubMed / URL via 2xx), `checkRetraction` (Crossref update-to +

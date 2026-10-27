@@ -21,3 +21,8 @@ export * from './curation/coverage-report';
 
 export * from './scoring/config';
 export * from './scoring/score';
+
+export * from './schemas/classification';
+export * from './classification/pubmed-type-override';
+export * from './agents/search-planner';
+export * from './agents/source-classifier';
