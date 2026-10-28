@@ -184,6 +184,21 @@ This file tracks what is actually built, not the full target state in `docs/arch
   reached `support: 'supports'`. The claim-card/evidence-drawer chips and
   `buildReceipt`'s `supported` count were updated to reflect the real verdict instead
   of a hardcoded "Not confirmed" (`docs/DECISIONS.md`, 2026-10-28).
+- **Grading, Part A only** (module 04, `src/modules/04-grading-scoring/`, started
+  2026-10-28): deterministic `grade-maps.ts` recognizes a printed grade string from
+  four schemes (ACC/AHA Class+LOE, GRADE wording, USPSTF, Oxford CEBM) and maps it to
+  `Grade` with `origin: 'source'`; `gradeClaim()` is wired into `verify-claim.ts` in
+  place of the old always-`ungraded` placeholder. 49 unit tests (≥40-fixture eval
+  target from the architecture doc), plus an integration test proving the exact code
+  path the live pipeline uses. **Known gaps, logged not silent:** Part B (wiring
+  module 02's already-built-and-tested `computeSourceScore`/`computeCurrency` into the
+  real pipeline, plus the `quality`/`applicability` factors and a `ScoreBreakdown`
+  tooltip) and the `grade-estimator` agent (P6, AI-estimated GRADE domains for SR/RCTs
+  with no native grade) are not built — user explicitly scoped this pass to Part A
+  only. `relevance` (one of source-score's five factors) still has no computed source
+  anywhere in the codebase. Nothing can reach `grade.origin: 'ai_estimated'` with real
+  `domains` yet; every ungraded claim still shows the plain "AI-estimated" placeholder
+  label.
 - **Retrieval connectors** (`src/modules/02-retrieval/tools/pubmed.ts`, `europe-pmc.ts`, `crossref.ts`,
   `fetch-url-text.ts`, wired into the tool registry by `register-retrieval-tools.ts`):
   all three REST APIs (PubMed E-utilities, Europe PMC, Crossref) are public and

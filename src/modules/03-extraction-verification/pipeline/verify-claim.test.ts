@@ -32,6 +32,22 @@ describe('verifyClaim', () => {
     }
   });
 
+  it('maps a recognized printed grade (module 04) onto the kept claim', () => {
+    const result = verifyClaim(
+      { extracted: baseExtracted({ nativeGrade: 'Class I, LOE A' }), sourceId: 'src_1', retracted: false },
+      passages,
+    );
+    expect(result.outcome).toBe('kept');
+    if (result.outcome === 'kept') {
+      expect(result.claim.grade).toEqual({
+        certainty: 'high',
+        strength: { direction: 'for', level: 'strong' },
+        origin: 'source',
+        nativeGrade: 'Class I, LOE A',
+      });
+    }
+  });
+
   it('drops a claim whose passageId does not match any passage', () => {
     const result = verifyClaim(
       { extracted: baseExtracted({ passageId: 'does-not-exist' }), sourceId: 'src_1', retracted: false },

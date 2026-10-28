@@ -3,6 +3,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import type { Claim } from '@/shared/domain';
 import { Chip } from '@/components/ui/chip';
+import { gradeOriginLabel, gradeSummaryLabel } from '@/lib/i18n/grade-labels';
 
 // SPEC §11 screen (3): Evidence drawer — "provenance always one click away."
 
@@ -73,7 +74,7 @@ export function EvidenceDrawer({ claim, onClose }: { claim: Claim | null; onClos
                 <dd className="text-fg">{claim.passageId}</dd>
                 <dt className="text-muted">Grade</dt>
                 <dd className="text-fg">
-                  {claim.grade.certainty} ({claim.grade.origin === 'source' ? 'from source' : 'AI-estimated'})
+                  {gradeSummaryLabel(claim.grade)} — {gradeOriginLabel(claim.grade)}
                 </dd>
               </dl>
             </>

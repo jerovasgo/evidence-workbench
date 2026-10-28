@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Claim, Passage } from '@/shared/domain';
+import { gradeClaim } from '@/modules/04-grading-scoring';
 import { applyDoseRule, checkNumbersPreserved, findQuoteInPassage } from '../validators/quote';
 import { applySafetyCriticalRule } from '../validators/safety-critical';
 import type { ExtractedClaim } from '../schemas/extraction';
@@ -66,9 +67,11 @@ export function verifyClaim(input: VerifyClaimInput, passages: Passage[]): Verif
     sourceId: input.sourceId,
     passageId: extracted.passageId,
     quote: extracted.quote,
-    // Module 04 (grading) isn't built yet; `certainty: 'ungraded'` is an honest
-    // placeholder, not an invented grade — a future grading pass overwrites this.
-    grade: { certainty: 'ungraded', origin: 'ai_estimated', nativeGrade: extracted.nativeGrade },
+    // Module 04's deterministic grade-maps: a recognized printed grade (ACC/AHA,
+    // GRADE, USPSTF, Oxford CEBM) is copied verbatim and mapped, origin:'source'; no
+    // native grade, or an unrecognized scheme, falls back to an honest `ungraded`
+    // (gradeClaim.ts). The AI-estimated half (grade-estimator, P6) isn't built yet.
+    grade: gradeClaim(extracted.nativeGrade),
     verification: { exists: true, quoteFound: true, retracted: false, support: 'unknown' },
     safetyCritical,
   };
