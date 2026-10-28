@@ -11,7 +11,7 @@ import {
   SearchPlanSchema,
   SourceClassificationSchema,
   applyPubmedTypeOverride,
-  classifySources,
+  classifySourcesBatched,
   deduplicateCandidates,
   executeSearchPlan,
   planSearch,
@@ -298,34 +298,44 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
       const toClassify = retrieval.value.slice(0, MAX_SOURCES_PER_CLASSIFY_CALL);
       const truncated = retrieval.value.length > MAX_SOURCES_PER_CLASSIFY_CALL;
 
+      // 2026-10-28 latency audit: was one serial ~40-source call (18.6-29.5s live-
+      // measured, consistently the slowest stage) — now several smaller batches run
+      // with bounded concurrency (classify-sources-batched.ts, module 02), cutting
+      // wall-clock time to roughly one small batch's duration instead of one giant
+      // one's, at the same cost and same per-source output.
       const classifyStarted = Date.now();
-      const classifyAgentResult = await classifySources(
+      const batched = await classifySourcesBatched(
         input.runId,
-        { sources: toClassify.map((c) => ({ sourceId: c.tempId, title: c.title, metadataAndText: buildMetadataAndText(c) })) },
+        toClassify.map((c) => ({ sourceId: c.tempId, title: c.title, metadataAndText: buildMetadataAndText(c) })),
         { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p4PromptTemplate: deps.p4PromptTemplate, onTrace: deps.onTrace },
       );
       const classifyMs = Date.now() - classifyStarted;
 
-      if (classifyAgentResult.ok) {
-        const byTempId = new Map(toClassify.map((c) => [c.tempId, c]));
-        const overridden = classifyAgentResult.value.classifications.map((classification) => {
-          const candidate = byTempId.get(classification.sourceId);
-          return candidate?.pubTypes ? applyPubmedTypeOverride(classification, candidate.pubTypes) : classification;
-        });
+      const byTempId = new Map(toClassify.map((c) => [c.tempId, c]));
+      const overridden = batched.classifications.map((classification) => {
+        const candidate = byTempId.get(classification.sourceId);
+        return candidate?.pubTypes ? applyPubmedTypeOverride(classification, candidate.pubTypes) : classification;
+      });
 
+      const reasons = [
+        ...(truncated ? [`${retrieval.value.length - MAX_SOURCES_PER_CLASSIFY_CALL} candidate(s) left unclassified (40/call cap)`] : []),
+        ...batched.failures.map((f) => `batch failed: ${f.reason}`),
+      ];
+
+      if (overridden.length === 0) {
         classification = toStageResult(classificationArraySchema, {
           stage: 'classify',
-          status: truncated ? 'partial' : 'ok',
-          value: overridden,
-          reasons: truncated ? [`${retrieval.value.length - MAX_SOURCES_PER_CLASSIFY_CALL} candidate(s) left unclassified (40/call cap)`] : undefined,
-          metrics: { ms: classifyMs, costUsd: classifyAgentResult.usage.costUsd },
+          status: 'failed',
+          reasons: reasons.length > 0 ? reasons : ['No classifications returned'],
+          metrics: { ms: classifyMs, costUsd: batched.costUsd },
         });
       } else {
         classification = toStageResult(classificationArraySchema, {
           stage: 'classify',
-          status: 'failed',
-          reasons: [classifyAgentResult.detail],
-          metrics: { ms: classifyMs, costUsd: 0 },
+          status: reasons.length > 0 ? 'partial' : 'ok',
+          value: overridden,
+          reasons: reasons.length > 0 ? reasons : undefined,
+          metrics: { ms: classifyMs, costUsd: batched.costUsd },
         });
       }
     }

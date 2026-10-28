@@ -329,6 +329,20 @@ This file tracks what is actually built, not the full target state in `docs/arch
   (no spurious mid-stream sends), and the streaming code reuses the exact
   `event.outcome.claims` array already proven correct elsewhere, but a live run
   showing multiple real claims arriving incrementally was not captured.
+  **Both gaps above closed in Phase 2, same session** (next entry).
+- **Latency audit, Phase 2** (2026-10-28, user-requested): `classifySourcesBatched`
+  (`src/modules/02-retrieval/agents/classify-sources-batched.ts`) splits the classify
+  stage's up-to-40-source batch into sub-batches of 10, run with bounded concurrency
+  (4 at a time) instead of one serial ~40-source call — `classifySources` (P4) itself
+  is untouched, this is a pooling layer on top of it mirroring
+  `extract-and-verify-pool.ts`. **Measured, not estimated:** classify dropped from
+  the Phase 1 baseline (18.6-29.5s) to 6.3s and 14.1s across two live runs (raw SSE
+  timings) — both well below the old range. The same live testing also closed Phase
+  1's own logged verification gap: a run that actually produced claims showed
+  `band_ready` firing 3 times during a single run (2 claims, then 4 claims, then 4
+  claims + sourceScores on the final send) while the UI still showed "Extract &
+  verify" as running — the progressive-streaming fix confirmed working as designed,
+  not just logically sound. 494 tests pass.
 - **Web crawling for `guideline`/`web` queries** (2026-10-28, user-requested): a
   curated default allow-list (`src/modules/02-retrieval/retrieval/default-allowed-domains.ts`
   — CDC, WHO, NICE, AHA/ACC journals, ESC, IDSA, ATS, ACOG, AAP, Cochrane, NCBI
