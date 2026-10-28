@@ -178,14 +178,29 @@ This file tracks what is actually built, not the full target state in `docs/arch
 - No rate limiting, CSP, or output-side prompt-injection suite yet (module 10 items for
   later days). The identifier pre-filter is built; the full 20-fixture injection suite
   is not.
-- An end-to-end "ask a question → get a sourced pool" path now exists
-  (`POST /api/runs` for `algorithm`/`evidence_map`/`comparison`/`fact_lookup` intents),
-  but only for the `pubmed`/`europe_pmc` query families. `guideline` and `web` queries
-  from the search plan are recorded as skipped, not executed: `web` needs the Meta
-  API's own `web_search` tool wired through an agent (not a plain fetch, which is all
-  `execute-plan.ts` does); `guideline`/`local` need `fetch_url_text`'s domain allow-list
-  configured (still empty by default) and a local-protocol document pool (module 10/
-  documents feature), neither of which exists yet.
+- **Web crawling for `guideline`/`web` queries** (2026-10-28, user-requested): a
+  curated default allow-list (`src/modules/02-retrieval/retrieval/default-allowed-domains.ts`
+  — CDC, WHO, NICE, AHA/ACC journals, ESC, IDSA, ATS, ACOG, AAP, Cochrane, NCBI
+  Bookshelf, MAGIC) feeds a new `findWebSources` step
+  (`src/modules/02-retrieval/agents/web-source-finder.ts`): the Meta API's
+  `web_search` tool proposes candidate URLs (a thin, budget-checked wrapper, not a
+  full `runAgent` call — there's no model-authored JSON to validate; the API already
+  returns structured `title`/`url`/`snippet`), code then keeps only URLs that
+  `assertSafeUrl` accepts against the allow-list (the model's domain preference is a
+  hint only, per `docs/DAY0-VERIFICATION.md`: "domain restriction not documented ...
+  filter results in code"), and `fetch_url_text` re-fetches each one for real content
+  rather than trusting the search snippet. Wired into `execute-plan.ts` (`web`/
+  `guideline` families, previously always skipped) and `fetch-full-text.ts` (so
+  `extract` can re-fetch these candidates' own URL, not just Europe PMC). Live-tested
+  2026-10-28 end to end through the real SSE route: found real NICE/AHA/ESC guideline
+  pages, fetched one successfully, and extracted and verified 2 real claims (bed
+  rest, aspirin) with quotes matching verbatim against the live-fetched NICE page —
+  the first claims this project has produced that trace to a freshly crawled web
+  page rather than PubMed/Europe PMC. `local` family queries are still always
+  skipped — no local-protocol document pool (module 10/documents feature) exists.
+  **User-requested follow-up, not built:** letting a clinician review/add their own
+  trusted domains rather than only this hardcoded default list needs a settings UI
+  (module 11), tracked in `default-allowed-domains.ts`'s own comment.
 - Curation stops at dedupe (`deduplicateCandidates`). `resolveVersions`,
   `selectTopNWithDiversity` and `buildCoverageReport` (module 02 curation) are built
   and unit-tested but not wired into `run-retrieval.ts` — they need candidates grouped

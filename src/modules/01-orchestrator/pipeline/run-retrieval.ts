@@ -6,6 +6,7 @@ import type { BudgetGuard } from '@/shared/security';
 import { StageResultSchema } from '@/shared/domain';
 import {
   CandidateSourceSchema,
+  DEFAULT_ALLOWED_DOMAIN_NAMES,
   SearchPlanSchema,
   SourceClassificationSchema,
   applyPubmedTypeOverride,
@@ -91,6 +92,8 @@ export interface RunRetrievalDeps {
   p5PromptTemplate: string;
   pubmed: PubmedClient;
   europePmc: EuropePmcClient;
+  /** Apex domains fetch_url_text may read from for 'web'/'guideline' queries; defaults to the curated list. */
+  allowedFetchDomains?: readonly string[];
   maxConcurrency?: number;
   perQueryTimeoutMs?: number;
   maxExtractSources?: number;
@@ -196,6 +199,12 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
       europePmc: deps.europePmc,
       maxConcurrency: deps.maxConcurrency,
       perQueryTimeoutMs: deps.perQueryTimeoutMs,
+      webSearch: {
+        runId: input.runId,
+        metaClient: deps.metaClient,
+        budgetGuard: deps.budgetGuard,
+        allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES,
+      },
     });
     const retrieveMs = Date.now() - retrieveStarted;
     const deduped = deduplicateCandidates(executed.candidates);
@@ -299,6 +308,7 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
         budgetGuard: deps.budgetGuard,
         crossref: deps.crossref,
         europePmc: deps.europePmc,
+        webFetch: { allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES },
         p0Preamble: deps.p0Preamble,
         p5PromptTemplate: deps.p5PromptTemplate,
         onTrace: deps.onTrace,

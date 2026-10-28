@@ -44,10 +44,31 @@ describe('fetchFullTextForCandidate', () => {
     expect(europePmc.fetchFullText).not.toHaveBeenCalled();
   });
 
-  it('returns null without calling the client for an unsupported family', async () => {
+  it('returns null for a web candidate when no webFetch options are given', async () => {
     const europePmc = fakeEuropePmc();
     const result = await fetchFullTextForCandidate({ ...baseEuropePmcCandidate, family: 'web', tempId: 'web:1' }, europePmc);
     expect(result).toBeNull();
     expect(europePmc.fetchFullText).not.toHaveBeenCalled();
+  });
+
+  it('re-fetches a web/guideline candidate by its own URL via fetch_url_text', async () => {
+    const europePmc = fakeEuropePmc();
+    const fetchImpl = vi.fn().mockResolvedValue(
+      new Response('<html><body><p>Real guideline text</p></body></html>', { status: 200, headers: { 'Content-Type': 'text/html' } }),
+    ) as unknown as typeof fetch;
+    const candidate: CandidateSource = { tempId: 'web:1', family: 'guideline', title: 'A guideline', url: 'https://www.cdc.gov/x' };
+
+    const result = await fetchFullTextForCandidate(candidate, europePmc, { allowedDomains: ['cdc.gov'], fetchImpl });
+
+    expect(result).toContain('Real guideline text');
+  });
+
+  it('returns null when the web/guideline candidate URL is not on the allow-list', async () => {
+    const europePmc = fakeEuropePmc();
+    const candidate: CandidateSource = { tempId: 'web:1', family: 'web', title: 'x', url: 'https://not-allowed.example.com/x' };
+
+    const result = await fetchFullTextForCandidate(candidate, europePmc, { allowedDomains: ['cdc.gov'] });
+
+    expect(result).toBeNull();
   });
 });

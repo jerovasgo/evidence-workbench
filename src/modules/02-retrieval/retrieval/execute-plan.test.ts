@@ -1,8 +1,28 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { MetaClient, RespondResult } from '@/shared/meta';
+import { createInMemoryBudgetGuard } from '@/shared/security';
 import type { EuropePmcClient } from '../tools/europe-pmc';
 import type { PubmedClient } from '../tools/pubmed';
 import type { SearchPlan } from '../schemas/retrieval';
 import { executeSearchPlan } from './execute-plan';
+
+function fakeRespondResult(webSearchResults: RespondResult['webSearchResults']): RespondResult {
+  return {
+    id: 'resp_x',
+    text: null,
+    parsed: null,
+    webSearchResults,
+    usage: { inputTokens: 10, cachedInputTokens: 0, outputTokens: 10, totalTokens: 20 },
+    costUsd: 0.01,
+    raw: {},
+  };
+}
+
+function fakeHttpFetch(body: string): typeof fetch {
+  return vi.fn().mockResolvedValue(
+    new Response(body, { status: 200, headers: { 'Content-Type': 'text/html' } }),
+  ) as unknown as typeof fetch;
+}
 
 function fakePubmed(overrides: Partial<PubmedClient> = {}): PubmedClient {
   return {
@@ -151,5 +171,61 @@ describe('executeSearchPlan', () => {
   it('returns empty results for an empty plan', async () => {
     const result = await executeSearchPlan({ queries: [] }, { pubmed: fakePubmed(), europePmc: fakeEuropePmc() });
     expect(result).toEqual({ candidates: [], skipped: [], failed: [] });
+  });
+
+  describe('webSearch (web/guideline families)', () => {
+    it('runs a web/guideline query via web_search + fetch_url_text when webSearch deps are provided', async () => {
+      const respond = vi.fn().mockResolvedValue(
+        fakeRespondResult([{ title: 'CDC guidance', url: 'https://www.cdc.gov/acs-guidance', snippet: 'x' }]),
+      );
+      const metaClient: MetaClient = { respond, listModels: vi.fn() };
+      const plan: SearchPlan = { queries: [{ family: 'guideline', text: 'ACS guideline', purpose: 'society guideline' }] };
+
+      const result = await executeSearchPlan(plan, {
+        pubmed: fakePubmed(),
+        europePmc: fakeEuropePmc(),
+        webSearch: {
+          runId: 'run_1',
+          metaClient,
+          budgetGuard: createInMemoryBudgetGuard({ runCostCapUsd: 1, dailyBudgetUsd: 10 }),
+          allowedDomains: ['cdc.gov'],
+          fetchImpl: fakeHttpFetch('<html><body><p>Real page text</p></body></html>'),
+        },
+      });
+
+      expect(result.skipped).toEqual([]);
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0]).toMatchObject({ family: 'guideline', title: 'CDC guidance', url: 'https://www.cdc.gov/acs-guidance' });
+    });
+
+    it('discards a web_search result whose URL is not on the allow-list', async () => {
+      const respond = vi.fn().mockResolvedValue(
+        fakeRespondResult([{ title: 'Random blog', url: 'https://some-random-blog.example.com/x', snippet: 'x' }]),
+      );
+      const metaClient: MetaClient = { respond, listModels: vi.fn() };
+      const plan: SearchPlan = { queries: [{ family: 'web', text: 'adversarial query', purpose: 'adversarial' }] };
+
+      const result = await executeSearchPlan(plan, {
+        pubmed: fakePubmed(),
+        europePmc: fakeEuropePmc(),
+        webSearch: {
+          runId: 'run_1',
+          metaClient,
+          budgetGuard: createInMemoryBudgetGuard({ runCostCapUsd: 1, dailyBudgetUsd: 10 }),
+          allowedDomains: ['cdc.gov'],
+          fetchImpl: fakeHttpFetch('<html></html>'),
+        },
+      });
+
+      expect(result.candidates).toEqual([]);
+      expect(result.failed).toEqual([]);
+    });
+
+    it('still skips web/guideline queries when webSearch deps are not provided', async () => {
+      const plan: SearchPlan = { queries: [{ family: 'web', text: 'x', purpose: 'p' }] };
+      const result = await executeSearchPlan(plan, { pubmed: fakePubmed(), europePmc: fakeEuropePmc() });
+      expect(result.skipped).toHaveLength(1);
+      expect(result.candidates).toEqual([]);
+    });
   });
 });

@@ -47,6 +47,8 @@ export interface ExtractAndVerifyPoolDeps {
   budgetGuard: BudgetGuard;
   crossref: CrossrefClient;
   europePmc: EuropePmcClient;
+  /** Lets `web`/`guideline`-family candidates re-fetch their own URL for extraction; omit to leave them as no_full_text. */
+  webFetch?: { allowedDomains: readonly string[]; fetchImpl?: typeof fetch };
   p0Preamble: string;
   p5PromptTemplate: string;
   onSourceDone?: (sourceId: string, outcome: PoolSourceOutcome) => void;
@@ -73,7 +75,7 @@ export async function extractAndVerifyPool(
   let totalCostUsd = 0;
 
   async function processOne(candidate: CandidateSource): Promise<void> {
-    const fullText = await fetchFullTextForCandidate(candidate, deps.europePmc);
+    const fullText = await fetchFullTextForCandidate(candidate, deps.europePmc, deps.webFetch);
 
     let outcome: PoolSourceOutcome;
     if (!fullText) {

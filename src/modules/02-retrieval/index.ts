@@ -28,3 +28,5 @@ export * from './agents/search-planner';
 export * from './agents/source-classifier';
 export * from './retrieval/execute-plan';
 export * from './retrieval/fetch-full-text';
+export * from './retrieval/default-allowed-domains';
+export * from './agents/web-source-finder';
