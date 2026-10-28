@@ -1,22 +1,30 @@
 @import 'tailwindcss';
 
-/* SPEC §11 design tokens: dark-first, minimalist, futuristic. Single accent hue;
-   certainty expressed as a luminance ramp of that hue (never color alone — SPEC
-   §11 "no color-only meaning" is enforced by always pairing a pip count + text
-   label, not by color choice here). */
+/* "From evidence to clarity" visual identity (2026-10-28, user-specified, see
+   docs/DECISIONS.md) — replaces the earlier teal-accent SPEC §11 placeholder
+   tokens. Pure black, monochrome-first; color is reserved for functional
+   signaling only (safety-critical, retraction, "not confirmed"), never
+   decoration — SPEC §11's "no color-only meaning" principle still holds, so
+   every functional color is always paired with a text label, not color alone. */
 :root {
-  --color-bg: #0b0d12;
-  --color-surface: #12151c;
-  --color-border: #222733;
-  --color-fg: #e7eaf0;
-  --color-muted: #8b93a7;
-  --color-accent: #4fd1c5;
-  --color-accent-dim: #2f7f78;
+  --color-bg: #000000;
+  --color-fg: #ffffff;
+  --color-muted: #9a9a9a;
+  --color-muted-2: #6b6b6b;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+
+  --color-glass: rgba(255, 255, 255, 0.04);
+  --color-glass-strong: rgba(255, 255, 255, 0.07);
+
+  /* Functional-only signal colors — never used decoratively. */
   --color-warning: #f5b544;
   --color-conflict: #ff6b6b;
+  --color-safety: #f5b544;
 
-  --radius-card: 12px;
+  --radius-card: 14px;
   --radius-chip: 10px;
+  --radius-pill: 999px;
 
   --motion-fast: 150ms;
   --motion-slow: 250ms;
@@ -25,18 +33,20 @@
 
 @theme inline {
   --color-bg: var(--color-bg);
-  --color-surface: var(--color-surface);
-  --color-border: var(--color-border);
   --color-fg: var(--color-fg);
   --color-muted: var(--color-muted);
-  --color-accent: var(--color-accent);
-  --color-accent-dim: var(--color-accent-dim);
+  --color-muted-2: var(--color-muted-2);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-glass: var(--color-glass);
+  --color-glass-strong: var(--color-glass-strong);
   --color-warning: var(--color-warning);
   --color-conflict: var(--color-conflict);
+  --color-safety: var(--color-safety);
   --radius-card: var(--radius-card);
   --radius-chip: var(--radius-chip);
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --radius-pill: var(--radius-pill);
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 html {
@@ -49,7 +59,15 @@ body {
   font-family: var(--font-sans);
 }
 
-/* SPEC §11 Motion: honor prefers-reduced-motion globally, not per-component. */
+/* Discrete glassmorphism utility: floating surfaces (nav, search bar, panels,
+   menus) — subtle translucency + blur, 1px border, no glow/halo. */
+.glass {
+  background: var(--color-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -61,9 +79,12 @@ body {
   }
 }
 
-/* Visible keyboard focus everywhere (SPEC §11 accessibility: keyboard navigation). */
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-fg);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.2);
 }

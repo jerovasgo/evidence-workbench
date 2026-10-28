@@ -13,8 +13,8 @@ const STAGE_LABEL: Record<StageName, string> = {
 
 const STATUS_DOT: Record<StageState['status'], string> = {
   pending: 'bg-border',
-  running: 'bg-accent animate-pulse',
-  ok: 'bg-accent',
+  running: 'bg-fg animate-pulse',
+  ok: 'bg-fg',
   partial: 'bg-warning',
   abstain: 'bg-muted',
   failed: 'bg-conflict',
@@ -24,7 +24,7 @@ export function StageProgress({ stages, sourceProgress }: { stages: Record<Stage
   const order: StageName[] = ['structure', 'plan', 'retrieve', 'classify', 'extract'];
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-border bg-surface p-4">
+    <div className="glass rounded-[var(--radius-card)] p-4">
       <ol className="flex flex-col gap-2">
         {order.map((stage) => {
           const state = stages[stage];

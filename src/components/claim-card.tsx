@@ -3,8 +3,7 @@
 import type { Claim } from '@/shared/domain';
 import { CertaintyPips, Chip, OriginBadge } from '@/components/ui/chip';
 
-// SPEC §11: node shapes carry meaning ("pill = claim"); rounded-full here is that
-// pill. `verification.support` is always 'unknown' today — module 03's
+// `verification.support` is always 'unknown' today — module 03's
 // support-judge agent isn't built (SECURITY.md) — so this is deliberately never
 // presented as "verified": CLAUDE.md rule 5 ("no unverified but shown" state) means
 // every claim here carries a visible "Not confirmed" chip, exactly matching
@@ -27,7 +26,7 @@ export function ClaimCard({ claim, onOpenEvidence }: { claim: Claim; onOpenEvide
       <button
         type="button"
         onClick={() => onOpenEvidence(claim)}
-        className="w-full rounded-full border border-border bg-surface px-4 py-3 text-left transition-colors duration-150 hover:border-accent"
+        className="glass w-full rounded-[var(--radius-card)] px-4 py-3 text-left transition-colors duration-150 hover:border-border-strong"
       >
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <Chip>{ACTION_LABEL[claim.actionType]}</Chip>

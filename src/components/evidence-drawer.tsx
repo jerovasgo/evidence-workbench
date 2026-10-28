@@ -11,7 +11,7 @@ export function EvidenceDrawer({ claim, onClose }: { claim: Claim | null; onClos
     <Dialog.Root open={claim !== null} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 motion-safe:animate-in motion-safe:fade-in" />
-        <Dialog.Content className="fixed inset-y-0 right-0 flex w-full max-w-md flex-col gap-4 overflow-y-auto border-l border-border bg-surface p-6 focus:outline-none">
+        <Dialog.Content className="glass fixed inset-y-0 right-0 flex w-full max-w-md flex-col gap-4 overflow-y-auto border-y-0 border-r-0 p-6 focus:outline-none">
           {claim && (
             <>
               <div className="flex items-start justify-between gap-4">
@@ -29,9 +29,9 @@ export function EvidenceDrawer({ claim, onClose }: { claim: Claim | null; onClos
                 {claim.verification.retracted && <Chip tone="conflict">Source retracted</Chip>}
               </div>
 
-              <div className="rounded-[var(--radius-card)] border border-border bg-bg p-4">
+              <div className="rounded-[var(--radius-card)] border border-border bg-black/40 p-4">
                 <p className="text-xs uppercase tracking-wide text-muted">Verbatim quote</p>
-                <blockquote className="mt-2 font-mono text-sm text-fg">&ldquo;{claim.quote}&rdquo;</blockquote>
+                <blockquote className="mt-2 text-sm italic text-fg">&ldquo;{claim.quote}&rdquo;</blockquote>
               </div>
 
               <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">

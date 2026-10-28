@@ -1,9 +1,10 @@
 import path from 'node:path';
 import { createSupabaseRunsRepository, type RunsRepository } from '../data/runs-repository';
 import { createSupabaseStageOutputsRepository, type StageOutputsRepository } from '../data/stage-outputs-repository';
+import { createSupabaseConversationsRepository, type ConversationsRepository } from '../data/conversations-repository';
 import { createMetaClient, type MetaClient } from '@/shared/meta';
 import { loadPromptBody } from '@/shared/prompts';
-import { createInMemoryBudgetGuard, type BudgetGuard } from '@/shared/security';
+import { createInMemoryBudgetGuard, createSingleKeyKeyring, loadEncryptionKey, type BudgetGuard } from '@/shared/security';
 import { createServiceRoleClient } from '@/shared/supabase';
 import { createCrossrefClient, createEuropePmcClient, createPubmedClient, type CrossrefClient, type EuropePmcClient, type PubmedClient } from '@/modules/02-retrieval';
 import { createPendingRunContextStore, type PendingRunContextStore } from './pending-run-context';
@@ -19,6 +20,7 @@ export interface ServerRuntime {
   budgetGuard: BudgetGuard;
   runsRepository: RunsRepository;
   stageOutputsRepository: StageOutputsRepository;
+  conversationsRepository: ConversationsRepository;
   dailyBudgetUsd: number;
   p0Preamble: string;
   p1PromptTemplate: string;
@@ -56,6 +58,7 @@ export function buildServerRuntime(): ServerRuntime {
   const metaApiBaseUrl = readRequiredEnv('META_API_BASE_URL');
   const supabaseUrl = readRequiredEnv('SUPABASE_URL');
   const serviceRoleKey = readRequiredEnv('SUPABASE_SERVICE_ROLE_KEY');
+  const appEncryptionKey = readRequiredEnv('APP_ENCRYPTION_KEY');
   const dailyBudgetUsd = readPositiveNumberEnv('DAILY_BUDGET_USD');
   const runCostCapUsd = readPositiveNumberEnv('RUN_COST_CAP_USD');
 
@@ -63,6 +66,11 @@ export function buildServerRuntime(): ServerRuntime {
   const supabase = createServiceRoleClient({ url: supabaseUrl, serviceRoleKey });
   const runsRepository = createSupabaseRunsRepository(supabase);
   const stageOutputsRepository = createSupabaseStageOutputsRepository(supabase);
+  // First real wiring of module 10's field encryption into a route handler (built
+  // 2026-10-27, unused until now) — the conversation-history feature's scoped
+  // exception to CLAUDE.md rule 3 (docs/DECISIONS.md) is what finally needs it.
+  const encryptionKeyring = createSingleKeyKeyring(loadEncryptionKey(appEncryptionKey));
+  const conversationsRepository = createSupabaseConversationsRepository(supabase, encryptionKeyring);
   const budgetGuard = createInMemoryBudgetGuard({ runCostCapUsd, dailyBudgetUsd });
 
   // NCBI_API_KEY is optional: without it PubMed is limited to 3 req/s (module 02's
@@ -89,6 +97,7 @@ export function buildServerRuntime(): ServerRuntime {
     budgetGuard,
     runsRepository,
     stageOutputsRepository,
+    conversationsRepository,
     dailyBudgetUsd,
     p0Preamble,
     p1PromptTemplate,

@@ -48,6 +48,10 @@ section 4 (Evidence Matrix), section 6 (three components), section 8 (data model
    descriptive messages; the git history is evidence. Do not copy code from private projects.
 3. **No patient data.** Reject patient identifiers. Scenario text is not persisted by default.
    Never log prompts, scenario text or document content; log ids, timings, costs, hashes.
+   **Scoped exception (2026-10-28, explicit user decision, see `docs/DECISIONS.md`):** the
+   conversation-history feature persists scenario text, field-encrypted (AES-256-GCM,
+   same mechanism as rule 10) at rest — this is the one place scenario text is stored;
+   it is still never logged/traced in plaintext anywhere (`onTrace`, server logs).
 4. **Clinician-addressed language.** Statements say "assess", "consider ordering", "consider
    referral". Never instructions to the patient. UI copy and README use *navigate, compare,
    audit, verify*; avoid *recommends*, *advises*, *tells you what to do*.

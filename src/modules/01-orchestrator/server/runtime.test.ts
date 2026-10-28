@@ -6,6 +6,7 @@ const validEnv = {
   META_API_BASE_URL: 'https://api.meta.ai/v1',
   SUPABASE_URL: 'https://example.supabase.co',
   SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key',
+  APP_ENCRYPTION_KEY: 't0aUJ6S8VMrlW+n+FROG5ILYvDZJNJZO2WItDKjG4Pg=', // test-only, not a real key
   DAILY_BUDGET_USD: '20',
   RUN_COST_CAP_USD: '0.4',
 };
@@ -36,6 +37,11 @@ describe('buildServerRuntime', () => {
   it('throws a clear error when META_API_KEY is missing', () => {
     stubValidEnv({ META_API_KEY: '' });
     expect(() => buildServerRuntime()).toThrow(/META_API_KEY/);
+  });
+
+  it('throws a clear error when APP_ENCRYPTION_KEY does not decode to 32 bytes', () => {
+    stubValidEnv({ APP_ENCRYPTION_KEY: 'dG9vLXNob3J0' }); // "too-short" base64
+    expect(() => buildServerRuntime()).toThrow(/32 bytes/);
   });
 
   it('throws a clear error when DAILY_BUDGET_USD is not a positive number', () => {

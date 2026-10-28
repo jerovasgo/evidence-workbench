@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createRun, CreateRunRequestSchema, getServerRuntime, intentNeedsRetrieval } from '@/modules/01-orchestrator';
+import { getOrCreateSessionId } from '@/lib/session-cookie';
 
 // Module 01: "Route handlers are thin: validate -> enqueue -> stream." All real
 // logic lives in modules/01-orchestrator/pipeline/{create-run,run-retrieval}.ts,
@@ -11,6 +13,18 @@ import { createRun, CreateRunRequestSchema, getServerRuntime, intentNeedsRetriev
 // client is expected to immediately open `GET /api/runs/:id/stream` (SSE), which
 // runs the rest of the pipeline and streams progress as it happens — see that
 // route's own comment for why a two-step POST-then-stream flow, not one call.
+//
+// `conversationId`/`mode` are the dashboard's (module 11) own fields, layered on
+// top of `createRun`'s request shape rather than inside it — createRun's own
+// contract stays routing-only. A successful 'routed' outcome persists a
+// conversation turn (CLAUDE.md rule 3 scoped exception, docs/DECISIONS.md); a
+// rejected/budget-exhausted/routing-failed attempt does not, since nothing usable
+// happened server-side to continue a thread with.
+
+const RequestWithConversationSchema = CreateRunRequestSchema.extend({
+  conversationId: z.string().uuid().optional(),
+  mode: z.enum(['auto', 'algorithm', 'evidence_map']).optional(),
+});
 
 export async function POST(request: Request): Promise<Response> {
   let body: unknown;
@@ -20,7 +34,7 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: 'Request body must be valid JSON' }, { status: 400 });
   }
 
-  const parsed = CreateRunRequestSchema.safeParse(body);
+  const parsed = RequestWithConversationSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
   }
@@ -57,9 +71,36 @@ export async function POST(request: Request): Promise<Response> {
           routerSetting: outcome.routerOutput.setting,
         });
       }
+
+      const sessionId = await getOrCreateSessionId();
+      const mode = parsed.data.mode ?? 'auto';
+      let conversationId: string | undefined = parsed.data.conversationId;
+
+      if (conversationId) {
+        const appended = await runtime.conversationsRepository.addTurn({
+          conversationId,
+          sessionId,
+          mode,
+          freeText: parsed.data.freeText,
+          runId: outcome.run.id,
+        });
+        if (!appended) conversationId = undefined; // not owned by this session -> start a new thread instead
+      }
+      if (!conversationId) {
+        const created = await runtime.conversationsRepository.create({
+          sessionId,
+          title: parsed.data.freeText.slice(0, 80),
+          mode,
+          freeText: parsed.data.freeText,
+          runId: outcome.run.id,
+        });
+        conversationId = created.conversationId;
+      }
+
       return NextResponse.json(
         {
           runId: outcome.run.id,
+          conversationId,
           intent: outcome.routerOutput.intent,
           status: outcome.run.status,
           streamUrl: needsStream ? `/api/runs/${outcome.run.id}/stream` : undefined,

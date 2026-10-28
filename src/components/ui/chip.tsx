@@ -17,7 +17,7 @@ export function Chip({ children, tone = 'default', className }: { children: Reac
   );
 }
 
-/** SPEC §11: certainty as a 4-pip luminance ramp of the accent, always paired with a text label — never color alone. */
+/** Certainty as a 4-pip luminance ramp, always paired with a text label — never color alone. */
 export function CertaintyPips({ certainty }: { certainty: 'high' | 'moderate' | 'low' | 'very_low' | 'ungraded' }) {
   const filled = { high: 4, moderate: 3, low: 2, very_low: 1, ungraded: 0 }[certainty];
   const label = { high: 'High', moderate: 'Moderate', low: 'Low', very_low: 'Very low', ungraded: 'Ungraded' }[certainty];
@@ -28,7 +28,7 @@ export function CertaintyPips({ certainty }: { certainty: 'high' | 'moderate' | 
         {Array.from({ length: 4 }, (_, i) => (
           <span
             key={i}
-            className={cn('h-1.5 w-1.5 rounded-full', i < filled ? 'bg-accent' : 'bg-border')}
+            className={cn('h-1.5 w-1.5 rounded-full', i < filled ? 'bg-fg' : 'bg-border')}
             style={i < filled ? { opacity: 0.4 + (i / 3) * 0.6 } : undefined}
           />
         ))}
@@ -38,7 +38,7 @@ export function CertaintyPips({ certainty }: { certainty: 'high' | 'moderate' | 
   );
 }
 
-/** SPEC §11: "from source" / "AI-estimated" — always a visible label, never implied by color. */
+/** "From source" / "AI-estimated" — always a visible label, never implied by color. */
 export function OriginBadge({ origin }: { origin: 'source' | 'ai_estimated' }) {
   return <Chip tone={origin === 'ai_estimated' ? 'warning' : 'default'}>{origin === 'source' ? 'From source' : 'AI-estimated'}</Chip>;
 }

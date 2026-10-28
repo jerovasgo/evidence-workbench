@@ -3,6 +3,30 @@ import type { RunRecord, RunsRepository } from '@/modules/01-orchestrator';
 import type { MetaClient, RespondResult } from '@/shared/meta';
 import { createInMemoryBudgetGuard } from '@/shared/security';
 
+// getOrCreateSessionId() (src/lib/session-cookie.ts) calls next/headers' cookies(),
+// which only works inside Next's own request-scoped context — not when a test
+// invokes the route handler directly. Fake it with a tiny in-memory cookie jar.
+vi.mock('next/headers', () => {
+  const store = new Map<string, string>();
+  return {
+    cookies: vi.fn(async () => ({
+      get: (name: string) => (store.has(name) ? { name, value: store.get(name)! } : undefined),
+      set: (name: string, value: string) => store.set(name, value),
+    })),
+  };
+});
+
+function fakeConversationsRepository() {
+  return {
+    create: vi.fn(async () => ({ conversationId: 'conversation_generated', turnId: 'turn_generated' })),
+    addTurn: vi.fn(async (): Promise<{ turnId: string } | null> => ({ turnId: 'turn_generated' })),
+    listForSession: vi.fn(async () => []),
+    getWithTurns: vi.fn(async () => null),
+    rename: vi.fn(async () => true),
+    remove: vi.fn(async () => true),
+  };
+}
+
 function fakeRespondResult(parsed: unknown): RespondResult {
   return {
     id: 'resp_x',
@@ -49,6 +73,7 @@ function mockRuntime(metaClient: MetaClient, dailyBudgetUsd = 20) {
     europePmc: { search: vi.fn(), fetchFullText: vi.fn() },
     crossref: { lookup: vi.fn() },
     pendingRunContext: { put: vi.fn(), take: vi.fn() },
+    conversationsRepository: fakeConversationsRepository(),
   };
 }
 
@@ -134,6 +159,7 @@ describe('POST /api/runs', () => {
     expect(json.intent).toBe('algorithm');
     expect(typeof json.runId).toBe('string');
     expect(json.streamUrl).toBe(`/api/runs/${json.runId}/stream`);
+    expect(json.conversationId).toBe('conversation_generated');
     // Only one respond() call (routing) — this handler must not run structure/plan/
     // retrieve/classify/extract itself anymore; that is the SSE route's job.
     expect(respond).toHaveBeenCalledTimes(1);
@@ -141,6 +167,50 @@ describe('POST /api/runs', () => {
       json.runId,
       expect.objectContaining({ freeText: 'What is first-line treatment for suspected ACS?' }),
     );
+    expect(runtime.conversationsRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ freeText: 'What is first-line treatment for suspected ACS?', mode: 'auto' }),
+    );
+  });
+
+  it('appends to an existing conversation when conversationId is provided', async () => {
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult({ intent: 'fact_lookup', confidence: 'high' }));
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const runtime = mockRuntime(metaClient);
+    const POST = await loadPostWithRuntime(runtime);
+
+    const res = await POST(
+      new Request('http://localhost/api/runs', {
+        method: 'POST',
+        body: JSON.stringify({ freeText: 'Follow-up question', userId: null, conversationId: '11111111-1111-1111-1111-111111111111', mode: 'algorithm' }),
+      }),
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(json.conversationId).toBe('11111111-1111-1111-1111-111111111111');
+    expect(runtime.conversationsRepository.addTurn).toHaveBeenCalledWith(
+      expect.objectContaining({ conversationId: '11111111-1111-1111-1111-111111111111', freeText: 'Follow-up question', mode: 'algorithm' }),
+    );
+    expect(runtime.conversationsRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('falls back to creating a new conversation when addTurn reports no ownership match', async () => {
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult({ intent: 'fact_lookup', confidence: 'high' }));
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const runtime = mockRuntime(metaClient);
+    runtime.conversationsRepository.addTurn.mockResolvedValue(null);
+    const POST = await loadPostWithRuntime(runtime);
+
+    const res = await POST(
+      new Request('http://localhost/api/runs', {
+        method: 'POST',
+        body: JSON.stringify({ freeText: 'x', userId: null, conversationId: '11111111-1111-1111-1111-111111111111' }),
+      }),
+    );
+    const json = await res.json();
+
+    expect(json.conversationId).toBe('conversation_generated');
+    expect(runtime.conversationsRepository.create).toHaveBeenCalled();
   });
 
   it('does not stash pending context or set streamUrl for an out_of_scope (abstained) result', async () => {
