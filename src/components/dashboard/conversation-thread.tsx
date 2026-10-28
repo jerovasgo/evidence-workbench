@@ -7,7 +7,9 @@ import type { Turn } from '@/lib/use-conversations';
 
 export function ConversationThread({ turns, onRetryTurn }: { turns: Turn[]; onRetryTurn: (turnId: string) => void }) {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-12 px-6 py-8">
+    // pt-16 clears the fixed mobile hamburger trigger (Sidebar, top-4 + h-9); not
+    // needed at md: and up, where the sidebar sits inline instead of floating.
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-12 px-6 pb-8 pt-16 md:pt-8">
       {turns.map((turn) => (
         <article key={turn.id} className="flex flex-col gap-6">
           <p className="text-lg font-medium text-fg">{turn.freeText}</p>

@@ -279,7 +279,29 @@ This file tracks what is actually built, not the full target state in `docs/arch
   `ConversationThread` now renders a new `TurnResult` (sending/error/ready state
   machine) instead of calling `RunResult` directly (conversational-flow Phase 2).
   Test conversations/runs deleted from `BenchBark` afterward. `next build`
-  (production) verified clean, 393 tests pass.
+  (production) verified clean, 393 tests pass. **The 375px "no horizontal overflow"
+  claim above was true but incomplete** — it checked for overflow, not usability:
+  the sidebar had no mobile treatment at all and permanently occupied ~80% of a
+  375px screen (no overflow because nothing scrolled past the viewport, just
+  everything else squeezed into the remaining sliver). Fixed 2026-10-28 in a
+  dedicated mobile-responsiveness pass, logged separately below.
+- **Mobile responsiveness pass** (2026-10-28, user-requested, full-platform audit):
+  `Sidebar` (`src/components/dashboard/sidebar.tsx`) rewritten as a CSS-breakpoint-
+  only off-canvas drawer below `md` (fixed hamburger trigger, `bg-black/60` backdrop,
+  closes on backdrop tap / selecting a conversation / new research) — previously the
+  only mobile bug on the platform large enough to matter, but a serious one: a fixed
+  288px inline column permanently ate ~80% of a 375px screen. Desktop (`md:` and up)
+  keeps the exact original static/collapse-to-rail behavior, same component, driven
+  entirely by Tailwind's `md:` prefix (no JS media query, no layout hydration
+  mismatch risk). Two smaller fixes found in the same pass: `conversation-thread.tsx`
+  needed top padding on mobile to clear the new fixed hamburger (the question text
+  was rendering underneath it); `src/app/runs/[id]/run-view.tsx`'s header now
+  truncates the run id (`min-w-0 truncate`) instead of letting a real ~36-char UUID
+  wrap the whole header onto two lines. Live-verified at 375px and the 768px `md`
+  boundary across every surface (landing, dashboard empty state, an active
+  conversation thread, both dropdown menus, the standalone run page), plus a 1440px
+  desktop regression pass; `scrollWidth === clientWidth` (no horizontal overflow)
+  confirmed programmatically on the landing page, dashboard and run page at 375px.
 - **Web crawling for `guideline`/`web` queries** (2026-10-28, user-requested): a
   curated default allow-list (`src/modules/02-retrieval/retrieval/default-allowed-domains.ts`
   — CDC, WHO, NICE, AHA/ACC journals, ESC, IDSA, ATS, ACOG, AAP, Cochrane, NCBI
