@@ -302,6 +302,33 @@ This file tracks what is actually built, not the full target state in `docs/arch
   conversation thread, both dropdown menus, the standalone run page), plus a 1440px
   desktop regression pass; `scrollWidth === clientWidth` (no horizontal overflow)
   confirmed programmatically on the landing page, dashboard and run page at 375px.
+- **Latency audit, Phase 1** (2026-10-28, user-requested, diagnosis grounded in this
+  session's own real SSE traces): classify (P4) measured 18.6-29.5s — consistently
+  the slowest stage, same T0/minimal tier as structure/plan (2.4-5.1s), slow purely
+  from batching up to 40 sources into one ~4800-token JSON generation
+  (`source-classifier.ts`). Headline fix: `extract-and-verify-pool.ts` already
+  computes claims per-source with bounded concurrency and fires `onSourceDone` as
+  each finishes, but `src/app/api/runs/[id]/stream/route.ts` discarded that signal
+  — every verified claim previously waited for the ENTIRE pipeline (all stages, all
+  sources) before one `band_ready` at the end. `band_ready` now sends once per
+  contributing source (cumulative claims array); `sourceScores` still rides only the
+  final send (not available via a stage callback, and secondary — read only inside
+  an opened evidence drawer). Two more fixes: `extractClaims`/`checkRetraction`
+  (independent — one doesn't read the other) now run via `Promise.all` instead of
+  sequential `await`s; `runAgent`'s `onTrace` (already emitting `{name, ms, costUsd,
+  tokens}` per model call, previously wired to nothing) now logs structured JSON
+  (`agent_latency`/`stage_latency`/`run_latency`/`first_claims_latency`) so real
+  p50/p95 can be computed from server logs going forward — ids/timings/costs only,
+  never prompt or scenario text (CLAUDE.md rule 3). **Known gap, not built this
+  pass:** splitting classify into smaller concurrent batches (the clear next fix for
+  the stage that's actually slowest) — Phase 2, changes the call shape rather than
+  just wiring. **Verification gap, logged not silent:** ~6 live attempts this
+  session to watch claims stream in progressively all hit 0 claims
+  (`no_full_text`/empty retrieval — the same pre-existing variance logged elsewhere
+  in this file); the 0-claims path itself was confirmed correct via raw SSE trace
+  (no spurious mid-stream sends), and the streaming code reuses the exact
+  `event.outcome.claims` array already proven correct elsewhere, but a live run
+  showing multiple real claims arriving incrementally was not captured.
 - **Web crawling for `guideline`/`web` queries** (2026-10-28, user-requested): a
   curated default allow-list (`src/modules/02-retrieval/retrieval/default-allowed-domains.ts`
   — CDC, WHO, NICE, AHA/ACC journals, ESC, IDSA, ATS, ACOG, AAP, Cochrane, NCBI

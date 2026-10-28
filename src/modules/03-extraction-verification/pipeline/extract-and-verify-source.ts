@@ -72,30 +72,36 @@ export async function extractAndVerifySource(
     return { sourceId: input.sourceId, status: 'no_text' };
   }
 
-  const extractResult = await extractClaims(
-    input.runId,
-    {
-      sourceTitle: input.sourceTitle,
-      passages: passages.map((p) => ({ passageId: p.id, locator: p.locator, text: p.text })),
-      subQuestions: input.subQuestions,
-    },
-    { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p5PromptTemplate: deps.p5PromptTemplate, onTrace: deps.onTrace },
-  );
+  // 2026-10-28 latency audit: claim extraction (a model call, up to 25s) and the
+  // retraction check (a Crossref lookup) are fully independent — neither reads the
+  // other's result — so they run concurrently instead of one `await` after the
+  // other. Free latency: this source's total time drops from (extract + retraction)
+  // to max(extract, retraction).
+  const [extractResult, retraction] = await Promise.all([
+    extractClaims(
+      input.runId,
+      {
+        sourceTitle: input.sourceTitle,
+        passages: passages.map((p) => ({ passageId: p.id, locator: p.locator, text: p.text })),
+        subQuestions: input.subQuestions,
+      },
+      { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p5PromptTemplate: deps.p5PromptTemplate, onTrace: deps.onTrace },
+    ),
+    // Step 4 ("not retracted") is source-level: computed once, applied to every
+    // claim from this source, rather than re-checked per claim.
+    checkRetraction(
+      {
+        doi: input.doi,
+        pubmedSummary: input.pubTypes ? { pmid: input.sourceId, title: input.sourceTitle, pubTypes: input.pubTypes } : undefined,
+        fetchedText: input.fullText,
+      },
+      { crossref: deps.crossref },
+    ),
+  ]);
 
   if (!extractResult.ok) {
     return { sourceId: input.sourceId, status: 'extraction_failed', reason: extractResult.detail };
   }
-
-  // Step 4 ("not retracted") is source-level: computed once, applied to every claim
-  // from this source, rather than re-checked per claim.
-  const retraction = await checkRetraction(
-    {
-      doi: input.doi,
-      pubmedSummary: input.pubTypes ? { pmid: input.sourceId, title: input.sourceTitle, pubTypes: input.pubTypes } : undefined,
-      fetchedText: input.fullText,
-    },
-    { crossref: deps.crossref },
-  );
 
   const verifiedClaims: Claim[] = [];
   const dropped: { reason: string }[] = [];

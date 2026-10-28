@@ -5,7 +5,23 @@ import {
   runRetrievalPipeline,
   type RunRetrievalResult,
 } from '@/modules/01-orchestrator';
-import type { RunEvent } from '@/shared/domain';
+import type { AgentTraceEvent } from '@/shared/agents';
+import type { Claim, RunEvent } from '@/shared/domain';
+
+// 2026-10-28 latency audit (docs/DECISIONS.md): `runAgent` (shared/agents) already
+// emits an `onTrace` event — {name, ms, costUsd, tokens} — for every single model
+// call in the pipeline, but nothing ever consumed it; every run's real per-agent
+// timing was silently discarded. These two loggers are the "quick win" fix: one
+// structured JSON line per agent call and one per finished run, both ids/timings/
+// costs only (CLAUDE.md rule 3 — never prompt or scenario text), so real p50/p95
+// latency can finally be computed from server logs instead of guessed.
+function logAgentTrace(runId: string, event: AgentTraceEvent): void {
+  if (event.type === 'agent_result') {
+    console.log(JSON.stringify({ type: 'agent_latency', runId, name: event.name, ok: event.ok, ms: event.ms, costUsd: event.costUsd, tokens: event.tokens }));
+  } else if (event.type === 'agent_abstain') {
+    console.log(JSON.stringify({ type: 'agent_abstain', runId, name: event.name, reason: event.reason }));
+  }
+}
 
 // Module 01: "GET /api/runs/:id/stream (SSE) <- events as stages complete." This is
 // the time-to-first-token path for an interactive run: `POST /api/runs` only routes
@@ -31,11 +47,25 @@ import type { RunEvent } from '@/shared/domain';
 //
 // `band_ready`'s "red-flag/first-action claims first" ordering (module 01) is
 // approximated here, not implemented in full: nothing tags claims as red-flag/
-// first-action yet (that needs the algorithm graph, module 06, not built), so this
-// route emits one `band_ready` with every verified(-pending-support) claim once
-// `extract` finishes, prioritized only by evidence kind (`extract-and-verify-pool.ts`'s
-// guideline > systematic_review > RCT ordering) — an honest, documented
-// simplification of the real design, not the real thing.
+// first-action yet (that needs the algorithm graph, module 06, not built), so
+// ordering is only by evidence kind (`extract-and-verify-pool.ts`'s guideline >
+// systematic_review > RCT ordering) — an honest, documented simplification of the
+// real design, not the real thing.
+//
+// 2026-10-28 latency audit: `band_ready` now sends MULTIPLE times, not once.
+// `extract-and-verify-pool.ts` already runs sources with bounded concurrency and
+// fires `onSourceDone` as EACH ONE finishes — previously that per-source signal only
+// produced a `stage_progress` text line, and every verified claim sat on the server
+// until the ENTIRE pipeline resolved (all sources, all support-judge calls) before
+// one single `band_ready` burst. The first source to finish is typically ready in
+// ~10-15s; the whole pool can take 60-90s+. Every source's claims now stream to the
+// client the moment that source finishes (a `band_ready` per contributing source,
+// cumulative), instead of making the client wait for the slowest one. `sourceScores`
+// isn't known until classification resolves (before extraction) but isn't exposed
+// via a callback — it rides only on the final `band_ready` (after the full pipeline
+// resolves), a deliberate, low-risk scope cut: claims are the TTFT-critical data:
+// the "why ranked here" score breakdown is secondary metadata read only after
+// opening a claim's evidence drawer, never needed before then.
 
 function sseFrame(event: RunEvent): string {
   return `data: ${JSON.stringify(event)}\n\n`;
@@ -58,10 +88,15 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
   const run = runOutcome.run;
   const encoder = new TextEncoder();
+  const streamStarted = Date.now();
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const send = (event: RunEvent) => controller.enqueue(encoder.encode(sseFrame(event)));
+      // Claims accumulated so far across already-finished sources, sent as a
+      // cumulative `band_ready` each time a new one arrives — see the latency-audit
+      // comment above. `sourceScores` only rides the final, authoritative send.
+      const streamedClaims: Claim[] = [];
 
       // A reconnect after the run already finished: nothing to stream, just report
       // the terminal state once (module 01: "results retrievable by run id").
@@ -107,15 +142,29 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
             p10PromptTemplate: runtime.p10PromptTemplate,
             pubmed: runtime.pubmed,
             europePmc: runtime.europePmc,
+            onTrace: (event) => logAgentTrace(run.id, event),
             onStageEvent: (event) => {
               if (event.type === 'stage_started') {
                 send({ type: 'stage_started', runId: run.id, stage: event.stage });
               } else if (event.type === 'stage_result') {
                 const detail = event.resumed ? `${event.status} (resumed)` : `${event.status} (${event.metrics.ms}ms)`;
                 send({ type: 'stage_progress', runId: run.id, stage: event.stage, detail });
+                console.log(
+                  JSON.stringify({ type: 'stage_latency', runId: run.id, stage: event.stage, status: event.status, ms: event.metrics.ms, resumed: event.resumed, elapsedMs: Date.now() - streamStarted }),
+                );
               } else {
                 const claimsNote = event.outcome.status === 'ok' ? `, ${event.outcome.claims.length} claim(s)` : '';
                 send({ type: 'stage_progress', runId: run.id, stage: 'extract', detail: `${event.sourceId}: ${event.outcome.status}${claimsNote}` });
+
+                // Stream this source's claims the moment they're verified, instead of
+                // waiting for every other source to finish too (see the comment above).
+                if (event.outcome.status === 'ok' && event.outcome.claims.length > 0) {
+                  streamedClaims.push(...event.outcome.claims);
+                  if (streamedClaims.length === event.outcome.claims.length) {
+                    console.log(JSON.stringify({ type: 'first_claims_latency', runId: run.id, elapsedMs: Date.now() - streamStarted }));
+                  }
+                  send({ type: 'band_ready', runId: run.id, payload: { claims: [...streamedClaims] } });
+                }
               }
             },
           },
@@ -127,6 +176,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         const finalStatus = computeFinalStatus(result);
         await runtime.runsRepository.updateRunStatus(run.id, finalStatus);
         send({ type: 'done', runId: run.id, status: finalStatus });
+        console.log(JSON.stringify({ type: 'run_latency', runId: run.id, status: finalStatus, totalMs: Date.now() - streamStarted, claimsTotal: result.extraction.value?.length ?? 0 }));
       } catch (err) {
         send({ type: 'error', runId: run.id, message: err instanceof Error ? err.message : 'Unknown error' });
         await runtime.runsRepository.updateRunStatus(run.id, 'failed').catch(() => undefined);
