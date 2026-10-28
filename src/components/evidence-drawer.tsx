@@ -4,7 +4,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import type { Claim } from '@/shared/domain';
 import type { ScoreBreakdown } from '@/modules/04-grading-scoring';
 import { Chip } from '@/components/ui/chip';
-import { gradeOriginLabel, gradeSummaryLabel } from '@/lib/i18n/grade-labels';
+import { NOT_GRADED_TOOLTIP, gradeCertaintyLabel, gradeProvenanceLabel, gradeStrengthLabel } from '@/lib/i18n/grade-labels';
 
 // SPEC §11 screen (3): Evidence drawer — "provenance always one click away."
 
@@ -82,10 +82,23 @@ export function EvidenceDrawer({
                 <dd className="truncate text-fg">{claim.sourceId}</dd>
                 <dt className="text-muted">Locator</dt>
                 <dd className="text-fg">{claim.passageId}</dd>
-                <dt className="text-muted">Grade</dt>
+                <dt className="text-muted">Certainty</dt>
                 <dd className="text-fg">
-                  {gradeSummaryLabel(claim.grade)} — {gradeOriginLabel(claim.grade)}
+                  {gradeCertaintyLabel(claim.grade)}
+                  {claim.grade.certainty === 'ungraded' && <span className="mt-0.5 block text-muted">{NOT_GRADED_TOOLTIP}</span>}
                 </dd>
+                {claim.grade.strength && (
+                  <>
+                    <dt className="text-muted">Strength</dt>
+                    <dd className="text-fg">{gradeStrengthLabel(claim.grade.strength)}</dd>
+                  </>
+                )}
+                {gradeProvenanceLabel(claim.grade) && (
+                  <>
+                    <dt className="text-muted">Source grade</dt>
+                    <dd className="text-fg">{gradeProvenanceLabel(claim.grade)}</dd>
+                  </>
+                )}
               </dl>
 
               {sourceScore && (

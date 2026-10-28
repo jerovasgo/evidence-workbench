@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import * as Tabs from '@radix-ui/react-tabs';
 import type { Claim } from '@/shared/domain';
 import { ClaimCard } from '@/components/claim-card';
 import { EvidenceDrawer } from '@/components/evidence-drawer';
@@ -9,34 +8,42 @@ import { StageProgress } from '@/components/stage-progress';
 import { Chip } from '@/components/ui/chip';
 import { useRunStream } from '@/lib/use-run-stream';
 import type { Mode } from '@/lib/modes';
+import type { Intent } from '@/modules/01-orchestrator';
 
-// The live/finished result of one run: stage progress while streaming, then view
-// tabs (Evidence is real; Algorithm/Map/Matrix/Mechanism are explicit "not built
-// yet" placeholders — modules 06/07/08 don't exist, never silently hidden) and a
-// receipt footer. Shared between the standalone run page
-// (src/app/runs/[id]/run-view.tsx) and the dashboard's conversation thread
-// (src/components/dashboard/conversation-thread.tsx) — both need the exact same
-// SSE-driven rendering, not a re-implementation.
+// The live/finished result of one run: stage progress while streaming, then exactly
+// one result (never a tab switcher with inert placeholder tabs — 2026-10-28 "single
+// mode per query" policy, docs/DECISIONS.md). Evidence is the only real output today
+// (modules 06/07/08 — Algorithm/Map/Matrix/Mechanism — aren't built); a mode that
+// asked for one of those says so in one line instead of showing an empty tab.
+// Shared between the standalone run page (src/app/runs/[id]/run-view.tsx) and the
+// dashboard's conversation thread (src/components/dashboard/conversation-thread.tsx)
+// — both need the exact same SSE-driven rendering, not a re-implementation.
 
-const PLACEHOLDER_VIEWS = [
-  { value: 'algorithm', label: 'Algorithm' },
-  { value: 'map', label: 'Map' },
-  { value: 'matrix', label: 'Matrix' },
-  { value: 'mechanism', label: 'Mechanism' },
-] as const;
+const MODE_LABEL: Partial<Record<Mode, string>> = { algorithm: 'Algorithm', evidence_map: 'Evidence Map' };
+const INTENT_LABEL: Partial<Record<Intent, string>> = { algorithm: 'an Algorithm', evidence_map: 'an Evidence Map', mechanism: 'a Mechanism diagram' };
 
-/** Mode only ever picks which tab opens by default — it never changes what's rendered (lib/modes.ts). */
-function defaultTabForMode(mode: Mode | undefined): string {
-  if (mode === 'algorithm') return 'algorithm';
-  if (mode === 'evidence_map') return 'map';
-  return 'evidence';
+/**
+ * An explicit `mode` (the user picked one) always wins — says which unbuilt view was
+ * asked for. Otherwise, in Auto, only worth a note when the router's real `intent`
+ * (P1) identified something other than plain evidence lookup — `fact_lookup`/
+ * `comparison` already IS the Evidence list shown below, nothing to explain.
+ */
+function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefined): string | null {
+  const explicitLabel = mode && mode !== 'auto' ? MODE_LABEL[mode] : undefined;
+  if (explicitLabel) return `The ${explicitLabel} view isn’t built yet — showing the verified evidence behind it instead.`;
+
+  const intentLabel = intent ? INTENT_LABEL[intent] : undefined;
+  if (intentLabel) return `I identified this as ${intentLabel} question; that view isn’t built yet, so here’s the verified evidence instead.`;
+
+  return null;
 }
 
-export function RunResult({ runId, mode }: { runId: string; mode?: Mode }) {
+export function RunResult({ runId, mode, intent }: { runId: string; mode?: Mode; intent?: Intent | null }) {
   const { stages, sourceProgress, claims, sourceScores, receipt, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const isStreaming = status === 'streaming';
+  const note = unbuiltViewNote(mode, intent);
 
   return (
     <div className="flex flex-col gap-6">
@@ -54,51 +61,23 @@ export function RunResult({ runId, mode }: { runId: string; mode?: Mode }) {
         </p>
       )}
 
-      <Tabs.Root defaultValue={defaultTabForMode(mode)} className="flex flex-col gap-4">
-        <Tabs.List className="flex flex-wrap gap-1 border-b border-border" aria-label="Views">
-          <Tabs.Trigger
-            value="evidence"
-            className="rounded-t-[var(--radius-chip)] px-3 py-2 text-sm text-muted data-[state=active]:border-b-2 data-[state=active]:border-fg data-[state=active]:text-fg"
-          >
-            Evidence
-          </Tabs.Trigger>
-          {PLACEHOLDER_VIEWS.map((view) => (
-            <Tabs.Trigger
-              key={view.value}
-              value={view.value}
-              className="rounded-t-[var(--radius-chip)] px-3 py-2 text-sm text-muted data-[state=active]:border-b-2 data-[state=active]:border-fg data-[state=active]:text-fg"
-            >
-              {view.label}
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
+      {note && <p className="text-xs text-muted">{note}</p>}
 
-        <Tabs.Content value="evidence" className="flex flex-col gap-3">
-          {claims === null && isStreaming && <p className="text-sm text-muted">Gathering and verifying sources…</p>}
-          {claims !== null && claims.length === 0 && (
-            <p className="text-sm text-muted">
-              No claims passed verification yet. This is shown explicitly, not left blank — see the receipt below for what was checked.
-            </p>
-          )}
-          {claims !== null && claims.length > 0 && (
-            <ul className="flex flex-col gap-3">
-              {claims.map((claim) => (
-                <ClaimCard key={claim.id} claim={claim} onOpenEvidence={setSelectedClaim} />
-              ))}
-            </ul>
-          )}
-        </Tabs.Content>
-
-        {PLACEHOLDER_VIEWS.map((view) => (
-          <Tabs.Content
-            key={view.value}
-            value={view.value}
-            className="rounded-[var(--radius-card)] border border-border bg-black/40 p-6 text-center text-sm text-muted"
-          >
-            The {view.label} view isn&rsquo;t built yet — the Evidence tab shows what has been verified so far.
-          </Tabs.Content>
-        ))}
-      </Tabs.Root>
+      <div className="flex flex-col gap-3">
+        {claims === null && isStreaming && <p className="text-sm text-muted">Gathering and verifying sources…</p>}
+        {claims !== null && claims.length === 0 && (
+          <p className="text-sm text-muted">
+            No claims passed verification yet. This is shown explicitly, not left blank — see the receipt below for what was checked.
+          </p>
+        )}
+        {claims !== null && claims.length > 0 && (
+          <ul className="flex flex-col gap-3">
+            {claims.map((claim) => (
+              <ClaimCard key={claim.id} claim={claim} onOpenEvidence={setSelectedClaim} />
+            ))}
+          </ul>
+        )}
+      </div>
 
       {receipt && (
         <footer className="rounded-[var(--radius-card)] border border-border bg-black/40 p-4 text-xs text-muted">

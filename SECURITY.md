@@ -207,11 +207,19 @@ This file tracks what is actually built, not the full target state in `docs/arch
   unscored rather than guessed. `isSuperseded` is always `false` — the classifier's
   one `supersedesOrSupersededBy` string field doesn't say which direction the
   relationship runs, so currency never penalizes it; the classifier schema needs two
-  separate fields before this can be scored for real. The `grade-estimator` agent
-  (P6, AI-estimated GRADE domains for SR/RCTs with no native grade) is not built —
-  user explicitly scoped this to Parts A+B only. Nothing can reach
-  `grade.origin: 'ai_estimated'` with real `domains` yet; every ungraded claim still
-  shows the plain "AI-estimated" placeholder label.
+  separate fields before this can be scored for real.
+  **"No AI-inferred grades" policy (2026-10-28, `docs/DECISIONS.md`):** the
+  `grade-estimator` agent (P6) and the `study-data-extractor` it would have needed are
+  cancelled, not deferred — the platform will never show a certainty/strength value
+  the system itself produced. `grade.origin: 'ai_estimated'` only ever means "no
+  formal grade was found," never "the AI estimated one." A claim without a recognized
+  printed grade shows a neutral "Not graded" tag (`claim-card.tsx`) or row
+  (`evidence-drawer.tsx`) with a fixed explanatory line, never a number or category;
+  certainty and strength are labeled independently (`src/lib/i18n/grade-labels.ts`)
+  so a printed strength (e.g. ACC/AHA "Class I") still shows even when certainty
+  reads "Not graded." An unrecognized-scheme native grade still shows its raw text,
+  labeled as unrecognized — traceability isn't lost, only the manufactured certainty
+  number is.
 - **Retrieval connectors** (`src/modules/02-retrieval/tools/pubmed.ts`, `europe-pmc.ts`, `crossref.ts`,
   `fetch-url-text.ts`, wired into the tool registry by `register-retrieval-tools.ts`):
   all three REST APIs (PubMed E-utilities, Europe PMC, Crossref) are public and

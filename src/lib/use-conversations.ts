@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Mode } from '@/lib/modes';
+import type { Intent } from '@/modules/01-orchestrator';
 
 export interface ConversationSummary {
   id: string;
@@ -16,6 +17,14 @@ export interface Turn {
   freeText: string;
   mode: Mode;
   runId: string | null;
+  /**
+   * The router's (P1) real intent for this turn — only known right when it was sent
+   * (the POST /api/runs response); not persisted (conversations only store
+   * freeText/mode/runId), so it's `null` again after a reload / selecting an older
+   * conversation. Lets the UI honestly say what "Auto" picked while the answer is
+   * fresh, without inventing it on turns we no longer have it for.
+   */
+  intent: Intent | null;
 }
 
 export interface UseConversationsResult {
@@ -70,7 +79,7 @@ export function useConversations(initialQuery?: string, initialMode?: Mode): Use
           return;
         }
 
-        setTurns((prev) => [...prev, { id: body.runId, freeText, mode, runId: body.runId }]);
+        setTurns((prev) => [...prev, { id: body.runId, freeText, mode, runId: body.runId, intent: body.intent ?? null }]);
         if (body.conversationId !== activeConversationId) {
           setActiveConversationId(body.conversationId);
         }
@@ -98,7 +107,15 @@ export function useConversations(initialQuery?: string, initialMode?: Mode): Use
     if (!res.ok) return;
     const body = await res.json();
     setActiveConversationId(id);
-    setTurns(body.turns.map((t: { id: string; freeText: string; mode: string; runId: string | null }) => ({ id: t.id, freeText: t.freeText, mode: t.mode as Mode, runId: t.runId })));
+    setTurns(
+      body.turns.map((t: { id: string; freeText: string; mode: string; runId: string | null }) => ({
+        id: t.id,
+        freeText: t.freeText,
+        mode: t.mode as Mode,
+        runId: t.runId,
+        intent: null, // not persisted — only known live, right after sending (see Turn.intent's own comment)
+      })),
+    );
   }, []);
 
   const newResearch = useCallback(() => {

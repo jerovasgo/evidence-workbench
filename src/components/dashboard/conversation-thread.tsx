@@ -11,7 +11,7 @@ export function ConversationThread({ turns }: { turns: Turn[] }) {
       {turns.map((turn) => (
         <article key={turn.id} className="flex flex-col gap-6">
           <p className="text-lg font-medium text-fg">{turn.freeText}</p>
-          {turn.runId && <RunResult runId={turn.runId} mode={turn.mode} />}
+          {turn.runId && <RunResult runId={turn.runId} mode={turn.mode} intent={turn.intent} />}
         </article>
       ))}
     </div>
