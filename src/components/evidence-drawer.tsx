@@ -2,6 +2,7 @@
 
 import * as Dialog from '@radix-ui/react-dialog';
 import type { Claim } from '@/shared/domain';
+import type { ScoreBreakdown } from '@/modules/04-grading-scoring';
 import { Chip } from '@/components/ui/chip';
 import { gradeOriginLabel, gradeSummaryLabel } from '@/lib/i18n/grade-labels';
 
@@ -23,7 +24,16 @@ const ISSUE_LABEL: Record<string, string> = {
   other: 'Other mismatch',
 };
 
-export function EvidenceDrawer({ claim, onClose }: { claim: Claim | null; onClose: () => void }) {
+export function EvidenceDrawer({
+  claim,
+  sourceScore,
+  onClose,
+}: {
+  claim: Claim | null;
+  /** Module 04 Part B — the claim's source score breakdown, when the run computed one. */
+  sourceScore?: ScoreBreakdown | null;
+  onClose: () => void;
+}) {
   return (
     <Dialog.Root open={claim !== null} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
@@ -77,6 +87,28 @@ export function EvidenceDrawer({ claim, onClose }: { claim: Claim | null; onClos
                   {gradeSummaryLabel(claim.grade)} — {gradeOriginLabel(claim.grade)}
                 </dd>
               </dl>
+
+              {sourceScore && (
+                <div className="rounded-[var(--radius-card)] border border-border bg-black/40 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted">Source score — why ranked here</p>
+                  <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+                    <dt className="text-muted">Relevance</dt>
+                    <dd className="text-fg">{sourceScore.relevance.toFixed(2)} (not yet modeled — placeholder)</dd>
+                    <dt className="text-muted">Evidence level</dt>
+                    <dd className="text-fg">{sourceScore.level.toFixed(2)}</dd>
+                    <dt className="text-muted">Quality</dt>
+                    <dd className="text-fg">{sourceScore.quality.toFixed(2)}</dd>
+                    <dt className="text-muted">Currency</dt>
+                    <dd className="text-fg">{sourceScore.currency.toFixed(2)}</dd>
+                    <dt className="text-muted">Applicability</dt>
+                    <dd className="text-fg">
+                      {sourceScore.applicability.toFixed(2)} ({sourceScore.applicabilityLabel})
+                    </dd>
+                    <dt className="text-muted">Total</dt>
+                    <dd className="text-fg">{sourceScore.total.toFixed(2)}</dd>
+                  </dl>
+                </div>
+              )}
             </>
           )}
         </Dialog.Content>

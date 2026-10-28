@@ -184,21 +184,34 @@ This file tracks what is actually built, not the full target state in `docs/arch
   reached `support: 'supports'`. The claim-card/evidence-drawer chips and
   `buildReceipt`'s `supported` count were updated to reflect the real verdict instead
   of a hardcoded "Not confirmed" (`docs/DECISIONS.md`, 2026-10-28).
-- **Grading, Part A only** (module 04, `src/modules/04-grading-scoring/`, started
-  2026-10-28): deterministic `grade-maps.ts` recognizes a printed grade string from
-  four schemes (ACC/AHA Class+LOE, GRADE wording, USPSTF, Oxford CEBM) and maps it to
-  `Grade` with `origin: 'source'`; `gradeClaim()` is wired into `verify-claim.ts` in
-  place of the old always-`ungraded` placeholder. 49 unit tests (≥40-fixture eval
-  target from the architecture doc), plus an integration test proving the exact code
-  path the live pipeline uses. **Known gaps, logged not silent:** Part B (wiring
-  module 02's already-built-and-tested `computeSourceScore`/`computeCurrency` into the
-  real pipeline, plus the `quality`/`applicability` factors and a `ScoreBreakdown`
-  tooltip) and the `grade-estimator` agent (P6, AI-estimated GRADE domains for SR/RCTs
-  with no native grade) are not built — user explicitly scoped this pass to Part A
-  only. `relevance` (one of source-score's five factors) still has no computed source
-  anywhere in the codebase. Nothing can reach `grade.origin: 'ai_estimated'` with real
-  `domains` yet; every ungraded claim still shows the plain "AI-estimated" placeholder
-  label.
+- **Grading and scoring, Parts A and B** (module 04, `src/modules/04-grading-scoring/`,
+  started 2026-10-28): **Part A** — deterministic `grade-maps.ts` recognizes a printed
+  grade string from four schemes (ACC/AHA Class+LOE, GRADE wording, USPSTF, Oxford
+  CEBM) and maps it to `Grade` with `origin: 'source'`; `gradeClaim()` is wired into
+  `verify-claim.ts` in place of the old always-`ungraded` placeholder. 49 unit tests
+  (≥40-fixture eval target from the architecture doc), plus an integration test
+  proving the exact code path the live pipeline uses. **Part B** — `quality.ts`
+  (COI/methods penalties from the classifier's own flags) and `applicability.ts`
+  (setting-only match/partial/mismatch) are new; `source-score.ts`'s
+  `buildSourceScore()` reuses module 02's already-built `computeSourceScore`/
+  `computeCurrency`/`LEVEL_WEIGHTS` and is wired into `run-retrieval.ts` right after
+  the `classify` stage, riding in the existing `band_ready` SSE event; the evidence
+  drawer shows a "Source score — why ranked here" breakdown. Live-verified through
+  the real SSE pipeline: `sourceScores` for 36 real classified sources came back with
+  correct per-kind level weights and currency values.
+  **Known gaps, logged not silent:** `relevance` (one of source-score's five factors)
+  still has a fixed 1.0 placeholder — the classifier (P4) isn't given the run's
+  sub-questions to judge relevance against, so nothing computes a real value.
+  `applicability` only scores **setting**, never population — free-text population
+  comparison needs real semantic reading, not a word-overlap heuristic, so it's left
+  unscored rather than guessed. `isSuperseded` is always `false` — the classifier's
+  one `supersedesOrSupersededBy` string field doesn't say which direction the
+  relationship runs, so currency never penalizes it; the classifier schema needs two
+  separate fields before this can be scored for real. The `grade-estimator` agent
+  (P6, AI-estimated GRADE domains for SR/RCTs with no native grade) is not built —
+  user explicitly scoped this to Parts A+B only. Nothing can reach
+  `grade.origin: 'ai_estimated'` with real `domains` yet; every ungraded claim still
+  shows the plain "AI-estimated" placeholder label.
 - **Retrieval connectors** (`src/modules/02-retrieval/tools/pubmed.ts`, `europe-pmc.ts`, `crossref.ts`,
   `fetch-url-text.ts`, wired into the tool registry by `register-retrieval-tools.ts`):
   all three REST APIs (PubMed E-utilities, Europe PMC, Crossref) are public and

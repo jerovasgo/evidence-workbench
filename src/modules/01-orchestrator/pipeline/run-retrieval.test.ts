@@ -95,6 +95,8 @@ describe('runRetrievalPipeline', () => {
     // The model classified sourceId pubmed:111 as 'rct', but its PubMed type is
     // "Practice Guideline" — the deterministic override must win.
     expect(result.classification.value?.[0]).toMatchObject({ sourceId: 'pubmed:111', kind: 'guideline' });
+    // Module 04 Part B: source scores are computed from the (overridden) classification.
+    expect(result.sourceScores['pubmed:111']?.level).toBeCloseTo(1.0, 5); // guideline level weight
   });
 
   it('falls back to the router condition for planning when structure fails', async () => {

@@ -33,7 +33,7 @@ function defaultTabForMode(mode: Mode | undefined): string {
 }
 
 export function RunResult({ runId, mode }: { runId: string; mode?: Mode }) {
-  const { stages, sourceProgress, claims, receipt, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
+  const { stages, sourceProgress, claims, sourceScores, receipt, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const isStreaming = status === 'streaming';
@@ -112,7 +112,7 @@ export function RunResult({ runId, mode }: { runId: string; mode?: Mode }) {
         </footer>
       )}
 
-      <EvidenceDrawer claim={selectedClaim} onClose={() => setSelectedClaim(null)} />
+      <EvidenceDrawer claim={selectedClaim} sourceScore={selectedClaim ? (sourceScores?.[selectedClaim.sourceId] ?? null) : null} onClose={() => setSelectedClaim(null)} />
     </div>
   );
 }

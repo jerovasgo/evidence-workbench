@@ -4,6 +4,7 @@ import { ClaimSchema, type Claim } from '@/shared/domain';
 import type { MetaClient } from '@/shared/meta';
 import type { BudgetGuard } from '@/shared/security';
 import { StageResultSchema } from '@/shared/domain';
+import { buildSourceScore, type ScoreBreakdown } from '@/modules/04-grading-scoring';
 import {
   CandidateSourceSchema,
   DEFAULT_ALLOWED_DOMAIN_NAMES,
@@ -138,6 +139,8 @@ export interface RunRetrievalResult {
   retrieval: StageResult<CandidateSource[]>;
   classification: StageResult<SourceClassification[]>;
   extraction: StageResult<Claim[]>;
+  /** Module 04 Part B, keyed by `SourceClassification.sourceId`. Pure code, computed once classification is available — not its own stage (no model call, nothing to fail/resume). */
+  sourceScores: Record<string, ScoreBreakdown>;
 }
 
 function buildMetadataAndText(candidate: CandidateSource): string {
@@ -330,6 +333,14 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
   }
   deps.onStageEvent?.({ type: 'stage_result', stage: 'classify', status: classification.status, metrics: classification.metrics, resumed: classificationResumed });
 
+  // --- source scores (module 04 Part B) --- pure code, no model call; computed for
+  // every classified source regardless of whether extraction ever reaches it, so the
+  // UI can show "why ranked here" for any source a claim cites.
+  const sourceScores: Record<string, ScoreBreakdown> = {};
+  for (const c of classification.value ?? []) {
+    sourceScores[c.sourceId] = buildSourceScore(c, structure.value?.setting ?? 'unknown');
+  }
+
   // --- extract + verify (P5 + deterministic checks, module 03) --- only runs if
   // there are candidates; classification is used for prioritization only (missing/
   // failed classification just means no kind-based prioritization, not a blocker).
@@ -405,5 +416,5 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
   }
   deps.onStageEvent?.({ type: 'stage_result', stage: 'extract', status: extraction.status, metrics: extraction.metrics, resumed: extractionResumed });
 
-  return { structure, plan, retrieval, classification, extraction };
+  return { structure, plan, retrieval, classification, extraction, sourceScores };
 }

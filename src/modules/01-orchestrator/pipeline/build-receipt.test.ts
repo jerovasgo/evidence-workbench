@@ -34,6 +34,7 @@ function baseResult(overrides: Partial<RunRetrievalResult> = {}): RunRetrievalRe
     retrieval: ok('retrieve', []),
     classification: ok('classify', classifications),
     extraction: ok('extract', [claim], { claimsKept: 1, claimsDropped: 1, retracted: 1 }),
+    sourceScores: {},
     ...overrides,
   };
 }

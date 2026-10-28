@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { Claim, Receipt, RunEvent } from '@/shared/domain';
+import type { ScoreBreakdown } from '@/modules/04-grading-scoring';
 
 // Client-side consumer of GET /api/runs/:id/stream (SSE). EventSource already
 // parses the `data: <json>\n\n` framing; this hook just accumulates the typed
@@ -18,6 +19,7 @@ export interface RunStreamState {
   stages: Record<StageName, StageState>;
   sourceProgress: string[];
   claims: Claim[] | null;
+  sourceScores: Record<string, ScoreBreakdown> | null;
   receipt: Receipt | null;
   status: 'streaming' | 'done' | 'partial' | 'abstained' | 'failed';
   errorMessage: string | null;
@@ -30,6 +32,7 @@ function initialState(): RunStreamState {
     stages: Object.fromEntries(STAGE_ORDER.map((s) => [s, { status: 'pending' }])) as Record<StageName, StageState>,
     sourceProgress: [],
     claims: null,
+    sourceScores: null,
     receipt: null,
     status: 'streaming',
     errorMessage: null,
@@ -81,8 +84,10 @@ function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamState {
       const status = (event.detail ?? '').split(' ')[0] as StageState['status'];
       return { ...prev, stages: { ...prev.stages, [stage]: { status, detail: event.detail } } };
     }
-    case 'band_ready':
-      return { ...prev, claims: (event.payload as { claims: Claim[] }).claims };
+    case 'band_ready': {
+      const payload = event.payload as { claims: Claim[]; sourceScores?: Record<string, ScoreBreakdown> };
+      return { ...prev, claims: payload.claims, sourceScores: payload.sourceScores ?? null };
+    }
     case 'receipt_ready':
       return { ...prev, receipt: event.receipt };
     case 'error':

@@ -121,7 +121,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           },
         );
 
-        send({ type: 'band_ready', runId: run.id, payload: { claims: result.extraction.value ?? [] } });
+        send({ type: 'band_ready', runId: run.id, payload: { claims: result.extraction.value ?? [], sourceScores: result.sourceScores } });
         send({ type: 'receipt_ready', runId: run.id, receipt: buildReceipt(result) });
 
         const finalStatus = computeFinalStatus(result);
