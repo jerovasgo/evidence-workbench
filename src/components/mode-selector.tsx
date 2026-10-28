@@ -13,7 +13,7 @@ export function ModeSelector({ mode, onChange }: { mode: Mode; onChange: (mode: 
       <DropdownMenu.Trigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-border-strong px-3 py-1.5 text-xs text-muted transition-colors hover:text-fg"
+          className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-transparent px-3 py-1.5 text-xs text-muted transition-colors hover:border-border-strong hover:text-fg"
         >
           {active.label}
           <ChevronDown className="h-3 w-3" aria-hidden="true" />
@@ -23,7 +23,7 @@ export function ModeSelector({ mode, onChange }: { mode: Mode; onChange: (mode: 
         <DropdownMenu.Content
           align="start"
           sideOffset={8}
-          className="glass z-50 w-72 rounded-[var(--radius-card)] p-1.5 shadow-none"
+          className="popover z-50 w-72 rounded-[var(--radius-card)] p-1.5 shadow-none"
         >
           {MODE_OPTIONS.map((option) => (
             <DropdownMenu.Item

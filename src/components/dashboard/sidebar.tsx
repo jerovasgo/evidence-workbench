@@ -118,7 +118,7 @@ export function Sidebar({
                           </button>
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Portal>
-                          <DropdownMenu.Content align="start" className="glass z-50 w-40 rounded-[var(--radius-chip)] p-1 text-left">
+                          <DropdownMenu.Content align="start" className="popover z-50 w-40 rounded-[var(--radius-chip)] p-1 text-left">
                             <DropdownMenu.Item
                               onSelect={() => startRename(conversation)}
                               className="flex cursor-pointer items-center gap-2 rounded-[var(--radius-chip)] px-2 py-1.5 text-xs text-fg outline-none data-[highlighted]:bg-glass-strong"

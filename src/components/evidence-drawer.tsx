@@ -38,7 +38,7 @@ export function EvidenceDrawer({
     <Dialog.Root open={claim !== null} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 motion-safe:animate-in motion-safe:fade-in" />
-        <Dialog.Content className="glass fixed inset-y-0 right-0 flex w-full max-w-md flex-col gap-4 overflow-y-auto border-y-0 border-r-0 p-6 focus:outline-none">
+        <Dialog.Content className="popover fixed inset-y-0 right-0 flex w-full max-w-md flex-col gap-4 overflow-y-auto border-y-0 border-r-0 p-6 focus:outline-none">
           {claim && (
             <>
               <div className="flex items-start justify-between gap-4">

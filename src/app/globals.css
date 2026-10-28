@@ -16,6 +16,13 @@
 
   --color-glass: rgba(255, 255, 255, 0.04);
   --color-glass-strong: rgba(255, 255, 255, 0.07);
+  /* Near-opaque backing for a Dialog/DropdownMenu that floats directly over page
+     content (evidence drawer, menus) — 2026-10-28, user-reported: `.glass`'s 4%
+     tint is tuned for calm fixed chrome (nav, search bar) over an otherwise-static
+     background; a popup can open over anything (claim cards, text), and blur alone
+     over a near-transparent tint still lets that content's luminance show through,
+     so its own text was reading as confused with what's behind it. */
+  --color-popover: rgba(8, 8, 8, 0.92);
 
   /* Functional-only signal colors — never used decoratively. */
   --color-warning: #f5b544;
@@ -40,6 +47,7 @@
   --color-border-strong: var(--color-border-strong);
   --color-glass: var(--color-glass);
   --color-glass-strong: var(--color-glass-strong);
+  --color-popover: var(--color-popover);
   --color-warning: var(--color-warning);
   --color-conflict: var(--color-conflict);
   --color-safety: var(--color-safety);
@@ -59,13 +67,24 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Discrete glassmorphism utility: floating surfaces (nav, search bar, panels,
-   menus) — subtle translucency + blur, 1px border, no glow/halo. */
+/* Discrete glassmorphism utility: calm FIXED chrome over an otherwise-static
+   background (nav, search bar) — subtle translucency + blur, 1px border, no
+   glow/halo. Not for anything that opens as an overlay on demand; use .popover
+   for that (a Dialog/DropdownMenu/Popover can open over literally anything). */
 .glass {
   background: var(--color-glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--color-border);
+}
+
+/* A Dialog/DropdownMenu/Popover content panel: near-opaque + blur, so its own text
+   reads clearly regardless of what it happens to open over. */
+.popover {
+  background: var(--color-popover);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border-strong);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -79,8 +98,15 @@ body {
   }
 }
 
+/* 2026-10-28, user-reported "visible white borders": Radix moves focus
+   programmatically when a Dialog/DropdownMenu opens (and `:focus-visible` treats a
+   script-driven focus() as keyboard-origin in most browsers, same as an actual Tab
+   press), so a full-opacity 2px white outline was firing far more often than "only
+   during keyboard navigation" reads — every drawer/menu open, not just real tabbing.
+   Softened to 70% opacity: still a clearly perceptible, accessible indicator, not a
+   stark "glow" rectangle. */
 :focus-visible {
-  outline: 2px solid var(--color-fg);
+  outline: 2px solid rgba(255, 255, 255, 0.7);
   outline-offset: 2px;
   border-radius: 4px;
 }
