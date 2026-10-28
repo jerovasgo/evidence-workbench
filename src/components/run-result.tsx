@@ -4,20 +4,26 @@ import { useState } from 'react';
 import type { Claim } from '@/shared/domain';
 import { ClaimCard } from '@/components/claim-card';
 import { EvidenceDrawer } from '@/components/evidence-drawer';
+import { EvidenceSkeleton } from '@/components/evidence-skeleton';
 import { StageProgress } from '@/components/stage-progress';
 import { Chip } from '@/components/ui/chip';
 import { useRunStream } from '@/lib/use-run-stream';
+import { initialProcessingMessage } from '@/lib/processing-messages';
+import { buildResultSummary } from '@/lib/i18n/result-summary';
 import type { Mode } from '@/lib/modes';
 import type { Intent } from '@/modules/01-orchestrator';
 
-// The live/finished result of one run: stage progress while streaming, then exactly
-// one result (never a tab switcher with inert placeholder tabs — 2026-10-28 "single
-// mode per query" policy, docs/DECISIONS.md). Evidence is the only real output today
-// (modules 06/07/08 — Algorithm/Map/Matrix/Mechanism — aren't built); a mode that
-// asked for one of those says so in one line instead of showing an empty tab.
-// Shared between the standalone run page (src/app/runs/[id]/run-view.tsx) and the
-// dashboard's conversation thread (src/components/dashboard/conversation-thread.tsx)
-// — both need the exact same SSE-driven rendering, not a re-implementation.
+// The live/finished result of one run: an initial processing message + collapsed
+// "Research progress" while streaming, then exactly one result — a short, receipt-
+// grounded summary followed by the evidence and its sources (2026-10-28
+// conversational-flow brief, Etapas B–D). Never a tab switcher with inert
+// placeholder tabs ("single mode per query" policy, docs/DECISIONS.md). Evidence is
+// the only real output today (modules 06/07/08 — Algorithm/Map/Matrix/Mechanism —
+// aren't built); a mode that asked for one of those says so in one line instead of
+// showing an empty tab. Shared between the standalone run page
+// (src/app/runs/[id]/run-view.tsx) and the dashboard's conversation thread
+// (src/components/dashboard/conversation-thread.tsx) — both need the exact same
+// SSE-driven rendering, not a re-implementation.
 
 const MODE_LABEL: Partial<Record<Mode, string>> = { algorithm: 'Algorithm', evidence_map: 'Evidence Map' };
 const INTENT_LABEL: Partial<Record<Intent, string>> = { algorithm: 'an Algorithm', evidence_map: 'an Evidence Map', mechanism: 'a Mechanism diagram' };
@@ -44,10 +50,16 @@ export function RunResult({ runId, mode, intent }: { runId: string; mode?: Mode;
 
   const isStreaming = status === 'streaming';
   const note = unbuiltViewNote(mode, intent);
+  const summary = buildResultSummary(status, receipt, claims);
 
   return (
     <div className="flex flex-col gap-6">
-      {isStreaming && <StageProgress stages={stages} sourceProgress={sourceProgress} />}
+      {isStreaming && (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-fg">{initialProcessingMessage(mode)}</p>
+          <StageProgress stages={stages} sourceProgress={sourceProgress} />
+        </div>
+      )}
 
       {errorMessage && (
         <div role="alert" className="rounded-[var(--radius-card)] border border-conflict/40 bg-black/40 p-4 text-sm text-conflict">
@@ -55,16 +67,12 @@ export function RunResult({ runId, mode, intent }: { runId: string; mode?: Mode;
         </div>
       )}
 
-      {!isStreaming && !errorMessage && (
-        <p className="text-xs text-muted">
-          Run {status === 'done' ? 'complete' : status === 'partial' ? 'finished with gaps' : status}.
-        </p>
-      )}
+      {!isStreaming && !errorMessage && summary && <p className="text-sm text-fg">{summary}</p>}
 
       {note && <p className="text-xs text-muted">{note}</p>}
 
       <div className="flex flex-col gap-3">
-        {claims === null && isStreaming && <p className="text-sm text-muted">Gathering and verifying sources…</p>}
+        {claims === null && isStreaming && <EvidenceSkeleton />}
         {claims !== null && claims.length === 0 && (
           <p className="text-sm text-muted">
             No claims passed verification yet. This is shown explicitly, not left blank — see the receipt below for what was checked.

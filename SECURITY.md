@@ -273,6 +273,11 @@ This file tracks what is actually built, not the full target state in `docs/arch
   showing the "nothing to resume" error rather than a crash) → a completed run
   with an honest "no claims passed verification" + real receipt. Mobile layout
   (375px) confirmed with no horizontal overflow on both landing and dashboard.
+  **Superseded 2026-10-28 by two later passes on the same module** (both logged
+  separately above/below): the "which result tab opens by default" line no longer
+  applies — the tab switcher itself is gone ("single mode per query" policy); and
+  `ConversationThread` now renders a new `TurnResult` (sending/error/ready state
+  machine) instead of calling `RunResult` directly (conversational-flow Phase 2).
   Test conversations/runs deleted from `BenchBark` afterward. `next build`
   (production) verified clean, 393 tests pass.
 - **Web crawling for `guideline`/`web` queries** (2026-10-28, user-requested): a
@@ -329,10 +334,17 @@ This file tracks what is actually built, not the full target state in `docs/arch
   it yet.
 - UI (module 11) is two of six SPEC §11 screens: Home/Landing and a conversational
   Result/Dashboard. Not built: real Algorithm/Map/Matrix/Mechanism visualizations
-  (their modules don't exist — the dashboard's mode selector and view tabs are
-  honest placeholders, not fake data), a divergence card, watches (list/builder/
-  inbox), a local pool screen, light theme (dark-first only), the ES/EN i18n toggle,
-  and a print stylesheet for the one-page card.
+  (their modules don't exist — the dashboard no longer shows view tabs at all for
+  them, 2026-10-28 "single mode per query" policy, honest one-line notes instead of
+  placeholder tabs), a divergence card, watches (list/builder/inbox), a local pool
+  screen, light theme (dark-first only), the ES/EN i18n toggle, and a print
+  stylesheet for the one-page card. "Continuidad conversacional" (reusing a prior
+  turn's already-retrieved sources/claims for a related follow-up, instead of
+  re-running retrieval from scratch) is also not built — each turn runs the full
+  pipeline independently; the conversational-flow brief's own point 5 asked for
+  this, but it needs a real caching/invalidation design (SPEC §9's
+  `(condition, setting, source-version hash)` cache key is itself still unbuilt)
+  beyond what a UI pass can decide on its own.
 - Conversation "ownership" is an httpOnly session cookie (one per browser), not a
   real account — no sign-up/sign-in exists (see the Auth gap above). Conversations
   are invisible from a different browser or after clearing cookies; the underlying

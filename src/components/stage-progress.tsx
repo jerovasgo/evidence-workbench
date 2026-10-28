@@ -3,6 +3,14 @@
 import { cn } from '@/lib/cn';
 import type { StageName, StageState } from '@/lib/use-run-stream';
 
+// 2026-10-28 conversational-flow brief, Etapa C: "Research progress"-style collapsed
+// panel showing a brief description of the active stage, expandable for detail.
+// Collapsed by default via a native <details> (no JS state, keyboard-accessible for
+// free); the stage list and statuses are the same real SSE-driven data as before —
+// nothing here is simulated or percentage-based.
+
+const STAGE_ORDER: StageName[] = ['structure', 'plan', 'retrieve', 'classify', 'extract'];
+
 const STAGE_LABEL: Record<StageName, string> = {
   structure: 'Structure',
   plan: 'Plan search',
@@ -20,13 +28,24 @@ const STATUS_DOT: Record<StageState['status'], string> = {
   failed: 'bg-conflict',
 };
 
-export function StageProgress({ stages, sourceProgress }: { stages: Record<StageName, StageState>; sourceProgress: string[] }) {
-  const order: StageName[] = ['structure', 'plan', 'retrieve', 'classify', 'extract'];
+/** One line for the collapsed summary: the running stage, or the most recently finished one, never a fabricated percentage. */
+function currentStageSummary(stages: Record<StageName, StageState>): string {
+  const running = STAGE_ORDER.find((s) => stages[s].status === 'running');
+  if (running) return `${STAGE_LABEL[running]}…`;
 
+  const lastActive = [...STAGE_ORDER].reverse().find((s) => stages[s].status !== 'pending');
+  if (!lastActive) return 'Starting…';
+  return `${STAGE_LABEL[lastActive]} ${stages[lastActive].status}`;
+}
+
+export function StageProgress({ stages, sourceProgress }: { stages: Record<StageName, StageState>; sourceProgress: string[] }) {
   return (
-    <div className="glass rounded-[var(--radius-card)] p-4">
-      <ol className="flex flex-col gap-2">
-        {order.map((stage) => {
+    <details className="glass rounded-[var(--radius-card)] p-4">
+      <summary className="cursor-pointer select-none text-sm text-fg">
+        Research progress <span className="text-muted">{'—'} {currentStageSummary(stages)}</span>
+      </summary>
+      <ol className="mt-3 flex flex-col gap-2">
+        {STAGE_ORDER.map((stage) => {
           const state = stages[stage];
           return (
             <li key={stage} className="flex items-center gap-3 text-sm">
@@ -49,6 +68,6 @@ export function StageProgress({ stages, sourceProgress }: { stages: Record<Stage
           </ul>
         </details>
       )}
-    </div>
+    </details>
   );
 }

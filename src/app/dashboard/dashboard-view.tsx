@@ -15,6 +15,7 @@ export function DashboardView({ initialQuery, initialMode }: { initialQuery?: st
     sending,
     error,
     sendMessage,
+    retryTurn,
     selectConversation,
     newResearch,
     renameConversation,
@@ -38,7 +39,7 @@ export function DashboardView({ initialQuery, initialMode }: { initialQuery?: st
         {hasActiveThread ? (
           <>
             <div className="flex-1 overflow-y-auto">
-              <ConversationThread turns={turns} />
+              <ConversationThread turns={turns} onRetryTurn={retryTurn} />
             </div>
             {error && (
               <p role="alert" className="mx-auto w-full max-w-3xl px-6 text-sm text-conflict">
