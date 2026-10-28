@@ -190,46 +190,50 @@ This file tracks what is actually built, not the full target state in `docs/arch
   Crossref / PMID via PubMed / URL via 2xx), `checkRetraction` (Crossref update-to +
   PubMed publication type + a withdrawal-banner text pattern), and the
   `safetyCritical` keyword-escalation rule — are built on top of these connectors.
-- **UI MVP scaffold** (module 11, 2026-10-28, user-requested): `pnpm dev`/`pnpm build`
-  wired for the first time (previously unwired, CLAUDE.md Commands). Tailwind CSS v4
-  (CSS-first `@theme`), Geist Sans/Mono (`geist` package via `next/font`), Motion and
-  Radix (`@radix-ui/react-tabs`, `react-dialog`) installed per SPEC §12's stack
-  decision — `@radix-ui/react-tabs`/`react-dialog` are used directly rather than
-  through the shadcn CLI generator, a scope simplification for Day-2 logged in
-  `docs/DECISIONS.md`. Design tokens (`src/app/globals.css`) match SPEC §11 exactly
-  (background/surface/border/text/muted/accent/warning/conflict, 10-12px radii,
-  150-250ms motion honoring `prefers-reduced-motion`). Two of SPEC §11's six
-  screens are built: **(1) Home** (`src/app/page.tsx`) — free-text input + example
-  conditions, posts to `POST /api/runs`, routes to the result page; **(2) Result**
-  (`src/app/runs/[id]/{page,run-view}.tsx`) — a client hook (`use-run-stream.ts`)
-  consumes `GET /api/runs/:id/stream` via `EventSource`, rendering live stage
-  progress, a view-tab shell (Radix Tabs: Evidence functional, Algorithm/Map/Matrix/
-  Mechanism explicitly "not built yet" placeholders — SPEC §11 "abstain = explained
-  state, never an empty screen"), claim cards, an evidence drawer (Radix Dialog:
-  verbatim quote, source, locator, grade), and a receipt footer. **Every claim card
-  and drawer carries a visible "Not confirmed" chip** — module 03's `support-judge`
-  isn't built, so `verification.support` is always `'unknown'`; the UI never
-  presents these as verified, matching CLAUDE.md rule 5 and the `VerifiedClaimSchema`
-  tightening from 2026-10-27. Live-tested end to end in the browser pane against the
-  real Meta API/PubMed/Europe PMC/NICE: submitted a real question, watched stage
-  progress stream live (structure→plan→retrieve→classify→extract, including a real
-  `classify` failure handled gracefully mid-run), saw 2 real verified-pending-review
-  claims render with correct chips, opened the evidence drawer and confirmed the
-  verbatim NICE quote/source/locator, confirmed Escape-to-close keyboard
-  accessibility, and confirmed a 375px mobile layout has no horizontal overflow; the
-  test run was deleted from `BenchBark` afterward. `next build` (production) verified
-  clean. **Not built:** Algorithm/Map/Matrix/Mechanism views (their modules don't
-  exist), light theme (dark-first only for now), watches/local-pool screens, i18n
-  (ES/EN toggle), print stylesheet, and a settings UI for the allow-listed-domains
-  follow-up noted above.
-
-## Known gaps (not built yet)
-
-- No CI workflow: lint/typecheck/test run locally only; the RLS test suite above is a
-  manual SQL script, not a CI gate.
-- No rate limiting, CSP, or output-side prompt-injection suite yet (module 10 items for
-  later days). The identifier pre-filter is built; the full 20-fixture injection suite
-  is not.
+- **UI, "From evidence to clarity" redesign** (module 11, 2026-10-28, user-specified
+  brief, supersedes the first teal-accent UI MVP from earlier the same day):
+  `pnpm dev`/`pnpm build` wired for the first time (previously unwired, CLAUDE.md
+  Commands). New tokens (pure black, DM Sans, glassmorphism — `src/app/globals.css`,
+  logged in `docs/DECISIONS.md` as replacing the original SPEC §11 placeholder
+  tokens). Tailwind CSS v4, Motion, and Radix (`@radix-ui/react-tabs`,
+  `react-dialog`, `react-dropdown-menu`) used directly rather than through the
+  shadcn CLI generator (scope simplification, logged). Two surfaces, both real, not
+  mockups:
+  - **Landing** (`src/app/page.tsx`): fixed `Navbar` (blur-on-scroll, fixed
+    `bg-bg/85` + backdrop-blur once scrolled — fixed live-testing-caught bug: the
+    original subtle `.glass` tint let scrolled section headings show through
+    illegibly), a `Hero` with the real search bar (submits to `/dashboard`,
+    preserving query + mode via URL params) and a `motion`-animated rotating
+    suggestion list, then four narrative sections (`HowItWorks`, `VisualizeTabs`
+    — four illustrative SVG sketches explicitly labeled "Example — not live data"
+    per the brief's own instruction never to present a static demo as a real
+    result, `EvidenceTrust`, `FinalCta`).
+  - **Dashboard** (`/dashboard`): a conversational workspace, not the old
+    single-run page (`/runs/:id` still exists as a direct deep link, now a thin
+    wrapper around the shared `RunResult` component). `Sidebar` (collapsible, "New
+    research," history grouped by period via `group-by-period.ts`, rename/delete
+    through a `conversations-repository.ts`-backed API — fixed a real bug found
+    live-testing: the options button was nested inside the conversation's own
+    `<button>`, invalid HTML that made Radix's dropdown clicks unreliable; now two
+    sibling buttons). `ConversationThread` renders each turn as a full-width
+    surface (never a cramped chat bubble, per the brief), reusing `RunResult` for
+    the live/streamed answer. `Composer` (floating glass bar) and `EmptyState`
+    ("What would you like to understand?") share the same `SearchBar` + mode
+    selector as the landing hero. `useConversations` orchestrates list/active
+    thread/sending, auto-submitting a query handed off from the landing page.
+  - **Mode selector** (Auto/Algorithm/Evidence Map — `src/lib/modes.ts`) only ever
+    hints `intent` and picks which result tab opens by default; it never
+    fabricates a different visualization per mode, since only the Evidence tab is
+    real (brief §6: never invent a visualization to fill a mode).
+  Live-tested end to end in the browser pane against the real Meta API/PubMed/
+  Europe PMC/NICE: landing hero submit → dashboard auto-start → live stage
+  streaming → sidebar updating with the new conversation → switching between 3
+  conversations (including one whose run had no resumable state, correctly
+  showing the "nothing to resume" error rather than a crash) → a completed run
+  with an honest "no claims passed verification" + real receipt. Mobile layout
+  (375px) confirmed with no horizontal overflow on both landing and dashboard.
+  Test conversations/runs deleted from `BenchBark` afterward. `next build`
+  (production) verified clean, 393 tests pass.
 - **Web crawling for `guideline`/`web` queries** (2026-10-28, user-requested): a
   curated default allow-list (`src/modules/02-retrieval/retrieval/default-allowed-domains.ts`
   — CDC, WHO, NICE, AHA/ACC journals, ESC, IDSA, ATS, ACOG, AAP, Cochrane, NCBI
@@ -250,8 +254,16 @@ This file tracks what is actually built, not the full target state in `docs/arch
   the first claims this project has produced that trace to a freshly crawled web
   page rather than PubMed/Europe PMC. `local` family queries are still always
   skipped — no local-protocol document pool (module 10/documents feature) exists.
-  **User-requested follow-up, not built:** letting a clinician review/add their own
-  trusted domains rather than only this hardcoded default list needs a settings UI
+
+## Known gaps (not built yet)
+
+- No CI workflow: lint/typecheck/test run locally only; the RLS test suite above is a
+  manual SQL script, not a CI gate.
+- No rate limiting, CSP, or output-side prompt-injection suite yet (module 10 items for
+  later days). The identifier pre-filter is built; the full 20-fixture injection suite
+  is not.
+- **User-requested follow-up, not built:** letting a clinician review/add their own
+  trusted domains (beyond the hardcoded default list below) needs a settings UI
   (module 11), tracked in `default-allowed-domains.ts`'s own comment.
 - Curation stops at dedupe (`deduplicateCandidates`). `resolveVersions`,
   `selectTopNWithDiversity` and `buildCoverageReport` (module 02 curation) are built
@@ -276,3 +288,13 @@ This file tracks what is actually built, not the full target state in `docs/arch
 - The budget guard is in-memory per server process (resets on restart, not shared
   across instances); the Postgres `budget_ledger` table exists but nothing writes to
   it yet.
+- UI (module 11) is two of six SPEC §11 screens: Home/Landing and a conversational
+  Result/Dashboard. Not built: real Algorithm/Map/Matrix/Mechanism visualizations
+  (their modules don't exist — the dashboard's mode selector and view tabs are
+  honest placeholders, not fake data), a divergence card, watches (list/builder/
+  inbox), a local pool screen, light theme (dark-first only), the ES/EN i18n toggle,
+  and a print stylesheet for the one-page card.
+- Conversation "ownership" is an httpOnly session cookie (one per browser), not a
+  real account — no sign-up/sign-in exists (see the Auth gap above). Conversations
+  are invisible from a different browser or after clearing cookies; the underlying
+  Postgres rows aren't deleted, just unreachable without the original cookie.
