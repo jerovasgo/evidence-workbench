@@ -45,6 +45,7 @@ function mockRuntime(
     p3PromptTemplate: 'Plan for {{condition}} / {{sub_questions}} / {{setting}} / {{country}}',
     p4PromptTemplate: 'Classify: {{sources_json}}',
     p5PromptTemplate: 'Extract: {{source_title}} / {{sub_questions}} / {{passages}}',
+    p10PromptTemplate: 'Judge: {{claim_text}} / {{conditions_json}} / {{quote}} / {{surrounding_context}}',
     pubmed: { search: vi.fn().mockResolvedValue({ pmids: [] }), fetchSummaries: vi.fn().mockResolvedValue([]) },
     europePmc: { search: vi.fn().mockResolvedValue([]), fetchFullText: vi.fn().mockResolvedValue(null) },
     pendingRunContext,

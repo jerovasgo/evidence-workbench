@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { Passage } from '@/shared/domain';
+import type { Claim, Passage } from '@/shared/domain';
 import type { ExtractedClaim } from '../schemas/extraction';
-import { verifyClaim } from './verify-claim';
+import type { JudgeSupportOutput } from '../schemas/support-judge';
+import { applySupportJudgment, verifyClaim } from './verify-claim';
 
 const passages: Passage[] = [
   { id: 'p1', sourceId: 'src_1', locator: '¶1', text: 'Aspirin 325 mg should be given promptly in suspected ACS.' },
@@ -92,5 +93,46 @@ describe('verifyClaim', () => {
     );
     expect(result.outcome).toBe('kept');
     if (result.outcome === 'kept') expect(result.claim.safetyCritical).toBe(true);
+  });
+});
+
+describe('applySupportJudgment', () => {
+  const baseClaim: Claim = {
+    id: 'c1',
+    text: 'Give aspirin.',
+    basis: 'recommendation',
+    actionType: 'treat',
+    conditions: [],
+    sourceId: 'src_1',
+    passageId: 'p1',
+    quote: 'Aspirin.',
+    grade: { certainty: 'ungraded', origin: 'ai_estimated' },
+    verification: { exists: true, quoteFound: true, retracted: false, support: 'unknown' },
+    safetyCritical: false,
+  };
+
+  it('drops the claim when the judge says no', () => {
+    const judgment: JudgeSupportOutput = { support: 'no', issues: ['negation'], note: 'Quote contradicts the claim.' };
+    expect(applySupportJudgment(baseClaim, judgment)).toBeNull();
+  });
+
+  it('marks the claim supports with no issues when fully supported', () => {
+    const judgment: JudgeSupportOutput = { support: 'supports', issues: [], note: 'Matches exactly.' };
+    const result = applySupportJudgment(baseClaim, judgment);
+    expect(result?.verification).toEqual({ exists: true, quoteFound: true, retracted: false, support: 'supports' });
+  });
+
+  it('keeps the claim as partial with a visible caveat (issues + note)', () => {
+    const judgment: JudgeSupportOutput = { support: 'partial', issues: ['wrong_strength'], note: 'Quote says "may be considered".' };
+    const result = applySupportJudgment(baseClaim, judgment);
+    expect(result?.verification.support).toBe('partial');
+    expect(result?.verification.supportIssues).toEqual(['wrong_strength']);
+    expect(result?.verification.supportNote).toBe('Quote says "may be considered".');
+  });
+
+  it('keeps the claim as unknown when the judge could not decide', () => {
+    const judgment: JudgeSupportOutput = { support: 'unknown', issues: [], note: 'Context insufficient.' };
+    const result = applySupportJudgment(baseClaim, judgment);
+    expect(result?.verification.support).toBe('unknown');
   });
 });

@@ -3,12 +3,18 @@
 import type { Claim } from '@/shared/domain';
 import { CertaintyPips, Chip, OriginBadge } from '@/components/ui/chip';
 
-// `verification.support` is always 'unknown' today — module 03's
-// support-judge agent isn't built (SECURITY.md) — so this is deliberately never
-// presented as "verified": CLAUDE.md rule 5 ("no unverified but shown" state) means
-// every claim here carries a visible "Not confirmed" chip, exactly matching
-// docs/architecture/03's own rule for an unknown-support claim ("available only in
-// the evidence drawer, marked 'not confirmed'").
+// `verification.support` now reflects a real support-judge (P10, module 03) verdict.
+// Only 'supports' gets a non-caveated chip — CLAUDE.md rule 5 ("no unverified but
+// shown" state) and docs/architecture/03's own rule mean 'partial' always shows its
+// caveat and 'unknown' still reads as "Not confirmed" (the judge couldn't decide, or
+// its call failed/timed out — both honest, not a hidden failure).
+
+const SUPPORT_CHIP: Record<Claim['verification']['support'], { label: string; tone: 'default' | 'warning' }> = {
+  supports: { label: 'Verified', tone: 'default' },
+  partial: { label: 'Partial support', tone: 'warning' },
+  unknown: { label: 'Not confirmed', tone: 'warning' },
+  no: { label: 'Not confirmed', tone: 'warning' }, // unreachable: a 'no' verdict drops the claim before it gets here
+};
 
 const ACTION_LABEL: Record<Claim['actionType'], string> = {
   assess: 'Assess',
@@ -21,6 +27,7 @@ const ACTION_LABEL: Record<Claim['actionType'], string> = {
 };
 
 export function ClaimCard({ claim, onOpenEvidence }: { claim: Claim; onOpenEvidence: (claim: Claim) => void }) {
+  const supportChip = SUPPORT_CHIP[claim.verification.support];
   return (
     <li>
       <button
@@ -31,7 +38,7 @@ export function ClaimCard({ claim, onOpenEvidence }: { claim: Claim; onOpenEvide
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <Chip>{ACTION_LABEL[claim.actionType]}</Chip>
           {claim.safetyCritical && <Chip tone="conflict">Safety-critical</Chip>}
-          <Chip tone="warning">Not confirmed</Chip>
+          <Chip tone={supportChip.tone}>{supportChip.label}</Chip>
           <OriginBadge origin={claim.grade.origin} />
           <CertaintyPips certainty={claim.grade.certainty} />
         </div>

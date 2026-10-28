@@ -117,6 +117,7 @@ export interface CreateRunAndRetrieveDeps extends CreateRunDeps {
   p3PromptTemplate: string;
   p4PromptTemplate: string;
   p5PromptTemplate: string;
+  p10PromptTemplate: string;
   pubmed: PubmedClient;
   europePmc: EuropePmcClient;
   crossref: CrossrefClient;

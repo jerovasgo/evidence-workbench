@@ -33,11 +33,24 @@ export const ActionTypeSchema = z.enum([
 ]);
 export type ActionType = z.infer<typeof ActionTypeSchema>;
 
+export const SupportIssueSchema = z.enum([
+  'negation',
+  'wrong_population',
+  'wrong_threshold',
+  'wrong_strength',
+  'out_of_context',
+  'other',
+]);
+export type SupportIssue = z.infer<typeof SupportIssueSchema>;
+
 export const ClaimVerificationSchema = z.object({
   exists: z.boolean(),
   quoteFound: z.boolean(),
   retracted: z.boolean(),
   support: z.enum(['supports', 'partial', 'no', 'unknown']),
+  /** Only set when support-judge actually ran (module 03, P10); explains a 'partial' or 'no' verdict — SPEC: "partial -> show with visible caveat". */
+  supportIssues: z.array(SupportIssueSchema).optional(),
+  supportNote: z.string().optional(),
 });
 export type ClaimVerification = z.infer<typeof ClaimVerificationSchema>;
 

@@ -52,6 +52,13 @@ describe('buildReceipt', () => {
     expect(receipt.oldestSourceYear).toBe(2018);
   });
 
+  it('counts only claims the support-judge marked as supports', () => {
+    const supportedClaim: Claim = { ...claim, id: 'c2', verification: { ...claim.verification, support: 'supports' } };
+    const partialClaim: Claim = { ...claim, id: 'c3', verification: { ...claim.verification, support: 'partial' } };
+    const receipt = buildReceipt(baseResult({ extraction: ok('extract', [claim, supportedClaim, partialClaim]) }));
+    expect(receipt.supported).toBe(1);
+  });
+
   it('omits oldestSourceYear when no classification has a publicationYear', () => {
     const receipt = buildReceipt(
       baseResult({ classification: ok('classify', [{ sourceId: 's1', kind: 'other', isScientific: false, confidence: 'low' }]) }),

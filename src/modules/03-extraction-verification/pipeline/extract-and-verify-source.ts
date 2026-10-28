@@ -4,15 +4,38 @@ import type { MetaClient } from '@/shared/meta';
 import type { BudgetGuard } from '@/shared/security';
 import type { CrossrefClient } from '@/modules/02-retrieval';
 import { extractClaims } from '../agents/claim-extractor';
+import { judgeSupport } from '../agents/support-judge';
 import { windowText } from '../passages/window-text';
 import { checkRetraction } from '../validators/retraction';
-import { verifyClaim } from './verify-claim';
+import { extractSurroundingContext } from './support-context';
+import { applySupportJudgment, verifyClaim } from './verify-claim';
 
 // Module 03, "one call per source, run in parallel" (claim-extractor, P5) followed by
-// deterministic verification — the whole `curate -> extract -> verify` slice for a
-// single already-fetched source. Callers (module 01) run this per source with
-// bounded concurrency so one slow/large source never blocks another's claims from
-// becoming available — the TTFT goal this was built for.
+// deterministic verification, followed by the support-judge (P10) — the whole
+// `curate -> extract -> verify -> judge` slice for a single already-fetched source.
+// Callers (module 01) run this per source with bounded concurrency so one slow/large
+// source never blocks another's claims from becoming available — the TTFT goal this
+// was built for. Within a source, the P10 judge calls (one per kept claim) also run
+// with bounded concurrency rather than one per source, since a source's claim count
+// varies and a single claim's judge call must never be the slow path.
+const MAX_JUDGE_CONCURRENCY = 4;
+
+/** Runs `fn` over `items` with at most `limit` in flight at once. */
+async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+
+  async function worker(): Promise<void> {
+    for (;;) {
+      const i = next++;
+      if (i >= items.length) return;
+      results[i] = await fn(items[i]!);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
 
 export interface ExtractAndVerifySourceInput {
   runId: string;
@@ -31,6 +54,7 @@ export interface ExtractAndVerifySourceDeps {
   crossref: CrossrefClient;
   p0Preamble: string;
   p5PromptTemplate: string;
+  p10PromptTemplate: string;
   onTrace?: (event: AgentTraceEvent) => void;
 }
 
@@ -73,13 +97,47 @@ export async function extractAndVerifySource(
     { crossref: deps.crossref },
   );
 
-  const claims: Claim[] = [];
+  const verifiedClaims: Claim[] = [];
   const dropped: { reason: string }[] = [];
   for (const extracted of extractResult.value.claims) {
     const verified = verifyClaim({ extracted, sourceId: input.sourceId, retracted: retraction.retracted }, passages);
-    if (verified.outcome === 'kept') claims.push(verified.claim);
+    if (verified.outcome === 'kept') verifiedClaims.push(verified.claim);
     else dropped.push({ reason: verified.reason });
   }
 
-  return { sourceId: input.sourceId, status: 'ok', claims, dropped, costUsd: extractResult.usage.costUsd };
+  // Step 8 (support-judge, P10) — the last verification step. One call per claim,
+  // bounded concurrency (see MAX_JUDGE_CONCURRENCY above). A judge failure
+  // (timeout/invalid/budget) is not a pipeline failure: the claim simply keeps the
+  // `support: 'unknown'` placeholder `verifyClaim` already gave it (prompts/P10 Notes
+  // — abstention here never drops a claim, only a 'no' verdict does).
+  let judgeCostUsd = 0;
+  const judged = await mapWithConcurrency(verifiedClaims, MAX_JUDGE_CONCURRENCY, async (claim) => {
+    const passage = passages.find((p) => p.id === claim.passageId);
+    if (!passage) return claim;
+
+    const result = await judgeSupport(
+      input.runId,
+      {
+        claimText: claim.text,
+        conditions: claim.conditions,
+        quote: claim.quote,
+        surroundingContext: extractSurroundingContext(passage.text, claim.quote),
+      },
+      {
+        metaClient: deps.metaClient,
+        budgetGuard: deps.budgetGuard,
+        p0Preamble: deps.p0Preamble,
+        p10PromptTemplate: deps.p10PromptTemplate,
+        onTrace: deps.onTrace,
+      },
+    );
+
+    if (!result.ok) return claim;
+    judgeCostUsd += result.usage.costUsd;
+    return applySupportJudgment(claim, result.value);
+  });
+
+  const claims = judged.filter((c): c is Claim => c !== null);
+
+  return { sourceId: input.sourceId, status: 'ok', claims, dropped, costUsd: extractResult.usage.costUsd + judgeCostUsd };
 }

@@ -51,6 +51,7 @@ export interface ExtractAndVerifyPoolDeps {
   webFetch?: { allowedDomains: readonly string[]; fetchImpl?: typeof fetch };
   p0Preamble: string;
   p5PromptTemplate: string;
+  p10PromptTemplate: string;
   onSourceDone?: (sourceId: string, outcome: PoolSourceOutcome) => void;
   onTrace?: (event: AgentTraceEvent) => void;
 }
@@ -97,6 +98,7 @@ export async function extractAndVerifyPool(
           crossref: deps.crossref,
           p0Preamble: deps.p0Preamble,
           p5PromptTemplate: deps.p5PromptTemplate,
+          p10PromptTemplate: deps.p10PromptTemplate,
           onTrace: deps.onTrace,
         },
       );

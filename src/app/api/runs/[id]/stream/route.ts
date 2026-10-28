@@ -104,6 +104,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
             p3PromptTemplate: runtime.p3PromptTemplate,
             p4PromptTemplate: runtime.p4PromptTemplate,
             p5PromptTemplate: runtime.p5PromptTemplate,
+            p10PromptTemplate: runtime.p10PromptTemplate,
             pubmed: runtime.pubmed,
             europePmc: runtime.europePmc,
             onStageEvent: (event) => {

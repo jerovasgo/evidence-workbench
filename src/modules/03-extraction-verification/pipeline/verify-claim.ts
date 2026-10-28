@@ -3,6 +3,7 @@ import type { Claim, Passage } from '@/shared/domain';
 import { applyDoseRule, checkNumbersPreserved, findQuoteInPassage } from '../validators/quote';
 import { applySafetyCriticalRule } from '../validators/safety-critical';
 import type { ExtractedClaim } from '../schemas/extraction';
+import type { JudgeSupportOutput } from '../schemas/support-judge';
 
 // Module 03 deterministic verification (docs/architecture/03-claim-extraction-and-verification.md):
 // runs steps 2/3/5/6/7 against one already-extracted claim. Steps 1 ("exists") and 4
@@ -10,10 +11,12 @@ import type { ExtractedClaim } from '../schemas/extraction';
 // source by the caller (`extract-and-verify-source.ts`) before this function runs at
 // all — a source whose full text couldn't be fetched never reaches here, and a
 // retracted source's claims are dropped by this function via `retracted: true`.
-// Step 8 ("support") has no `support-judge` agent yet (not built) — every claim this
-// function keeps carries `verification.support: 'unknown'`, which
-// `shared/domain/claim.ts`'s `VerifiedClaimSchema` deliberately refuses to accept as
-// `verified`; callers must not treat this module's output as display-ready on its own.
+// Step 8 ("support") isn't decided here — every claim this function keeps carries
+// `verification.support: 'unknown'` as a placeholder; the caller
+// (`extract-and-verify-source.ts`) runs the `support-judge` agent (P10) afterward
+// and calls `applySupportJudgment` (below) to fill in the real verdict. Splitting it
+// this way keeps this function pure/sync (no model calls) and independently
+// testable, while the async judging step composes on top.
 
 export interface VerifyClaimInput {
   extracted: ExtractedClaim;
@@ -71,4 +74,34 @@ export function verifyClaim(input: VerifyClaimInput, passages: Passage[]): Verif
   };
 
   return { outcome: 'kept', claim };
+}
+
+/**
+ * Applies a `support-judge` verdict to an already-deterministically-verified claim.
+ * `'no'` means the judge found the quote does not actually support the claim — the
+ * caller drops it (returns null), same as any other failed check. `'supports'` and
+ * `'partial'` keep the claim with the real verdict and, if the judge gave any,
+ * `supportIssues`/`supportNote` for a visible caveat (architecture doc: "partial ->
+ * show with visible caveat"). `'unknown'` also keeps the claim — it's the honest
+ * "couldn't determine" state, not a failure to drop over.
+ */
+export function applySupportJudgment(claim: Claim, judgment: JudgeSupportOutput): Claim | null {
+  if (judgment.support === 'no') return null;
+
+  // supportIssues/supportNote are the visible caveat for a less-than-full verdict
+  // (architecture doc: "partial -> show with visible caveat"). A full 'supports'
+  // has nothing to caveat, so its note/issues are dropped even if the judge wrote
+  // one (the prompt asks for a one-sentence note on every verdict, not only the
+  // ones worth surfacing).
+  const isFullSupport = judgment.support === 'supports';
+
+  return {
+    ...claim,
+    verification: {
+      ...claim.verification,
+      support: judgment.support,
+      supportIssues: !isFullSupport && judgment.issues.length > 0 ? judgment.issues : undefined,
+      supportNote: !isFullSupport && judgment.note.length > 0 ? judgment.note : undefined,
+    },
+  };
 }

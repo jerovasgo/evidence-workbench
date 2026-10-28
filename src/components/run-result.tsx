@@ -106,7 +106,7 @@ export function RunResult({ runId, mode }: { runId: string; mode?: Mode }) {
             <Chip>{receipt.claimsTotal} claims checked</Chip>
             <Chip>{receipt.quotesFound} quotes verified</Chip>
             {receipt.retracted > 0 && <Chip tone="conflict">{receipt.retracted} retracted source(s) excluded</Chip>}
-            <Chip>{receipt.supported} fully supported (support review not built yet)</Chip>
+            <Chip>{receipt.supported} fully supported by support-judge</Chip>
           </div>
           <p className="mt-2">Generated {new Date(receipt.generatedAt).toLocaleString()}</p>
         </footer>

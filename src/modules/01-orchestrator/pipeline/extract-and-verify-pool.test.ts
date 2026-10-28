@@ -50,6 +50,7 @@ function baseDeps(metaClient: MetaClient, europePmc: EuropePmcClient) {
     europePmc,
     p0Preamble: 'P0',
     p5PromptTemplate: 'Extract: {{source_title}} / {{sub_questions}} / {{passages}}',
+    p10PromptTemplate: 'Judge: {{claim_text}} / {{conditions_json}} / {{quote}} / {{surrounding_context}}',
   };
 }
 

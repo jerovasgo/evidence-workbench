@@ -50,6 +50,7 @@ function baseDeps(metaClient: MetaClient, overrides: Partial<Parameters<typeof r
     p3PromptTemplate: 'Plan for {{condition}} / {{sub_questions}} / {{setting}} / {{country}}',
     p4PromptTemplate: 'Classify: {{sources_json}}',
     p5PromptTemplate: 'Extract: {{source_title}} / {{sub_questions}} / {{passages}}',
+    p10PromptTemplate: 'Judge: {{claim_text}} / {{conditions_json}} / {{quote}} / {{surrounding_context}}',
     pubmed: fakePubmed(),
     europePmc: fakeEuropePmc(),
     ...overrides,

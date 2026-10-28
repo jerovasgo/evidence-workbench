@@ -117,6 +117,7 @@ export interface RunRetrievalDeps {
   p3PromptTemplate: string;
   p4PromptTemplate: string;
   p5PromptTemplate: string;
+  p10PromptTemplate: string;
   pubmed: PubmedClient;
   europePmc: EuropePmcClient;
   /** Apex domains fetch_url_text may read from for 'web'/'guideline' queries; defaults to the curated list. */
@@ -363,6 +364,7 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
           webFetch: { allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES },
           p0Preamble: deps.p0Preamble,
           p5PromptTemplate: deps.p5PromptTemplate,
+          p10PromptTemplate: deps.p10PromptTemplate,
           onTrace: deps.onTrace,
           onSourceDone: (sourceId, outcome) => deps.onStageEvent?.({ type: 'source_extracted', sourceId, outcome }),
         },

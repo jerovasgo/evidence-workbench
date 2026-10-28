@@ -107,8 +107,9 @@ This file tracks what is actually built, not the full target state in `docs/arch
   now passes `NCBI_API_KEY` (if configured) to the PubMed client to raise that limit.
 - **Retrieval + extraction pipeline** (`src/modules/01-orchestrator/pipeline/run-retrieval.ts`):
   chains structure (P2) -> plan (P3) -> retrieve -> dedupe -> classify (P4 +
-  `applyPubmedTypeOverride`) -> extract+verify (P5 + deterministic checks, module 03,
-  via `extract-and-verify-pool.ts`) into one function, with each stage returning the
+  `applyPubmedTypeOverride`) -> extract+verify (P5 + deterministic checks + P10
+  `support-judge`, module 03, via `extract-and-verify-pool.ts`) into one function,
+  with each stage returning the
   shared `StageResultSchema` envelope (`shared/domain/run.ts`) so a stage can fail or
   go partial without losing output from stages that already succeeded.
 - **Time-to-first-token orchestration** (user-requested, 2026-10-27): `POST /api/runs`
@@ -171,14 +172,18 @@ This file tracks what is actually built, not the full target state in `docs/arch
   safety-critical keyword raise. Live-tested 2026-10-27 against a realistic guideline
   excerpt: extracted 3 correct claims (aspirin dose, oxygen non-recommendation,
   reperfusion timing) with quotes matching verbatim and `safetyCritical` correctly
-  raised on the aspirin claim. **Honest, documented gap, not a silent one:**
-  `support-judge` (T2, the 8th verification step) isn't built, so no claim produced
-  here can reach `support: 'supports'` — every kept claim carries
-  `verification.support: 'unknown'`, and `shared/domain/claim.ts`'s
-  `VerifiedClaimSchema` was tightened (it only checked `quoteFound` before) to refuse
-  such a claim as `verified`. A future UI must treat this module's output as
-  drawer-only ("not confirmed"), never a main-view "verified" claim, until
-  `support-judge` exists.
+  raised on the aspirin claim. **Module 03 closed 2026-10-28:** `support-judge` (P10,
+  T2, the 8th verification step) is now built (`agents/support-judge.ts`) and wired
+  into `extractAndVerifySource` — one call per kept claim, bounded concurrency
+  (`MAX_JUDGE_CONCURRENCY = 4`), judging each claim against ±800 chars of surrounding
+  passage context (`support-context.ts`). A `'no'` verdict drops the claim;
+  `'supports'`/`'partial'` keep it with the real verdict (`applySupportJudgment`,
+  `verify-claim.ts`); `'unknown'` (model abstention, or the judge call itself
+  timing out/erroring) keeps the claim at the same honest placeholder as before. Live
+  end-to-end against the real SSE pipeline and a NICE guideline source: 4 claims all
+  reached `support: 'supports'`. The claim-card/evidence-drawer chips and
+  `buildReceipt`'s `supported` count were updated to reflect the real verdict instead
+  of a hardcoded "Not confirmed" (`docs/DECISIONS.md`, 2026-10-28).
 - **Retrieval connectors** (`src/modules/02-retrieval/tools/pubmed.ts`, `europe-pmc.ts`, `crossref.ts`,
   `fetch-url-text.ts`, wired into the tool registry by `register-retrieval-tools.ts`):
   all three REST APIs (PubMed E-utilities, Europe PMC, Crossref) are public and
@@ -275,13 +280,11 @@ This file tracks what is actually built, not the full target state in `docs/arch
   dedup/classify would be its own (expensive) stage; this is an honest Day-1
   simplification, not a silent one, and likely lowers classification confidence versus
   real abstract text.
-- `support-judge` (module 03, T2) isn't built: every claim this pipeline produces
-  carries `verification.support: 'unknown'`, never `'supports'` — nothing here can
-  satisfy `VerifiedClaimSchema`. No view/UI should treat this module's `Claim[]`
-  output as display-ready; it belongs in an evidence drawer marked "not confirmed"
-  once a UI exists. There is also no per-sub-question "abstain" decision at this
-  layer (module 03's own threshold rule: "≥1 verified claim from a guideline/SR, else
-  abstain") — that decision belongs to a view/synthesize stage, not built.
+- `support-judge` (module 03, T2) is now built and wired in (2026-10-28, see above) —
+  claims can reach `support: 'supports'` and satisfy `VerifiedClaimSchema`. Still not
+  built: there is no per-sub-question "abstain" decision at this layer (module 03's
+  own threshold rule: "≥1 verified claim from a guideline/SR, else abstain") — that
+  decision belongs to a view/synthesize stage, not built.
 - No Auth UI/flow built — the RLS policies and `getRunForViewer` are ready for
   `auth.uid()`-bearing sessions, but there is no sign-up/sign-in page yet, so every
   request today is effectively anonymous.

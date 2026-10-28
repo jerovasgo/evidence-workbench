@@ -27,6 +27,7 @@ function baseDeps(metaClient: MetaClient, crossref: CrossrefClient = fakeCrossre
     crossref,
     p0Preamble: 'P0',
     p5PromptTemplate: 'Extract: {{source_title}} / {{sub_questions}} / {{passages}}',
+    p10PromptTemplate: 'Judge: {{claim_text}} / {{conditions_json}} / {{quote}} / {{surrounding_context}}',
   };
 }
 
