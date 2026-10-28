@@ -137,9 +137,29 @@ This file tracks what is actually built, not the full target state in `docs/arch
   limit is 300s default *and* maximum — not actually at risk from a ~13-30s pipeline.
   The real cost of the OLD synchronous design was no incremental feedback and no
   resumability, not a hard timeout; this is exactly what the SSE work above now
-  addresses for the feedback half. Resumability (persisted `stage_outputs`, so a
-  stream reconnect after the in-memory context expires can pick up where it left off
-  instead of erroring) is still not built — tracked below.
+  addresses for the feedback half.
+- **Stage output persistence / resumability** (2026-10-28, user-requested): a new
+  `StageOutputsRepository` (`src/modules/01-orchestrator/data/stage-outputs-repository.ts`)
+  finally writes to the `stage_outputs` table that existed since Day 1 but nothing
+  used. `runRetrievalPipeline` now checks for a usable ('ok'/'partial') prior output
+  before running each stage and reuses it instead of recomputing (never resuming
+  from a `failed` attempt), and persists every freshly computed stage —
+  best-effort: a persistence failure is swallowed, never fails the run. `GET
+  /api/runs/:id/stream` only emits its `error` ("nothing to resume") when BOTH the
+  in-memory `pendingRunContext` is gone AND no stage output was ever persisted for
+  that run; otherwise it resumes with whatever free text it has (possibly none —
+  resumed stages never need it). Live-tested 2026-10-28 end to end: streamed a real
+  run, cut the connection after `structure`/`plan` completed (`curl --max-time`),
+  reconnected to the same run, and confirmed `structure`/`plan` came back marked
+  `(resumed)` with no new model calls, while `retrieve`→`extract` ran fresh and
+  produced 4 real verified claims from a live NICE STEMI guideline page (reperfusion
+  timing, aspirin 300 mg loading dose, avoiding early dual antiplatelet therapy —
+  `safetyCritical` correctly raised on all three dosing/treatment claims). Confirmed
+  in Postgres and cleaned up afterward. Found and fixed a related robustness gap
+  while live-testing: `run-retrieval.ts`'s `planCondition` fallback chain could
+  resolve to an empty string on a resume with no free text, which crashed
+  `planSearch`'s own input validation instead of failing the `plan` stage gracefully
+  — now defaults to a non-empty placeholder in that case.
 - **Claim extraction and verification** (module 03, P5 `claim-extractor` +
   `verify-claim.ts`): one agent call per source (passages windowed to ~1,200 tokens
   by `window-text.ts`, a deterministic paragraph-based chunker) proposes claims with
@@ -211,13 +231,6 @@ This file tracks what is actually built, not the full target state in `docs/arch
   dedup/classify would be its own (expensive) stage; this is an honest Day-1
   simplification, not a silent one, and likely lowers classification confidence versus
   real abstract text.
-- No `stage_outputs` persistence: `GET /api/runs/:id/stream` (SSE) gives real
-  incremental feedback now, but a stream that's reconnected after the in-memory
-  `pendingRunContext` has already been consumed (or the server restarted) gets an
-  `error` event, not a resumed stream from where it left off — module 01's
-  resumable-run design needs persisted per-stage output to do that, and it isn't
-  built. A client that disconnects mid-stream loses the in-flight retrieval; the
-  spent cost is not recovered.
 - `support-judge` (module 03, T2) isn't built: every claim this pipeline produces
   carries `verification.support: 'unknown'`, never `'supports'` — nothing here can
   satisfy `VerifiedClaimSchema`. No view/UI should treat this module's `Claim[]`
@@ -225,13 +238,6 @@ This file tracks what is actually built, not the full target state in `docs/arch
   once a UI exists. There is also no per-sub-question "abstain" decision at this
   layer (module 03's own threshold rule: "≥1 verified claim from a guideline/SR, else
   abstain") — that decision belongs to a view/synthesize stage, not built.
-- Full-text coverage for extraction is Europe-PMC-open-access-only: a live run
-  against a real ACS question found 0/10 prioritized sources had fetchable full text
-  (confirmed real, not a connector bug — `fetch-full-text.ts`'s own comment already
-  flags this as expected for non-open-access PubMed records). Extraction quality
-  today is bounded by how much of the retrieved pool happens to be open access;
-  `fetch_url_text`'s empty-by-default guideline-domain allow-list (noted above) would
-  help once configured, since many guidelines are gated behind it, not Europe PMC.
 - No Auth UI/flow built — the RLS policies and `getRunForViewer` are ready for
   `auth.uid()`-bearing sessions, but there is no sign-up/sign-in page yet, so every
   request today is effectively anonymous.

@@ -22,6 +22,7 @@ import {
 } from '@/modules/02-retrieval';
 import { structureScenario } from '../agents/scenario-structurer';
 import { ScenarioStructureSchema, type ScenarioStructure } from '../schemas/scenario-structure';
+import type { StageOutputRecord, StageOutputsRepository } from '../data/stage-outputs-repository';
 import { extractAndVerifyPool, type PoolSourceOutcome } from './extract-and-verify-pool';
 
 // Module 01 request lifecycle: "structure (T0) -> [plan -> retrieve -> curate] ->
@@ -65,12 +66,38 @@ function toStageResult<T>(schema: z.ZodType<T>, raw: unknown): StageResult<T> {
   return StageResultSchema(schema).parse(raw) as StageResult<T>;
 }
 
+/**
+ * Module 01 resumability: if a usable ('ok' or 'partial') prior output for this
+ * stage was already persisted, reuse it instead of recomputing — the whole point
+ * of `stage_outputs` existing. Returns null (meaning "run the stage") when there is
+ * nothing to resume from, the prior attempt failed/abstained, or the stored payload
+ * no longer matches the current schema (defensive: never resume into a shape the
+ * rest of the pipeline can't trust).
+ */
+function resumeStage<T>(stage: StageName, schema: z.ZodType<T>, latest: Map<string, StageOutputRecord> | undefined): StageResult<T> | null {
+  const record = latest?.get(stage);
+  if (!record || (record.status !== 'ok' && record.status !== 'partial')) return null;
+  const parsed = schema.safeParse(record.value);
+  if (!parsed.success) return null;
+  return toStageResult(schema, { stage, status: record.status, value: parsed.data, reasons: record.reasons, metrics: record.metrics });
+}
+
+/** Best-effort: a persistence failure must never fail the run itself. */
+async function persistStage<T>(stageOutputs: StageOutputsRepository | undefined, runId: string, result: StageResult<T>): Promise<void> {
+  if (!stageOutputs) return;
+  try {
+    await stageOutputs.insert({ runId, stage: result.stage, status: result.status, value: result.value, reasons: result.reasons, metrics: result.metrics });
+  } catch {
+    // swallow — the in-memory result is already correct for this run.
+  }
+}
+
 const MAX_SOURCES_PER_CLASSIFY_CALL = 40;
 type StageName = 'structure' | 'plan' | 'retrieve' | 'classify' | 'extract';
 
 export type RunRetrievalStageEvent =
   | { type: 'stage_started'; stage: StageName }
-  | { type: 'stage_result'; stage: StageName; status: StageResult<unknown>['status']; metrics: StageResult<unknown>['metrics'] }
+  | { type: 'stage_result'; stage: StageName; status: StageResult<unknown>['status']; metrics: StageResult<unknown>['metrics']; resumed: boolean }
   | { type: 'source_extracted'; sourceId: string; outcome: PoolSourceOutcome };
 
 export interface RunRetrievalInput {
@@ -98,6 +125,8 @@ export interface RunRetrievalDeps {
   perQueryTimeoutMs?: number;
   maxExtractSources?: number;
   maxExtractConcurrency?: number;
+  /** Enables resumability: reuse a usable prior stage output instead of recomputing, and persist each newly computed one. Omit to run every stage fresh (e.g. tests). */
+  stageOutputs?: StageOutputsRepository;
   onTrace?: (event: AgentTraceEvent) => void;
   onStageEvent?: (event: RunRetrievalStageEvent) => void;
 }
@@ -119,235 +148,260 @@ function buildMetadataAndText(candidate: CandidateSource): string {
 }
 
 export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRetrievalDeps): Promise<RunRetrievalResult> {
-  // --- structure (P2) ---
-  deps.onStageEvent?.({ type: 'stage_started', stage: 'structure' });
-  const structureStarted = Date.now();
-  const structureAgentResult = await structureScenario(
-    input.runId,
-    { freeText: input.freeText, condition: input.routerCondition, setting: input.routerSetting },
-    {
-      metaClient: deps.metaClient,
-      budgetGuard: deps.budgetGuard,
-      p0Preamble: deps.p0Preamble,
-      p2PromptTemplate: deps.p2PromptTemplate,
-      onTrace: deps.onTrace,
-    },
-  );
-  const structureMs = Date.now() - structureStarted;
+  const latest = deps.stageOutputs ? await deps.stageOutputs.getLatestPerStage(input.runId).catch(() => undefined) : undefined;
 
-  const structure: StageResult<ScenarioStructure> = structureAgentResult.ok
-    ? toStageResult(ScenarioStructureSchema, {
-        stage: 'structure',
-        status: 'ok',
-        value: structureAgentResult.value,
-        metrics: { ms: structureMs, costUsd: structureAgentResult.usage.costUsd },
-      })
-    : toStageResult(ScenarioStructureSchema, {
-        stage: 'structure',
-        status: 'failed',
-        reasons: [structureAgentResult.detail],
-        metrics: { ms: structureMs, costUsd: 0 },
-      });
-  deps.onStageEvent?.({ type: 'stage_result', stage: 'structure', status: structure.status, metrics: structure.metrics });
+  // --- structure (P2) ---
+  let structure = resumeStage('structure', ScenarioStructureSchema, latest);
+  const structureResumed = structure !== null;
+  if (!structure) {
+    deps.onStageEvent?.({ type: 'stage_started', stage: 'structure' });
+    const structureStarted = Date.now();
+    const structureAgentResult = await structureScenario(
+      input.runId,
+      { freeText: input.freeText, condition: input.routerCondition, setting: input.routerSetting },
+      {
+        metaClient: deps.metaClient,
+        budgetGuard: deps.budgetGuard,
+        p0Preamble: deps.p0Preamble,
+        p2PromptTemplate: deps.p2PromptTemplate,
+        onTrace: deps.onTrace,
+      },
+    );
+    const structureMs = Date.now() - structureStarted;
+
+    structure = structureAgentResult.ok
+      ? toStageResult(ScenarioStructureSchema, {
+          stage: 'structure',
+          status: 'ok',
+          value: structureAgentResult.value,
+          metrics: { ms: structureMs, costUsd: structureAgentResult.usage.costUsd },
+        })
+      : toStageResult(ScenarioStructureSchema, {
+          stage: 'structure',
+          status: 'failed',
+          reasons: [structureAgentResult.detail],
+          metrics: { ms: structureMs, costUsd: 0 },
+        });
+    await persistStage(deps.stageOutputs, input.runId, structure);
+  }
+  deps.onStageEvent?.({ type: 'stage_result', stage: 'structure', status: structure.status, metrics: structure.metrics, resumed: structureResumed });
 
   // --- plan (P3) --- degrades to the router's condition hint + free text when
   // structure failed, rather than aborting the whole pipeline (module 01: continue
   // with usable input).
-  const planCondition = input.routerCondition ?? structure.value?.population ?? input.freeText;
+  // Never pass an empty string through to planSearch's own `.min(1)` input schema —
+  // on a resumed run with no fresh free text, every fallback here can legitimately
+  // be empty/missing, and that schema throws synchronously rather than failing
+  // gracefully (it's meant to catch a caller bug, not handle untrusted input).
+  const planCondition = input.routerCondition || structure.value?.population || input.freeText || 'unspecified clinical condition';
   const planSetting = structure.value?.setting !== 'unknown' ? structure.value?.setting : input.routerSetting;
 
-  deps.onStageEvent?.({ type: 'stage_started', stage: 'plan' });
-  const planStarted = Date.now();
-  const planAgentResult = await planSearch(
-    input.runId,
-    { condition: planCondition, subQuestions: structure.value?.subQuestions, setting: planSetting },
-    { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p3PromptTemplate: deps.p3PromptTemplate, onTrace: deps.onTrace },
-  );
-  const planMs = Date.now() - planStarted;
+  let plan = resumeStage('plan', SearchPlanSchema, latest);
+  const planResumed = plan !== null;
+  if (!plan) {
+    deps.onStageEvent?.({ type: 'stage_started', stage: 'plan' });
+    const planStarted = Date.now();
+    const planAgentResult = await planSearch(
+      input.runId,
+      { condition: planCondition, subQuestions: structure.value?.subQuestions, setting: planSetting },
+      { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p3PromptTemplate: deps.p3PromptTemplate, onTrace: deps.onTrace },
+    );
+    const planMs = Date.now() - planStarted;
 
-  const plan: StageResult<z.infer<typeof SearchPlanSchema>> = planAgentResult.ok
-    ? toStageResult(SearchPlanSchema, {
-        stage: 'plan',
-        status: 'ok',
-        value: planAgentResult.value,
-        metrics: { ms: planMs, costUsd: planAgentResult.usage.costUsd },
-      })
-    : toStageResult(SearchPlanSchema, {
-        stage: 'plan',
-        status: 'failed',
-        reasons: [planAgentResult.detail],
-        metrics: { ms: planMs, costUsd: 0 },
-      });
-  deps.onStageEvent?.({ type: 'stage_result', stage: 'plan', status: plan.status, metrics: plan.metrics });
+    plan = planAgentResult.ok
+      ? toStageResult(SearchPlanSchema, {
+          stage: 'plan',
+          status: 'ok',
+          value: planAgentResult.value,
+          metrics: { ms: planMs, costUsd: planAgentResult.usage.costUsd },
+        })
+      : toStageResult(SearchPlanSchema, {
+          stage: 'plan',
+          status: 'failed',
+          reasons: [planAgentResult.detail],
+          metrics: { ms: planMs, costUsd: 0 },
+        });
+    await persistStage(deps.stageOutputs, input.runId, plan);
+  }
+  deps.onStageEvent?.({ type: 'stage_result', stage: 'plan', status: plan.status, metrics: plan.metrics, resumed: planResumed });
 
   // --- retrieve + dedupe (module 02) --- only runs if a plan exists.
-  deps.onStageEvent?.({ type: 'stage_started', stage: 'retrieve' });
   const candidateArraySchema = z.array(CandidateSourceSchema);
-  let retrieval: StageResult<CandidateSource[]>;
-
-  if (!plan.value) {
-    retrieval = toStageResult(candidateArraySchema, {
-      stage: 'retrieve',
-      status: 'failed',
-      reasons: ['No search plan to execute (plan stage failed)'],
-      metrics: { ms: 0, costUsd: 0 },
-    });
-  } else {
-    const retrieveStarted = Date.now();
-    const executed = await executeSearchPlan(plan.value, {
-      pubmed: deps.pubmed,
-      europePmc: deps.europePmc,
-      maxConcurrency: deps.maxConcurrency,
-      perQueryTimeoutMs: deps.perQueryTimeoutMs,
-      webSearch: {
-        runId: input.runId,
-        metaClient: deps.metaClient,
-        budgetGuard: deps.budgetGuard,
-        allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES,
-      },
-    });
-    const retrieveMs = Date.now() - retrieveStarted;
-    const deduped = deduplicateCandidates(executed.candidates);
-    const hasIssues = executed.skipped.length > 0 || executed.failed.length > 0;
-
-    retrieval = toStageResult(candidateArraySchema, {
-      stage: 'retrieve',
-      status: deduped.length === 0 && hasIssues ? 'failed' : hasIssues ? 'partial' : 'ok',
-      value: deduped,
-      reasons: hasIssues
-        ? [
-            ...executed.skipped.map((s) => `Skipped "${s.query.text}" (${s.query.family}): ${s.reason}`),
-            ...executed.failed.map((f) => `Failed "${f.query.text}" (${f.query.family}): ${f.error}`),
-          ]
-        : undefined,
-      metrics: {
-        ms: retrieveMs,
-        costUsd: 0,
-        counts: { raw: executed.candidates.length, deduped: deduped.length, skipped: executed.skipped.length, failed: executed.failed.length },
-      },
-    });
-  }
-  deps.onStageEvent?.({ type: 'stage_result', stage: 'retrieve', status: retrieval.status, metrics: retrieval.metrics });
-
-  // --- classify (P4 + applyPubmedTypeOverride) --- only runs if there are candidates.
-  deps.onStageEvent?.({ type: 'stage_started', stage: 'classify' });
-  const classificationArraySchema = z.array(SourceClassificationSchema);
-  let classification: StageResult<SourceClassification[]>;
-
-  if (!retrieval.value || retrieval.value.length === 0) {
-    classification = toStageResult(classificationArraySchema, {
-      stage: 'classify',
-      status: 'abstain',
-      reasons: ['No candidates to classify'],
-      metrics: { ms: 0, costUsd: 0 },
-    });
-  } else {
-    const toClassify = retrieval.value.slice(0, MAX_SOURCES_PER_CLASSIFY_CALL);
-    const truncated = retrieval.value.length > MAX_SOURCES_PER_CLASSIFY_CALL;
-
-    const classifyStarted = Date.now();
-    const classifyAgentResult = await classifySources(
-      input.runId,
-      { sources: toClassify.map((c) => ({ sourceId: c.tempId, title: c.title, metadataAndText: buildMetadataAndText(c) })) },
-      { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p4PromptTemplate: deps.p4PromptTemplate, onTrace: deps.onTrace },
-    );
-    const classifyMs = Date.now() - classifyStarted;
-
-    if (classifyAgentResult.ok) {
-      const byTempId = new Map(toClassify.map((c) => [c.tempId, c]));
-      const overridden = classifyAgentResult.value.classifications.map((classification) => {
-        const candidate = byTempId.get(classification.sourceId);
-        return candidate?.pubTypes ? applyPubmedTypeOverride(classification, candidate.pubTypes) : classification;
-      });
-
-      classification = toStageResult(classificationArraySchema, {
-        stage: 'classify',
-        status: truncated ? 'partial' : 'ok',
-        value: overridden,
-        reasons: truncated ? [`${retrieval.value.length - MAX_SOURCES_PER_CLASSIFY_CALL} candidate(s) left unclassified (40/call cap)`] : undefined,
-        metrics: { ms: classifyMs, costUsd: classifyAgentResult.usage.costUsd },
+  let retrieval = resumeStage('retrieve', candidateArraySchema, latest);
+  const retrievalResumed = retrieval !== null;
+  if (!retrieval) {
+    deps.onStageEvent?.({ type: 'stage_started', stage: 'retrieve' });
+    if (!plan.value) {
+      retrieval = toStageResult(candidateArraySchema, {
+        stage: 'retrieve',
+        status: 'failed',
+        reasons: ['No search plan to execute (plan stage failed)'],
+        metrics: { ms: 0, costUsd: 0 },
       });
     } else {
-      classification = toStageResult(classificationArraySchema, {
-        stage: 'classify',
-        status: 'failed',
-        reasons: [classifyAgentResult.detail],
-        metrics: { ms: classifyMs, costUsd: 0 },
+      const retrieveStarted = Date.now();
+      const executed = await executeSearchPlan(plan.value, {
+        pubmed: deps.pubmed,
+        europePmc: deps.europePmc,
+        maxConcurrency: deps.maxConcurrency,
+        perQueryTimeoutMs: deps.perQueryTimeoutMs,
+        webSearch: {
+          runId: input.runId,
+          metaClient: deps.metaClient,
+          budgetGuard: deps.budgetGuard,
+          allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES,
+        },
+      });
+      const retrieveMs = Date.now() - retrieveStarted;
+      const deduped = deduplicateCandidates(executed.candidates);
+      const hasIssues = executed.skipped.length > 0 || executed.failed.length > 0;
+
+      retrieval = toStageResult(candidateArraySchema, {
+        stage: 'retrieve',
+        status: deduped.length === 0 && hasIssues ? 'failed' : hasIssues ? 'partial' : 'ok',
+        value: deduped,
+        reasons: hasIssues
+          ? [
+              ...executed.skipped.map((s) => `Skipped "${s.query.text}" (${s.query.family}): ${s.reason}`),
+              ...executed.failed.map((f) => `Failed "${f.query.text}" (${f.query.family}): ${f.error}`),
+            ]
+          : undefined,
+        metrics: {
+          ms: retrieveMs,
+          costUsd: 0,
+          counts: { raw: executed.candidates.length, deduped: deduped.length, skipped: executed.skipped.length, failed: executed.failed.length },
+        },
       });
     }
+    await persistStage(deps.stageOutputs, input.runId, retrieval);
   }
-  deps.onStageEvent?.({ type: 'stage_result', stage: 'classify', status: classification.status, metrics: classification.metrics });
+  deps.onStageEvent?.({ type: 'stage_result', stage: 'retrieve', status: retrieval.status, metrics: retrieval.metrics, resumed: retrievalResumed });
+
+  // --- classify (P4 + applyPubmedTypeOverride) --- only runs if there are candidates.
+  const classificationArraySchema = z.array(SourceClassificationSchema);
+  let classification = resumeStage('classify', classificationArraySchema, latest);
+  const classificationResumed = classification !== null;
+  if (!classification) {
+    deps.onStageEvent?.({ type: 'stage_started', stage: 'classify' });
+    if (!retrieval.value || retrieval.value.length === 0) {
+      classification = toStageResult(classificationArraySchema, {
+        stage: 'classify',
+        status: 'abstain',
+        reasons: ['No candidates to classify'],
+        metrics: { ms: 0, costUsd: 0 },
+      });
+    } else {
+      const toClassify = retrieval.value.slice(0, MAX_SOURCES_PER_CLASSIFY_CALL);
+      const truncated = retrieval.value.length > MAX_SOURCES_PER_CLASSIFY_CALL;
+
+      const classifyStarted = Date.now();
+      const classifyAgentResult = await classifySources(
+        input.runId,
+        { sources: toClassify.map((c) => ({ sourceId: c.tempId, title: c.title, metadataAndText: buildMetadataAndText(c) })) },
+        { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p4PromptTemplate: deps.p4PromptTemplate, onTrace: deps.onTrace },
+      );
+      const classifyMs = Date.now() - classifyStarted;
+
+      if (classifyAgentResult.ok) {
+        const byTempId = new Map(toClassify.map((c) => [c.tempId, c]));
+        const overridden = classifyAgentResult.value.classifications.map((classification) => {
+          const candidate = byTempId.get(classification.sourceId);
+          return candidate?.pubTypes ? applyPubmedTypeOverride(classification, candidate.pubTypes) : classification;
+        });
+
+        classification = toStageResult(classificationArraySchema, {
+          stage: 'classify',
+          status: truncated ? 'partial' : 'ok',
+          value: overridden,
+          reasons: truncated ? [`${retrieval.value.length - MAX_SOURCES_PER_CLASSIFY_CALL} candidate(s) left unclassified (40/call cap)`] : undefined,
+          metrics: { ms: classifyMs, costUsd: classifyAgentResult.usage.costUsd },
+        });
+      } else {
+        classification = toStageResult(classificationArraySchema, {
+          stage: 'classify',
+          status: 'failed',
+          reasons: [classifyAgentResult.detail],
+          metrics: { ms: classifyMs, costUsd: 0 },
+        });
+      }
+    }
+    await persistStage(deps.stageOutputs, input.runId, classification);
+  }
+  deps.onStageEvent?.({ type: 'stage_result', stage: 'classify', status: classification.status, metrics: classification.metrics, resumed: classificationResumed });
 
   // --- extract + verify (P5 + deterministic checks, module 03) --- only runs if
   // there are candidates; classification is used for prioritization only (missing/
   // failed classification just means no kind-based prioritization, not a blocker).
-  deps.onStageEvent?.({ type: 'stage_started', stage: 'extract' });
   const extractArraySchema = z.array(ClaimSchema);
-  let extraction: StageResult<Claim[]>;
-
-  if (!retrieval.value || retrieval.value.length === 0) {
-    extraction = toStageResult(extractArraySchema, {
-      stage: 'extract',
-      status: 'abstain',
-      reasons: ['No candidates to extract from'],
-      metrics: { ms: 0, costUsd: 0 },
-    });
-  } else {
-    const extractStarted = Date.now();
-    const pool = await extractAndVerifyPool(
-      {
-        runId: input.runId,
-        candidates: retrieval.value,
-        classifications: classification.value ?? [],
-        subQuestions: structure.value?.subQuestions ?? [],
-        maxSources: deps.maxExtractSources,
-        maxConcurrency: deps.maxExtractConcurrency,
-      },
-      {
-        metaClient: deps.metaClient,
-        budgetGuard: deps.budgetGuard,
-        crossref: deps.crossref,
-        europePmc: deps.europePmc,
-        webFetch: { allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES },
-        p0Preamble: deps.p0Preamble,
-        p5PromptTemplate: deps.p5PromptTemplate,
-        onTrace: deps.onTrace,
-        onSourceDone: (sourceId, outcome) => deps.onStageEvent?.({ type: 'source_extracted', sourceId, outcome }),
-      },
-    );
-    const extractMs = Date.now() - extractStarted;
-
-    const noFullText = pool.perSource.filter((s) => s.outcome.status === 'no_full_text').length;
-    const extractionFailed = pool.perSource.filter((s) => s.outcome.status === 'extraction_failed').length;
-    const okOutcomes = pool.perSource.flatMap((s) => (s.outcome.status === 'ok' ? [s.outcome] : []));
-    const droppedClaims = okOutcomes.flatMap((o) => o.dropped);
-    const retractedDropped = droppedClaims.filter((d) => d.reason === 'source is retracted or withdrawn').length;
-    const hasIssues = noFullText > 0 || extractionFailed > 0;
-
-    extraction = toStageResult(extractArraySchema, {
-      stage: 'extract',
-      status: pool.claims.length === 0 ? (pool.perSource.length > 0 ? 'partial' : 'abstain') : hasIssues ? 'partial' : 'ok',
-      value: pool.claims,
-      reasons: hasIssues
-        ? pool.perSource
-            .filter((s) => s.outcome.status !== 'ok')
-            .map((s) => `${s.sourceId}: ${s.outcome.status === 'extraction_failed' ? s.outcome.reason : 'no full text available'}`)
-        : undefined,
-      metrics: {
-        ms: extractMs,
-        costUsd: pool.costUsd,
-        counts: {
-          sourcesAttempted: pool.perSource.length,
-          claimsKept: pool.claims.length,
-          claimsDropped: droppedClaims.length,
-          retracted: retractedDropped,
-          noFullText,
-          extractionFailed,
+  let extraction = resumeStage('extract', extractArraySchema, latest);
+  const extractionResumed = extraction !== null;
+  if (!extraction) {
+    deps.onStageEvent?.({ type: 'stage_started', stage: 'extract' });
+    if (!retrieval.value || retrieval.value.length === 0) {
+      extraction = toStageResult(extractArraySchema, {
+        stage: 'extract',
+        status: 'abstain',
+        reasons: ['No candidates to extract from'],
+        metrics: { ms: 0, costUsd: 0 },
+      });
+    } else {
+      const extractStarted = Date.now();
+      const pool = await extractAndVerifyPool(
+        {
+          runId: input.runId,
+          candidates: retrieval.value,
+          classifications: classification.value ?? [],
+          subQuestions: structure.value?.subQuestions ?? [],
+          maxSources: deps.maxExtractSources,
+          maxConcurrency: deps.maxExtractConcurrency,
         },
-      },
-    });
+        {
+          metaClient: deps.metaClient,
+          budgetGuard: deps.budgetGuard,
+          crossref: deps.crossref,
+          europePmc: deps.europePmc,
+          webFetch: { allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES },
+          p0Preamble: deps.p0Preamble,
+          p5PromptTemplate: deps.p5PromptTemplate,
+          onTrace: deps.onTrace,
+          onSourceDone: (sourceId, outcome) => deps.onStageEvent?.({ type: 'source_extracted', sourceId, outcome }),
+        },
+      );
+      const extractMs = Date.now() - extractStarted;
+
+      const noFullText = pool.perSource.filter((s) => s.outcome.status === 'no_full_text').length;
+      const extractionFailed = pool.perSource.filter((s) => s.outcome.status === 'extraction_failed').length;
+      const okOutcomes = pool.perSource.flatMap((s) => (s.outcome.status === 'ok' ? [s.outcome] : []));
+      const droppedClaims = okOutcomes.flatMap((o) => o.dropped);
+      const retractedDropped = droppedClaims.filter((d) => d.reason === 'source is retracted or withdrawn').length;
+      const hasIssues = noFullText > 0 || extractionFailed > 0;
+
+      extraction = toStageResult(extractArraySchema, {
+        stage: 'extract',
+        status: pool.claims.length === 0 ? (pool.perSource.length > 0 ? 'partial' : 'abstain') : hasIssues ? 'partial' : 'ok',
+        value: pool.claims,
+        reasons: hasIssues
+          ? pool.perSource
+              .filter((s) => s.outcome.status !== 'ok')
+              .map((s) => `${s.sourceId}: ${s.outcome.status === 'extraction_failed' ? s.outcome.reason : 'no full text available'}`)
+          : undefined,
+        metrics: {
+          ms: extractMs,
+          costUsd: pool.costUsd,
+          counts: {
+            sourcesAttempted: pool.perSource.length,
+            claimsKept: pool.claims.length,
+            claimsDropped: droppedClaims.length,
+            retracted: retractedDropped,
+            noFullText,
+            extractionFailed,
+          },
+        },
+      });
+    }
+    await persistStage(deps.stageOutputs, input.runId, extraction);
   }
-  deps.onStageEvent?.({ type: 'stage_result', stage: 'extract', status: extraction.status, metrics: extraction.metrics });
+  deps.onStageEvent?.({ type: 'stage_result', stage: 'extract', status: extraction.status, metrics: extraction.metrics, resumed: extractionResumed });
 
   return { structure, plan, retrieval, classification, extraction };
 }

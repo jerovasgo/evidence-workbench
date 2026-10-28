@@ -18,13 +18,16 @@ import type { RunEvent } from '@/shared/domain';
 // than one ~30s+ silence.
 //
 // Why a separate GET after POST, not one streaming POST: module 01's own design
-// (multiple viewers could reconnect to the same run; a future resumable/persisted
-// run could be watched without re-running it). The real cost of that split today:
-// scenario text is never persisted (CLAUDE.md rule 3), so this route can only run
-// the pipeline once, immediately after POST, using the in-memory `pendingRunContext`
-// handoff — reconnecting after it's been consumed (or after a server restart) gets
-// an `error` event, not a resumed stream (no `stage_outputs` persistence yet,
-// SECURITY.md known gap).
+// (multiple viewers could reconnect to the same run; a resumable/persisted run can
+// be watched without re-running it from scratch). Scenario text is never persisted
+// (CLAUDE.md rule 3), so a reconnect after `pendingRunContext` has been consumed (or
+// the server restarted) can't recover the ORIGINAL free text — but `stage_outputs`
+// persistence (module 01's resumable-run design, wired in 2026-10-28) means that
+// only matters for whichever stage hasn't completed yet: a resumed run with
+// `structure` and `plan` already persisted skips straight to `retrieve` without
+// needing free text at all, since neither stage used it directly. Only a run that
+// never got past routing (no stage output exists yet) and lost its pending context
+// truly has nothing to resume — that case alone gets the `error` event below.
 //
 // `band_ready`'s "red-flag/first-action claims first" ordering (module 01) is
 // approximated here, not implemented in full: nothing tags claims as red-flag/
@@ -69,24 +72,33 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       }
 
       const pending = runtime.pendingRunContext.take(run.id);
+
+      // No in-memory context: only an actual blocker if nothing was persisted
+      // either — otherwise this is exactly the resumable-reconnect case stage
+      // persistence exists for, and the pipeline's own resume logic picks up from
+      // whichever stage last completed.
       if (!pending) {
-        send({
-          type: 'error',
-          runId: run.id,
-          message: 'Retrieval context is no longer available for this run (already streamed, expired, or the server restarted). Start a new run.',
-        });
-        send({ type: 'done', runId: run.id, status: 'failed' });
-        controller.close();
-        return;
+        const alreadyPersisted = await runtime.stageOutputsRepository.getLatestPerStage(run.id).catch(() => new Map());
+        if (alreadyPersisted.size === 0) {
+          send({
+            type: 'error',
+            runId: run.id,
+            message: 'Retrieval context is no longer available for this run (never started streaming, or expired before it could). Start a new run.',
+          });
+          send({ type: 'done', runId: run.id, status: 'failed' });
+          controller.close();
+          return;
+        }
       }
 
       try {
         const result = await runRetrievalPipeline(
-          { runId: run.id, freeText: pending.freeText, routerCondition: pending.routerCondition, routerSetting: pending.routerSetting },
+          { runId: run.id, freeText: pending?.freeText ?? '', routerCondition: pending?.routerCondition, routerSetting: pending?.routerSetting },
           {
             metaClient: runtime.metaClient,
             budgetGuard: runtime.budgetGuard,
             crossref: runtime.crossref,
+            stageOutputs: runtime.stageOutputsRepository,
             p0Preamble: runtime.p0Preamble,
             p2PromptTemplate: runtime.p2PromptTemplate,
             p3PromptTemplate: runtime.p3PromptTemplate,
@@ -98,7 +110,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
               if (event.type === 'stage_started') {
                 send({ type: 'stage_started', runId: run.id, stage: event.stage });
               } else if (event.type === 'stage_result') {
-                send({ type: 'stage_progress', runId: run.id, stage: event.stage, detail: `${event.status} (${event.metrics.ms}ms)` });
+                const detail = event.resumed ? `${event.status} (resumed)` : `${event.status} (${event.metrics.ms}ms)`;
+                send({ type: 'stage_progress', runId: run.id, stage: event.stage, detail });
               } else {
                 const claimsNote = event.outcome.status === 'ok' ? `, ${event.outcome.claims.length} claim(s)` : '';
                 send({ type: 'stage_progress', runId: run.id, stage: 'extract', detail: `${event.sourceId}: ${event.outcome.status}${claimsNote}` });

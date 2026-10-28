@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { createSupabaseRunsRepository, type RunsRepository } from '../data/runs-repository';
+import { createSupabaseStageOutputsRepository, type StageOutputsRepository } from '../data/stage-outputs-repository';
 import { createMetaClient, type MetaClient } from '@/shared/meta';
 import { loadPromptBody } from '@/shared/prompts';
 import { createInMemoryBudgetGuard, type BudgetGuard } from '@/shared/security';
@@ -17,6 +18,7 @@ export interface ServerRuntime {
   metaClient: MetaClient;
   budgetGuard: BudgetGuard;
   runsRepository: RunsRepository;
+  stageOutputsRepository: StageOutputsRepository;
   dailyBudgetUsd: number;
   p0Preamble: string;
   p1PromptTemplate: string;
@@ -60,6 +62,7 @@ export function buildServerRuntime(): ServerRuntime {
   const metaClient = createMetaClient({ apiKey: metaApiKey, baseUrl: metaApiBaseUrl });
   const supabase = createServiceRoleClient({ url: supabaseUrl, serviceRoleKey });
   const runsRepository = createSupabaseRunsRepository(supabase);
+  const stageOutputsRepository = createSupabaseStageOutputsRepository(supabase);
   const budgetGuard = createInMemoryBudgetGuard({ runCostCapUsd, dailyBudgetUsd });
 
   // NCBI_API_KEY is optional: without it PubMed is limited to 3 req/s (module 02's
@@ -85,6 +88,7 @@ export function buildServerRuntime(): ServerRuntime {
     metaClient,
     budgetGuard,
     runsRepository,
+    stageOutputsRepository,
     dailyBudgetUsd,
     p0Preamble,
     p1PromptTemplate,

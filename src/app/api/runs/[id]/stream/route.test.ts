@@ -28,9 +28,15 @@ const routingRun: RunRecord = {
   createdAt: '2026-10-27T00:00:00.000Z',
 };
 
-function mockRuntime(metaClient: MetaClient, runsRepository: RunsRepository, pendingRunContext = createPendingRunContextStore()) {
+function mockRuntime(
+  metaClient: MetaClient,
+  runsRepository: RunsRepository,
+  pendingRunContext = createPendingRunContextStore(),
+  stageOutputsRepository = { insert: vi.fn(), getLatestPerStage: vi.fn().mockResolvedValue(new Map()) },
+) {
   return {
     runsRepository,
+    stageOutputsRepository,
     metaClient,
     budgetGuard: createInMemoryBudgetGuard({ runCostCapUsd: 1, dailyBudgetUsd: 20 }),
     crossref: { lookup: vi.fn().mockResolvedValue(null) },
@@ -115,5 +121,35 @@ describe('GET /api/runs/[id]/stream', () => {
     expect(events.at(-1)).toMatchObject({ type: 'done', runId: 'run_1' });
     expect(runsRepository.updateRunStatus).toHaveBeenCalledWith('run_1', expect.any(String));
     // Consumed once — a second take() would return null (pending context's own test covers that directly).
+  });
+
+  it('resumes from persisted stage outputs when pending context is gone but stage_outputs exist', async () => {
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult({ queries: [] })); // plan's own call, if it runs
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const runsRepository = fakeRunsRepository({ getRun: vi.fn(async () => routingRun) });
+    const persistedStructure = {
+      stage: 'structure',
+      status: 'ok',
+      value: { setting: 'emergency', subQuestions: [], genericParameters: {} },
+      metrics: { ms: 1, costUsd: 0.001 },
+      createdAt: '2026-10-27T00:00:00Z',
+    };
+    const stageOutputsRepository = {
+      insert: vi.fn(),
+      getLatestPerStage: vi.fn().mockResolvedValue(new Map([['structure', persistedStructure]])),
+    };
+
+    const GET = await loadGetWithRuntime(
+      mockRuntime(metaClient, runsRepository, createPendingRunContextStore(), stageOutputsRepository), // no pending context put
+    );
+    const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
+    const events = await readAllEvents(res);
+
+    // Structure is resumed (no 'stage_started' for it), plan runs fresh.
+    expect(events.some((e) => e.type === 'stage_started' && (e as { stage: string }).stage === 'structure')).toBe(false);
+    expect(events.find((e) => e.type === 'stage_progress' && (e as { stage: string }).stage === 'structure')).toMatchObject({
+      detail: expect.stringContaining('resumed'),
+    });
+    expect(events.at(-1)).toMatchObject({ type: 'done', runId: 'run_1' });
   });
 });
