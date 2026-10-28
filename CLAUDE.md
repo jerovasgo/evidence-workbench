@@ -95,14 +95,15 @@ section 4 (Evidence Matrix), section 6 (three components), section 8 (data model
 
 ```text
 pnpm install   # pnpm isn't on PATH on this machine; use `corepack pnpm <cmd>` instead of bare `pnpm`
-pnpm test      # vitest run — schemas, Meta client, runAgent, tool registry (60 tests as of 2026-10-27)
-pnpm lint      # eslint .
+pnpm dev       # next dev — UI MVP (Home, Result/stream) as of 2026-10-28
+pnpm build     # next build — verified clean (TS + static/dynamic route collection)
+pnpm test      # vitest run — 370+ tests as of 2026-10-28
+pnpm lint      # eslint . + module boundary check
 pnpm typecheck # tsc --noEmit
 ```
 
-`pnpm dev`, `pnpm build` and `pnpm eval` are not wired yet — no Next.js app or `/evals` runner
-exists in `/src` yet. Add them when the UI shell (module 11) and evaluation harness (module 12)
-are scaffolded.
+`pnpm eval` is not wired yet — no `/evals` runner exists in `/src` yet. Add it when the
+evaluation harness (module 12) is scaffolded.
 
 ## Priorities if time runs short
 

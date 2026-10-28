@@ -190,6 +190,38 @@ This file tracks what is actually built, not the full target state in `docs/arch
   Crossref / PMID via PubMed / URL via 2xx), `checkRetraction` (Crossref update-to +
   PubMed publication type + a withdrawal-banner text pattern), and the
   `safetyCritical` keyword-escalation rule — are built on top of these connectors.
+- **UI MVP scaffold** (module 11, 2026-10-28, user-requested): `pnpm dev`/`pnpm build`
+  wired for the first time (previously unwired, CLAUDE.md Commands). Tailwind CSS v4
+  (CSS-first `@theme`), Geist Sans/Mono (`geist` package via `next/font`), Motion and
+  Radix (`@radix-ui/react-tabs`, `react-dialog`) installed per SPEC §12's stack
+  decision — `@radix-ui/react-tabs`/`react-dialog` are used directly rather than
+  through the shadcn CLI generator, a scope simplification for Day-2 logged in
+  `docs/DECISIONS.md`. Design tokens (`src/app/globals.css`) match SPEC §11 exactly
+  (background/surface/border/text/muted/accent/warning/conflict, 10-12px radii,
+  150-250ms motion honoring `prefers-reduced-motion`). Two of SPEC §11's six
+  screens are built: **(1) Home** (`src/app/page.tsx`) — free-text input + example
+  conditions, posts to `POST /api/runs`, routes to the result page; **(2) Result**
+  (`src/app/runs/[id]/{page,run-view}.tsx`) — a client hook (`use-run-stream.ts`)
+  consumes `GET /api/runs/:id/stream` via `EventSource`, rendering live stage
+  progress, a view-tab shell (Radix Tabs: Evidence functional, Algorithm/Map/Matrix/
+  Mechanism explicitly "not built yet" placeholders — SPEC §11 "abstain = explained
+  state, never an empty screen"), claim cards, an evidence drawer (Radix Dialog:
+  verbatim quote, source, locator, grade), and a receipt footer. **Every claim card
+  and drawer carries a visible "Not confirmed" chip** — module 03's `support-judge`
+  isn't built, so `verification.support` is always `'unknown'`; the UI never
+  presents these as verified, matching CLAUDE.md rule 5 and the `VerifiedClaimSchema`
+  tightening from 2026-10-27. Live-tested end to end in the browser pane against the
+  real Meta API/PubMed/Europe PMC/NICE: submitted a real question, watched stage
+  progress stream live (structure→plan→retrieve→classify→extract, including a real
+  `classify` failure handled gracefully mid-run), saw 2 real verified-pending-review
+  claims render with correct chips, opened the evidence drawer and confirmed the
+  verbatim NICE quote/source/locator, confirmed Escape-to-close keyboard
+  accessibility, and confirmed a 375px mobile layout has no horizontal overflow; the
+  test run was deleted from `BenchBark` afterward. `next build` (production) verified
+  clean. **Not built:** Algorithm/Map/Matrix/Mechanism views (their modules don't
+  exist), light theme (dark-first only for now), watches/local-pool screens, i18n
+  (ES/EN toggle), print stylesheet, and a settings UI for the allow-listed-domains
+  follow-up noted above.
 
 ## Known gaps (not built yet)
 
