@@ -4,7 +4,9 @@ import {
   getServerRuntime,
   runRetrievalPipeline,
   type RunRetrievalResult,
+  type ServerRuntime,
 } from '@/modules/01-orchestrator';
+import { labelRelationsBatched, pairClaimsForRelations } from '@/modules/05-governance';
 import type { AgentTraceEvent } from '@/shared/agents';
 import type { Claim, RunEvent } from '@/shared/domain';
 
@@ -69,6 +71,38 @@ function logAgentTrace(runId: string, event: AgentTraceEvent): void {
 
 function sseFrame(event: RunEvent): string {
   return `data: ${JSON.stringify(event)}\n\n`;
+}
+
+// Module 05 `relation-labeller` slice (2026-10-28 scoping decision, docs/DECISIONS.md):
+// runs cross-source relation labelling strictly AFTER the client's terminal `done`
+// event has already been enqueued, so it can never add to this run's TTFT — it is
+// awaited (not fire-and-forget) only so the Vercel function instance stays alive
+// long enough to finish safely before the handler returns and the instance can be
+// torn down. Never sends an SSE frame of its own; failures are logged, not surfaced
+// to a client that has already moved on.
+async function labelRelationsAfterDone(runId: string, claims: Claim[], runtime: ServerRuntime): Promise<void> {
+  const pairs = pairClaimsForRelations(claims);
+  if (pairs.length === 0) return;
+
+  const started = Date.now();
+  const result = await labelRelationsBatched(runId, pairs, {
+    metaClient: runtime.metaClient,
+    budgetGuard: runtime.budgetGuard,
+    p0Preamble: runtime.p0Preamble,
+    p7PromptTemplate: runtime.p7PromptTemplate,
+    onTrace: (event) => logAgentTrace(runId, event),
+  });
+  const ms = Date.now() - started;
+
+  await runtime.stageOutputsRepository.insert({
+    runId,
+    stage: 'relate',
+    status: result.relations.length > 0 || result.failures.length === 0 ? 'ok' : 'partial',
+    value: result.relations,
+    reasons: result.failures.map((f) => f.reason),
+    metrics: { ms, costUsd: result.costUsd, counts: { pairs: pairs.length, relations: result.relations.length, failures: result.failures.length } },
+  });
+  console.log(JSON.stringify({ type: 'stage_latency', runId, stage: 'relate', status: 'ok', ms, resumed: false }));
 }
 
 function computeFinalStatus(result: RunRetrievalResult): 'done' | 'partial' | 'failed' {
@@ -177,6 +211,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         await runtime.runsRepository.updateRunStatus(run.id, finalStatus);
         send({ type: 'done', runId: run.id, status: finalStatus });
         console.log(JSON.stringify({ type: 'run_latency', runId: run.id, status: finalStatus, totalMs: Date.now() - streamStarted, claimsTotal: result.extraction.value?.length ?? 0 }));
+
+        // Strictly after `done` — see labelRelationsAfterDone's own comment. Never
+        // lets a relation-labelling failure surface as a stream `error` event.
+        await labelRelationsAfterDone(run.id, result.extraction.value ?? [], runtime).catch((err) => {
+          console.log(JSON.stringify({ type: 'relate_error', runId: run.id, message: err instanceof Error ? err.message : 'Unknown error' }));
+        });
       } catch (err) {
         send({ type: 'error', runId: run.id, message: err instanceof Error ? err.message : 'Unknown error' });
         await runtime.runsRepository.updateRunStatus(run.id, 'failed').catch(() => undefined);

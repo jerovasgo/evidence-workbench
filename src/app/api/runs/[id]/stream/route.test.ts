@@ -45,6 +45,7 @@ function mockRuntime(
     p3PromptTemplate: 'Plan for {{condition}} / {{sub_questions}} / {{setting}} / {{country}}',
     p4PromptTemplate: 'Classify: {{sources_json}}',
     p5PromptTemplate: 'Extract: {{source_title}} / {{sub_questions}} / {{passages}}',
+    p7PromptTemplate: 'Relate: {{pairs_json}}',
     p10PromptTemplate: 'Judge: {{claim_text}} / {{conditions_json}} / {{quote}} / {{surrounding_context}}',
     pubmed: { search: vi.fn().mockResolvedValue({ pmids: [] }), fetchSummaries: vi.fn().mockResolvedValue([]) },
     europePmc: { search: vi.fn().mockResolvedValue([]), fetchFullText: vi.fn().mockResolvedValue(null) },
@@ -55,6 +56,11 @@ function mockRuntime(
 vi.mock(import('@/modules/01-orchestrator'), async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, getServerRuntime: vi.fn() };
+});
+
+vi.mock(import('@/modules/05-governance'), async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, labelRelationsBatched: vi.fn() };
 });
 
 async function loadGetWithRuntime(runtime: ReturnType<typeof mockRuntime>) {
@@ -152,5 +158,98 @@ describe('GET /api/runs/[id]/stream', () => {
       detail: expect.stringContaining('resumed'),
     });
     expect(events.at(-1)).toMatchObject({ type: 'done', runId: 'run_1' });
+  });
+
+  it('runs relation labelling after the terminal done event and persists it as a "relate" stage output, with no extra SSE frame', async () => {
+    const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
+    const runsRepository = fakeRunsRepository({ getRun: vi.fn(async () => routingRun) });
+
+    const claimA = {
+      id: 'claim_a',
+      text: 'Give aspirin.',
+      basis: 'recommendation' as const,
+      actionType: 'treat' as const,
+      conditions: [],
+      sourceId: 's1',
+      passageId: 'p1',
+      quote: 'Aspirin.',
+      grade: { certainty: 'ungraded' as const, origin: 'ai_estimated' as const },
+      verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' as const },
+      safetyCritical: false,
+    };
+    const claimB = { ...claimA, id: 'claim_b', sourceId: 's2', quote: 'Low-dose aspirin.' };
+
+    const metrics = { ms: 1, costUsd: 0 };
+    const stageOutputsRepository = {
+      insert: vi.fn(),
+      getLatestPerStage: vi.fn().mockResolvedValue(
+        new Map([
+          ['structure', { stage: 'structure', status: 'ok', value: { setting: 'emergency', subQuestions: [], genericParameters: {} }, metrics, createdAt: 'x' }],
+          ['plan', { stage: 'plan', status: 'ok', value: { queries: [] }, metrics, createdAt: 'x' }],
+          ['retrieve', { stage: 'retrieve', status: 'ok', value: [], metrics, createdAt: 'x' }],
+          ['classify', { stage: 'classify', status: 'ok', value: [], metrics, createdAt: 'x' }],
+          ['extract', { stage: 'extract', status: 'ok', value: [claimA, claimB], metrics, createdAt: 'x' }],
+        ]),
+      ),
+    };
+
+    const GET = await loadGetWithRuntime(mockRuntime(metaClient, runsRepository, createPendingRunContextStore(), stageOutputsRepository));
+
+    const { labelRelationsBatched } = await import('@/modules/05-governance');
+    vi.mocked(labelRelationsBatched).mockResolvedValue({ relations: [{ from: 'claim_a', to: 'claim_b', kind: 'agrees', evidence: 'both recommend aspirin' }], failures: [], costUsd: 0 });
+
+    const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
+    const events = await readAllEvents(res);
+
+    expect(events.at(-1)).toEqual({ type: 'done', runId: 'run_1', status: 'done' }); // no event rides after done
+    expect(labelRelationsBatched).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(labelRelationsBatched).mock.calls[0]?.[1]).toEqual([{ a: claimA, b: claimB }]);
+    expect(stageOutputsRepository.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ runId: 'run_1', stage: 'relate', status: 'ok', value: [{ from: 'claim_a', to: 'claim_b', kind: 'agrees', evidence: 'both recommend aspirin' }] }),
+    );
+  });
+
+  it('never lets a relation-labelling failure surface as a stream error after done was already sent', async () => {
+    const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
+    const runsRepository = fakeRunsRepository({ getRun: vi.fn(async () => routingRun) });
+
+    const claimA = {
+      id: 'claim_a',
+      text: 'Give aspirin.',
+      basis: 'recommendation' as const,
+      actionType: 'treat' as const,
+      conditions: [],
+      sourceId: 's1',
+      passageId: 'p1',
+      quote: 'Aspirin.',
+      grade: { certainty: 'ungraded' as const, origin: 'ai_estimated' as const },
+      verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' as const },
+      safetyCritical: false,
+    };
+    const claimB = { ...claimA, id: 'claim_b', sourceId: 's2', quote: 'Low-dose aspirin.' };
+    const metrics = { ms: 1, costUsd: 0 };
+    const stageOutputsRepository = {
+      insert: vi.fn(),
+      getLatestPerStage: vi.fn().mockResolvedValue(
+        new Map([
+          ['structure', { stage: 'structure', status: 'ok', value: { setting: 'emergency', subQuestions: [], genericParameters: {} }, metrics, createdAt: 'x' }],
+          ['plan', { stage: 'plan', status: 'ok', value: { queries: [] }, metrics, createdAt: 'x' }],
+          ['retrieve', { stage: 'retrieve', status: 'ok', value: [], metrics, createdAt: 'x' }],
+          ['classify', { stage: 'classify', status: 'ok', value: [], metrics, createdAt: 'x' }],
+          ['extract', { stage: 'extract', status: 'ok', value: [claimA, claimB], metrics, createdAt: 'x' }],
+        ]),
+      ),
+    };
+
+    const GET = await loadGetWithRuntime(mockRuntime(metaClient, runsRepository, createPendingRunContextStore(), stageOutputsRepository));
+
+    const { labelRelationsBatched } = await import('@/modules/05-governance');
+    vi.mocked(labelRelationsBatched).mockRejectedValue(new Error('boom'));
+
+    const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
+    const events = await readAllEvents(res);
+
+    expect(events.at(-1)).toEqual({ type: 'done', runId: 'run_1', status: 'done' });
+    expect(events.some((e) => e.type === 'error')).toBe(false);
   });
 });

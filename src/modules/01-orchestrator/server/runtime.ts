@@ -28,6 +28,7 @@ export interface ServerRuntime {
   p3PromptTemplate: string;
   p4PromptTemplate: string;
   p5PromptTemplate: string;
+  p7PromptTemplate: string;
   p10PromptTemplate: string;
   pubmed: PubmedClient;
   europePmc: EuropePmcClient;
@@ -92,6 +93,7 @@ export function buildServerRuntime(): ServerRuntime {
   const p3PromptTemplate = loadPrompt('P3-search-planner.md');
   const p4PromptTemplate = loadPrompt('P4-source-classifier.md');
   const p5PromptTemplate = loadPrompt('P5-claim-extractor.md');
+  const p7PromptTemplate = loadPrompt('P7-relation-labeller.md');
   const p10PromptTemplate = loadPrompt('P10-support-judge.md');
 
   return {
@@ -107,6 +109,7 @@ export function buildServerRuntime(): ServerRuntime {
     p3PromptTemplate,
     p4PromptTemplate,
     p5PromptTemplate,
+    p7PromptTemplate,
     p10PromptTemplate,
     pubmed,
     europePmc,

@@ -1,0 +1,73 @@
+import { describe, expect, it } from 'vitest';
+import type { Claim } from '@/shared/domain';
+import { pairClaimsForRelations } from './pair-claims';
+
+function claim(overrides: Partial<Claim>): Claim {
+  return {
+    id: 'c',
+    text: 'Give aspirin.',
+    basis: 'recommendation',
+    actionType: 'treat',
+    conditions: [],
+    sourceId: 's1',
+    passageId: 'p1',
+    quote: 'Aspirin.',
+    grade: { certainty: 'ungraded', origin: 'ai_estimated' },
+    verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' },
+    safetyCritical: false,
+    ...overrides,
+  };
+}
+
+describe('pairClaimsForRelations', () => {
+  it('pairs two claims with the same actionType from different sources', () => {
+    const a = claim({ id: 'a', sourceId: 's1' });
+    const b = claim({ id: 'b', sourceId: 's2' });
+
+    const pairs = pairClaimsForRelations([a, b]);
+
+    expect(pairs).toHaveLength(1);
+    expect(pairs[0]).toEqual({ a, b });
+  });
+
+  it('never pairs two claims from the same source', () => {
+    const a = claim({ id: 'a', sourceId: 's1' });
+    const b = claim({ id: 'b', sourceId: 's1' });
+
+    expect(pairClaimsForRelations([a, b])).toEqual([]);
+  });
+
+  it('never pairs claims with different actionType', () => {
+    const a = claim({ id: 'a', sourceId: 's1', actionType: 'treat' });
+    const b = claim({ id: 'b', sourceId: 's2', actionType: 'test' });
+
+    expect(pairClaimsForRelations([a, b])).toEqual([]);
+  });
+
+  it('pairs when either claim is unconditioned, even if the other has conditions', () => {
+    const a = claim({ id: 'a', sourceId: 's1', conditions: [] });
+    const b = claim({ id: 'b', sourceId: 's2', conditions: [{ variable: 'age', op: '>', value: 65 }] });
+
+    expect(pairClaimsForRelations([a, b])).toHaveLength(1);
+  });
+
+  it('pairs when conditions share a variable, regardless of operator/value', () => {
+    const a = claim({ id: 'a', sourceId: 's1', conditions: [{ variable: 'age', op: '>', value: 65 }] });
+    const b = claim({ id: 'b', sourceId: 's2', conditions: [{ variable: 'age', op: '<', value: 18 }] });
+
+    expect(pairClaimsForRelations([a, b])).toHaveLength(1);
+  });
+
+  it('does not pair claims whose conditions share no variable', () => {
+    const a = claim({ id: 'a', sourceId: 's1', conditions: [{ variable: 'age', op: '>', value: 65 }] });
+    const b = claim({ id: 'b', sourceId: 's2', conditions: [{ variable: 'egfr', op: '<', value: 30 }] });
+
+    expect(pairClaimsForRelations([a, b])).toEqual([]);
+  });
+
+  it('caps the number of pairs to avoid cost/latency blowup on a large claim set', () => {
+    const claims = Array.from({ length: 20 }, (_, i) => claim({ id: `c${i}`, sourceId: `s${i}` }));
+    const pairs = pairClaimsForRelations(claims);
+    expect(pairs.length).toBeLessThanOrEqual(60);
+  });
+});

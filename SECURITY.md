@@ -412,3 +412,12 @@ This file tracks what is actually built, not the full target state in `docs/arch
   real account — no sign-up/sign-in exists (see the Auth gap above). Conversations
   are invisible from a different browser or after clearing cookies; the underlying
   Postgres rows aren't deleted, just unreachable without the original cookie.
+- **Module 05 (`relation-labeller`, 2026-10-28) pairs claims by `actionType` +
+  `sourceId` + compatible `conditions` only.** `docs/architecture/05-governance-
+  local-vs-external.md`'s own pairing heuristic also matches on "semantic key from
+  sub-question assignment" — not buildable yet, since `claim-extractor`'s output
+  schema doesn't tag a claim with which sub-question it answers. Honest subset, not
+  a silent shortcut: documented in `pair-claims.ts` and `docs/DECISIONS.md`. The
+  rest of module 05 (governance table, divergence-analyst, local-document upload)
+  is also not built — this slice is cross-source relation labelling only, which
+  needs no local protocol document.
