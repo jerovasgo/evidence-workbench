@@ -1,9 +1,16 @@
 # P17 — Mechanism extractor
 
-Version: `P17@0.1`
+Version: `P17@0.2`
 Agent: `mechanism-extractor` (module 08, tier T1, 1 step + 1 repair, ~4,000 tokens, run in
 parallel per source and merged in code)
 Shares the common preamble `P0` (see `docs/PROMPTS.md`).
+
+**2026-10-29 pivot (docs/DECISIONS.md):** this prompt was already non-clinical
+molecular-biology vocabulary — kept as-is and extended with a parallel
+chemistry-reaction vocabulary (`reactant`/`catalyst`/`intermediate`/`product`/
+`transition_state` entities; `forms_bond`/`breaks_bond`/`transfers_electron`/
+`catalyzes` interactions), so the same mechanism canvas covers both chosen
+demo domains (biology/genetics and chemistry).
 
 ## Task
 
@@ -16,14 +23,16 @@ Return: {
    'id': string,                     // stable slug, e.g. 'beta1_adrenergic_receptor'
    'name': string,                   // normalized display name
    'kind': 'ligand|gpcr|rtk|ion_channel|g_protein|enzyme|kinase|second_messenger|
-            transcription_factor|other',
-   'compartment': 'extracellular|membrane|cytosol|nucleus'
+            transcription_factor|reactant|catalyst|intermediate|product|
+            transition_state|other',
+   'compartment': 'extracellular|membrane|cytosol|nucleus|solution|surface|gas_phase'
  }],
  'interactions': [{
    'id': string,
    'from': string,                   // entity id
    'to': string,                     // entity id
-   'type': 'activates|inhibits|produces|binds|phosphorylates',
+   'type': 'activates|inhibits|produces|binds|phosphorylates|forms_bond|breaks_bond|
+            transfers_electron|catalyzes',
    'sign': '+'|'-'|'0',
    'order': int,                     // position in the cascade, 1..N, ties allowed
    'quote': string,                  // verbatim minimal span from the passage
@@ -55,5 +64,5 @@ Rules:
 - Validate with the `MechanismGraph` zod schema fragment (module 08 contracts) before
   merge; each interaction becomes a `Claim` with `basis='background'`,
   `actionType='mechanism'` (SPEC §8 v0.3).
-- Feeds the deterministic validators in `src/lib/validators/mechanism.ts` (quote check,
+- Feeds the deterministic validators in `src/modules/08-mechanism/validators/` (quote check,
   cross-reference resolution, structural checks) before `coherence-judge` (P18) runs.

@@ -371,7 +371,7 @@ This file tracks what is actually built, not the full target state in `docs/arch
 - No rate limiting, CSP, or output-side prompt-injection suite yet (module 10 items for
   later days). The identifier pre-filter is built; the full 20-fixture injection suite
   is not.
-- **User-requested follow-up, not built:** letting a clinician review/add their own
+- **User-requested follow-up, not built:** letting a user review/add their own
   trusted domains (beyond the hardcoded default list below) needs a settings UI
   (module 11), tracked in `default-allowed-domains.ts`'s own comment.
 - Curation stops at dedupe (`deduplicateCandidates`). `resolveVersions`,
@@ -406,7 +406,7 @@ This file tracks what is actually built, not the full target state in `docs/arch
   re-running retrieval from scratch) is also not built — each turn runs the full
   pipeline independently; the conversational-flow brief's own point 5 asked for
   this, but it needs a real caching/invalidation design (SPEC §9's
-  `(condition, setting, source-version hash)` cache key is itself still unbuilt)
+  `(topic, context, source-version hash)` cache key is itself still unbuilt)
   beyond what a UI pass can decide on its own.
 - Conversation "ownership" is an httpOnly session cookie (one per browser), not a
   real account — no sign-up/sign-in exists (see the Auth gap above). Conversations
@@ -421,3 +421,12 @@ This file tracks what is actually built, not the full target state in `docs/arch
   rest of module 05 (governance table, divergence-analyst, local-document upload)
   is also not built — this slice is cross-source relation labelling only, which
   needs no local protocol document.
+- **2026-10-29 pivot (docs/DECISIONS.md):** the identifier pre-filter
+  (`src/modules/01-orchestrator/validators/identifiers.ts`) was generalized from
+  "patient identifiers" to "any specific, identifiable real person" — the cue list
+  (`my colleague/coworker/student/co-author <Name>`, plus the original `patient/
+  paciente <Name>`) is a best-effort, not exhaustive; same honest false-positive-
+  tolerance posture as before. The `safetyCritical` keyword list
+  (`validators/safety-critical.ts`) was similarly generalized from clinical hazard
+  terms to lab/chemical/biological/physical hazard terms — same "code can only
+  raise the flag, never lower it" mechanism, new keyword domain.

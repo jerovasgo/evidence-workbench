@@ -8,7 +8,7 @@ export const JobSpecSchema = z.object({
     subquestions: z.array(z.string()).optional(),
   }),
   sources: z.object({
-    guidelines: z.boolean(),
+    standardsBodies: z.boolean(),
     pubmed: z.boolean(),
     web: z.boolean(),
     localPool: z.boolean(),

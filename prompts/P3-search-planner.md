@@ -1,8 +1,15 @@
 # P3 — Search planner
 
-Version: `P3@0.1`
+Version: `P3@0.2`
 Agent: `search-planner` (module 02, tier T0, 1 step, ~1,200 output tokens)
 Shares the common preamble `P0`.
+
+**2026-10-29 pivot (docs/DECISIONS.md):** "clinical question" -> "question";
+`'guideline'` family -> `'standards_body'` (IUPAC/NIST/ISO-style publications);
+MeSH-specific wording dropped for a field-general "standard terminology"
+instruction, since MeSH (Medical Subject Headings) is biomedical-literature-
+specific; `pubmed`/`europe_pmc`/`web`/`local` unchanged — both literature
+databases index plenty of non-clinical biology/biochemistry.
 
 **Adapted from the `docs/PROMPTS.md` §10 draft:** that draft returns four separate
 arrays (`guideline_queries`, `pubmed_queries`, `web_queries`, `local_pool_queries`)
@@ -15,29 +22,31 @@ follows module 02, not the older draft, per `00-overview.md`'s "the architecture
 ## Task
 
 ```text
-Task: Plan evidence retrieval for this clinical question. Do not answer it.
+Task: Plan evidence retrieval for this question. Do not answer it.
 <condition>{{condition}}</condition>
 <sub_questions>{{sub_questions}}</sub_questions>
 <setting>{{setting}}</setting>
 <country>{{country}}</country>
 Return: {
  'queries': [{
-   'family': 'guideline'|'pubmed'|'europe_pmc'|'web'|'local',
+   'family': 'standards_body'|'pubmed'|'europe_pmc'|'web'|'local',
    'text': string,              // the actual search string for that family
-   'filters': {string: string}|omit,  // e.g. {'publication_type': 'practice_guideline'}
+   'filters': {string: string}|omit,  // e.g. {'publication_type': 'review'}
    'purpose': string             // which sub-question this query serves
  }],
- 'mustFind': [string]|omit        // named guidelines/trials you expect the pool to contain
+ 'mustFind': [string]|omit        // named standards/landmark studies you expect the pool to contain
 }
 Rules:
 - At most 12 queries total, each with a distinct 'purpose'.
-- Include at least one adversarial query (controversy, "not recommended", discordant
-  guidelines) and one currency query (recent updates, withdrawals) among the 12.
-- For 'pubmed' queries, use MeSH terms and synonyms where you know them.
-- Prefer guideline-issuing bodies relevant to {{country}} and {{setting}} by name
-  where you are confident of the name; never invent a guideline title — that goes in
-  'mustFind' only if you are reasonably sure it exists, not as a search string.
-- Do not answer the clinical question; only plan how to look it up.
+- Include at least one adversarial query (controversy, "disputed", conflicting
+  findings) and one currency query (recent updates, retractions) among the 12.
+- Use field-standard terminology and known synonyms for the topic where you know
+  them.
+- Prefer standards-issuing bodies (e.g. IUPAC, NIST, ISO) relevant to the topic by
+  name where you are confident of the name; never invent a publication title —
+  that goes in 'mustFind' only if you are reasonably sure it exists, not as a
+  search string.
+- Do not answer the question; only plan how to look it up.
 ```
 
 ## Notes

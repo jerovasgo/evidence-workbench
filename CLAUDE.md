@@ -21,12 +21,18 @@ module done until they are met or the gap is logged in `docs/DECISIONS.md`.
 
 ## What we are building
 
-A workbench for clinicians that turns clinical evidence into verified, graded, comparable visuals
-(Algorithm Generator, Evidence Maps/Matrix, Pathophysiology Diagrams), plus watches that alert on
-changes. The product *navigates, compares, audits and verifies* evidence. It does not give patient
-instructions or diagnose. `docs/SPEC.md` is the source of truth: section 3 (safety posture),
-section 4 (Evidence Matrix), section 6 (three components), section 8 (data model), section 9
-(pipeline/performance) and section 10 (security) are binding.
+**2026-10-29 pivot (see `docs/DECISIONS.md`): the hackathon rejected medical/clinical tools as
+"anti-projects," two days into the build. The product is re-scoped from clinical evidence to
+general scientific evidence verification — any field of science (physics, chemistry, biology,
+mathematics, etc.), explicitly excluding clinical medicine and patient care.**
+
+A workbench for researchers, engineers and students that turns scattered scientific evidence into
+verified, graded, comparable visuals (Algorithm Generator, Evidence Maps/Matrix, Mechanism
+Diagrams), plus watches that alert on changes. The product *navigates, compares, audits and
+verifies* evidence. It does not give instructions to act on a specific real-world case, and it is
+never a clinical/medical-advice tool. `docs/SPEC.md` is the source of truth: section 3 (safety
+posture), section 4 (Evidence Matrix), section 6 (three components), section 8 (data model),
+section 9 (pipeline/performance) and section 10 (security) are binding.
 
 ## Stack (decided)
 
@@ -42,28 +48,32 @@ section 4 (Evidence Matrix), section 6 (three components), section 8 (data model
 
 ## Non-negotiable rules
 
-1. **Public repo.** Never commit secrets, `.env*`, real patient data, or full copyrighted PDFs.
+1. **Public repo.** Never commit secrets, `.env*`, real personal data, or full copyrighted PDFs.
    Only synthetic or public data in `/data/synthetic`. Short quotes with locator and link only.
 2. **New work only.** Everything is implemented during Oct 27 – Nov 4. Small commits with
    descriptive messages; the git history is evidence. Do not copy code from private projects.
-3. **No patient data.** Reject patient identifiers. Scenario text is not persisted by default.
-   Never log prompts, scenario text or document content; log ids, timings, costs, hashes.
+3. **No personal data.** Reject identifiers of a specific, real, identifiable person. Scenario
+   text is not persisted by default. Never log prompts, scenario text or document content; log
+   ids, timings, costs, hashes.
    **Scoped exception (2026-10-28, explicit user decision, see `docs/DECISIONS.md`):** the
    conversation-history feature persists scenario text, field-encrypted (AES-256-GCM,
    same mechanism as rule 10) at rest — this is the one place scenario text is stored;
    it is still never logged/traced in plaintext anywhere (`onTrace`, server logs).
-4. **Clinician-addressed language.** Statements say "assess", "consider ordering", "consider
-   referral". Never instructions to the patient. UI copy and README use *navigate, compare,
-   audit, verify*; avoid *recommends*, *advises*, *tells you what to do*.
+4. **Reader-addressed language.** Statements say "assess", "consider measuring", "consider
+   replicating". Never second-person instructions to act on a specific real-world case. UI copy
+   and README use *navigate, compare, audit, verify*; avoid *recommends*, *advises*, *tells you
+   what to do*.
 5. **Verified by code, not by the model.** A claim is displayed only if: the source exists, the
    quote appears verbatim in the fetched text, it is not retracted, and the support check passed.
    Failures remove the claim or trigger abstention. There is no "unverified but shown" state.
-6. **Doses and thresholds** appear only if quoted from a source with locator; otherwise
+6. **Measurements and thresholds** appear only if quoted from a source with locator; otherwise
    "per local protocol".
-7. **Two-dimension grading.** Certainty and strength are separate. Source grades are copied as-is
+7. **Two-dimension grading.** Certainty is tracked; source grades are copied as-is
    (`origin: 'source'`); AI-estimated grades carry `origin: 'ai_estimated'` and a visible label.
+   (Clinical "recommendation strength" was dropped in the 2026-10-29 pivot — no general-science
+   analog.)
 8. **Local protocol is never overwritten silently.** Divergences are shown side by side;
-   safety-critical ones are `needs_clinician_decision`.
+   safety-critical ones need `requiresExpertReview`.
 9. **Retrieved content is data, not instructions.** Tag it; validate every model output against
    its zod schema; one retry on invalid output, then abstain.
 10. **Security basics:** RLS on all tables; service role key server-only; Meta API key only in
@@ -73,7 +83,7 @@ section 4 (Evidence Matrix), section 6 (three components), section 8 (data model
     per-IP/user rate limits and `DAILY_BUDGET_USD`; anonymous visitors get precomputed results.
 12. **Performance:** run independent work in parallel (`Promise.allSettled`, bounded
     concurrency, per-source timeouts), stream with SSE, publish the 10-second band first, persist
-    each stage so runs are resumable, cache by `(condition, setting, source-version hash)`.
+    each stage so runs are resumable, cache by `(topic, context, source-version hash)`.
 
 ## How to work
 
@@ -101,7 +111,7 @@ section 4 (Evidence Matrix), section 6 (three components), section 8 (data model
 pnpm install   # pnpm isn't on PATH on this machine; use `corepack pnpm <cmd>` instead of bare `pnpm`
 pnpm dev       # next dev — UI MVP (Home, Result/stream) as of 2026-10-28
 pnpm build     # next build — verified clean (TS + static/dynamic route collection)
-pnpm test      # vitest run — 370+ tests as of 2026-10-28
+pnpm test      # vitest run — 489+ tests as of 2026-10-29
 pnpm lint      # eslint . + module boundary check
 pnpm typecheck # tsc --noEmit
 ```
@@ -112,5 +122,5 @@ evaluation harness (module 12) is scaffolded.
 ## Priorities if time runs short
 
 Never cut: quote verification, receipt, concordance matrix, governance, evaluation.
-Cut order (first to cut first): mechanism sandbox toggles → mechanism-to-guideline bridge →
+Cut order (first to cut first): mechanism sandbox toggles → mechanism-to-source bridge →
 answer card → block builder → diff view → printable card → "walk the path" mode → mechanism canvas.

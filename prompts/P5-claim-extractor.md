@@ -1,8 +1,19 @@
 # P5 — Claim extractor
 
-Version: `P5@0.1`
+Version: `P5@0.2`
 Agent: `claim-extractor` (module 03, tier T1, 1 step, ~3,000 output tokens, 25 s timeout)
 Shares the common preamble `P0`.
+
+**2026-10-29 pivot (docs/DECISIONS.md), heaviest rewrite in the prompt set:**
+`actionType` (the clinical workflow verbs assess/test/treat/threshold/
+disposition/avoid) -> a general-science claim taxonomy
+(finding/method/measurement/theory/mechanism/limitation); `basis`
+(`recommendation`/`background`) -> (`primary`/`background`); `safetyCritical`'s
+description moves from clinical hazards (dose, contraindication, discharge
+criteria, anticoagulation) to lab/chemical/biological/physical hazards
+(explosive, toxic, corrosive, biohazard, pathogenic, radioactive, lethal —
+`src/modules/03-extraction-verification/validators/safety-critical.ts`'s own
+keyword list); "clinician-addressed" -> "reader-addressed".
 
 **Adapted from the `docs/PROMPTS.md` §10 draft:** that draft calls the model once per
 *(passage, sub-question)* pair. Module 03
@@ -15,30 +26,30 @@ windowed passage and every sub-question for one source in a single call, per mod
 ## Task
 
 ```text
-Task: Extract clinical management claims this source explicitly states, relevant to
-these sub-questions. Do not add content the passages don't state; do not answer a
+Task: Extract scientific claims this source explicitly states, relevant to these
+sub-questions. Do not add content the passages don't state; do not answer a
 question the source doesn't address.
 <source_title>{{source_title}}</source_title>
 <sub_questions>{{sub_questions}}</sub_questions>
 <passages>{{passages}}</passages>
 Return: {
  'claims': [{
-   'text': string,              // clinician-addressed paraphrase, <=35 words, no added content
-   'basis': 'recommendation'|'background',
-   'actionType': 'assess'|'test'|'treat'|'threshold'|'disposition'|'avoid'|'mechanism',
+   'text': string,              // reader-addressed paraphrase, <=35 words, no added content
+   'basis': 'primary'|'background',
+   'actionType': 'finding'|'method'|'measurement'|'theory'|'mechanism'|'limitation',
    'conditions': [{'variable','op','value','unit'}]|[],
    'quote': string,             // verbatim from ONE passage, minimal span, <=300 chars
    'passageId': string,         // must exactly match a passageId given in <passages>
-   'nativeGrade': string|omit,  // copy exactly as written, e.g. 'Class I, LOE A'
-   'safetyCritical': bool       // dose, contraindication, discharge criteria, anticoagulation, etc.
+   'nativeGrade': string|omit,  // copy exactly as written, e.g. 'a well-established result'
+   'safetyCritical': bool       // explosive, toxic, corrosive, biohazard, pathogenic, radioactive, lethal, etc.
  }]
 }
 Rules:
-- One claim = one recommendation/finding; never merge content across passages.
+- One claim = one finding/result; never merge content across passages.
 - 'quote' must be copied character-for-character from the passage text given for
   that 'passageId' — never paraphrase or summarize inside 'quote'; 'text' may paraphrase.
-- Never state a dose, threshold, or number in 'text'/'conditions' that is not present
-  in 'quote'.
+- Never state a measurement, threshold, or number in 'text'/'conditions' that is not
+  present in 'quote'.
 - 'passageId' must be one of the ids given in <passages> — never invent one.
 - If no passage answers any sub-question, return {'claims': []}. Do not force a claim.
 ```

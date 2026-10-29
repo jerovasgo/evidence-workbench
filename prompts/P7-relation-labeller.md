@@ -1,6 +1,6 @@
 # P7 — Relation labeller
 
-Version: `P7@0.1`
+Version: `P7@0.2`
 Agent: `relation-labeller` (module 05, tier T1, batched ≤10 pairs/call)
 Shares the common preamble `P0`.
 
@@ -23,8 +23,8 @@ since `Relation` has no third field.
 
 ```text
 Task: For each pair below, decide how claim A relates to claim B. Both claims
-are about the same clinical question and come from different sources — judge
-only from the two quotes given; never use outside knowledge of the topic.
+are about the same question and come from different sources — judge only from
+the two quotes given; never use outside knowledge of the topic.
 <pairs>{{pairs_json}}</pairs>
 Each item is { 'pairId': number, 'claim_a': string, 'quote_a': string, 'claim_b': string, 'quote_b': string }.
 Return: { 'relations': [{ 'pairId': number, 'kind': 'agrees'|'differs'|'supersedes'|'contradicts'|'adapts', 'evidence': string }] }
@@ -35,13 +35,13 @@ Rules:
 - 'adapts': B narrows or specializes A's scope in a way the quotes support.
 - 'supersedes': one quote explicitly updates or replaces the other (e.g. states a
   newer recommendation for the same question).
-- 'contradicts': ONLY when both quotes address the same population and action and
-  give opposite directions (e.g. "should" vs "should not"). Prefer 'differs' or
-  'adapts' over 'contradicts' whenever the scope differs at all.
+- 'contradicts': ONLY when both quotes address the same scope and action and
+  give opposite directions (e.g. "increases" vs "does not increase"). Prefer
+  'differs' or 'adapts' over 'contradicts' whenever the scope differs at all.
 - If the relation is unclear or the quotes do not actually address the same
   question, OMIT that pairId from 'relations' entirely — never guess.
 - 'evidence' is one short sentence citing what each quote actually says.
-Do not decide which claim the clinician should follow.
+Do not decide which claim the reader should follow.
 ```
 
 ## Notes

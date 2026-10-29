@@ -1,9 +1,10 @@
-# Evidence Workbench — SPEC v0.3
+# Evidence Workbench — SPEC v0.4
 
 Module-level architecture (agents, tools, evaluation) lives in `docs/architecture/00–12`.
 Those files refine this one; if they conflict, log it in `docs/DECISIONS.md`.
 
-Working name. Last updated: 2026-10-26. This file is the single source of truth for the build.
+Working name. Last updated: 2026-10-29 (general-science pivot, see `docs/DECISIONS.md`).
+This file is the single source of truth for the build.
 Planning for this design was done before the hackathon building period (Oct 27 – Nov 4, 2026);
 everything in the repository is implemented during that period. See README for the disclosure.
 
@@ -11,63 +12,78 @@ everything in the repository is implemented during that period. See README for t
 
 ## 1. Product in one paragraph
 
-Evidence Workbench is a workbench for clinicians that turns scattered clinical evidence into
-visuals that can be understood in seconds (decision algorithms, evidence maps, concordance
-matrices, pathophysiology diagrams). Every claim is tied to a verbatim quote that our code
-verifies (the source exists, says that, and was not retracted), graded separately for certainty
-and strength of recommendation, and flagged when sources conflict or become outdated. It also
-watches topics on the clinician's behalf and alerts only when something changes. It does not tell
-anyone what to do with a patient: it shows what the evidence says, how solid it is, and where it
-disagrees; when the evidence is thin, it says so.
+**2026-10-29 pivot (see `docs/DECISIONS.md`):** the hackathon rejected medical/clinical tools as
+"anti-projects," two days into the build. This spec now describes a general scientific evidence
+verification engine — any field of science (physics, chemistry, biology, mathematics, etc.),
+explicitly excluding clinical medicine and patient care. The core engine (§4) and all three
+flagship components (§6) carry over almost unchanged; what changes is the domain vocabulary (§8)
+and the two demo domains used to ground the build: chemistry (reactions/mechanisms) and
+non-clinical biology/genetics.
+
+Evidence Workbench is a workbench for researchers, engineers and students that turns scattered
+scientific evidence into visuals that can be understood in seconds (decision algorithms, evidence
+maps, concordance matrices, mechanism diagrams). Every claim is tied to a verbatim quote that our
+code verifies (the source exists, says that, and was not retracted), graded for certainty, and
+flagged when sources conflict or become outdated. It also watches topics on the reader's behalf
+and alerts only when something changes. It does not tell anyone what to do in a specific
+real-world case: it shows what the evidence says, how solid it is, and where it disagrees; when
+the evidence is thin, it says so.
 
 Tagline: *Evidence you can audit, in seconds.*
 
-## 2. What it offers the clinician
+## 2. What it offers the reader
 
 | Need | Typical chatbot answer | Evidence Workbench |
 | --- | --- | --- |
 | Read in seconds | Paragraphs of prose | 10-second band + visual (algorithm, map, matrix, diagram) |
 | Trust a citation | Citations that may not say what is claimed | Quote verified by code; receipt per result |
-| Know how strong it is | Uniform confident tone | Certainty and strength graded separately; origin (source vs AI-estimated) visible |
-| Compare sources | Blended into one answer | Side-by-side concordance matrix; local protocol vs external guidelines |
+| Know how strong it is | Uniform confident tone | Certainty graded; origin (source vs AI-estimated) visible |
+| Compare sources | Blended into one answer | Side-by-side concordance matrix; local protocol vs external literature |
 | Stay current | Stateless | Watches with change detection; version diffs |
 | Know what is unknown | Fills gaps | Explicit abstention |
 
-Primary user: physicians and residents (on-call use). Secondary: protocol/guideline committees.
+Primary user: researchers, engineers and students verifying scientific claims. Secondary: lab/
+standards committees maintaining an internal protocol against published literature.
 
 ## 3. Scope and safety posture (non-negotiable)
 
-- **Is:** an evidence navigation, comparison and audit tool for healthcare professionals.
-- **Is not:** a source of patient instructions, a diagnostic tool, or a chatbot.
-- Management statements are addressed to the clinician ("assess", "consider ordering", "consider
-  referral"); never to the patient.
-- No patient data. Input is a condition or generic scenario. No patient identifiers are accepted
-  (reject and warn). Scenario text is not persisted by default (ephemeral mode).
-- Doses and thresholds appear only if quoted from a source with locator; otherwise
+- **Is:** an evidence navigation, comparison and audit tool for any field of science — explicitly
+  excluding clinical medicine and patient care.
+- **Is not:** a source of instructions to act on a specific real-world case, a diagnostic tool, a
+  medical-advice tool, or a chatbot.
+- Statements are addressed to the reader/researcher ("assess", "consider measuring", "consider
+  replicating"); never second-person instructions to act on a specific real-world case.
+- No personal data. Input is a scientific topic or generic scenario. No identifiers of a specific,
+  real, identifiable person are accepted (reject and warn). Scenario text is not persisted by
+  default (ephemeral mode).
+- Measurements and thresholds appear only if quoted from a source with locator; otherwise
   "per local protocol".
-- Visible limits statement on every view: reference tool; clinician review required; AI-estimated
-  grades are not a GRADE panel.
+- Visible limits statement on every view: reference tool; expert review required; AI-estimated
+  grades are never shown as if printed by the source.
 - The hackathon guide lists "AI to generate and give medical advice" and "basic RAG" as
-  anti-projects. Product language, UI copy, README and demo must therefore say *navigate, compare,
-  audit, verify* and never *recommend to the patient* or *tells you what to do*.
+  anti-projects — this product avoids both by construction: it is not a medical-advice tool (it
+  explicitly excludes clinical medicine), and it is not basic RAG (every claim is deterministically
+  verified against a verbatim quote, graded, related across sources, and rendered as a governed
+  visual, not a generated paragraph). Product language, UI copy, README and demo must say
+  *navigate, compare, audit, verify* and never *recommend* or *tells you what to do*.
 
 ## 4. The Evidence Matrix (core engine)
 
 Everything the platform shows is derived from one verified structure: the **Evidence Matrix**,
 built in four phases.
 
-1. **Search.** Plan queries, retrieve in parallel from guidelines, PubMed/Europe PMC, web
+1. **Search.** Plan queries, retrieve in parallel from standards bodies, PubMed/Europe PMC, web
    grounding (Meta Model API) and the user's local document pool.
 2. **Appraise.** Classify each source, compute a deterministic source score (type, quality,
-   currency, applicability), and grade evidence in two dimensions (certainty; strength).
+   currency, applicability), and grade evidence certainty.
 3. **Compare.** Relate claims across sources (agrees, differs, supersedes, contradicts, adapts);
    run governance for local protocol vs external evidence.
 4. **Curate.** Deduplicate, resolve versions, drop retracted or non-scientific sources, verify every
    quote, run support and adversarial checks, and abstain where verification fails.
 
-A **cell** of the matrix = one claim from one source for one clinical question, with: quote,
-locator, grade (+origin), verification status, provenance. Rows = clinical questions; columns =
-sources (including the local protocol). All views below are projections of this structure.
+A **cell** of the matrix = one claim from one source for one question, with: quote, locator, grade
+(+origin), verification status, provenance. Rows = questions; columns = sources (including the
+local protocol). All views below are projections of this structure.
 
 ## 5. Request routing (differential behavior)
 
@@ -75,13 +91,13 @@ An intent router (prompt P1) classifies each request; the system then runs only 
 
 | Intent | Example | Pipeline | Primary view |
 | --- | --- | --- | --- |
-| `algorithm` | "Chest pain in the ED: what is the pathway?" | Full matrix → algorithm synthesis | Algorithm + 10-second band |
-| `evidence_map` | "What do guidelines say about X vs Y?" | Full matrix → map/matrix | Evidence Map / Matrix |
-| `mechanism` | "How does adrenaline act on the cardiomyocyte?" | Mechanism pipeline (§6.3) | Pathophysiology diagram |
-| `fact_lookup` | "Troponin threshold in guideline Z" | Targeted retrieval → verify | Answer card |
-| `comparison` | "Is A better than B for outcome O?" | Matrix restricted to comparison | Matrix + grading |
-| `watch` | "Tell me weekly if sepsis guidelines change" | Parse to JobSpec → confirm → schedule | Watch preview + digests |
-| `out_of_scope` | Diagnosis of a specific patient | None | Clear refusal + redirect |
+| `algorithm` | "Troubleshooting a failed SN2 reaction: what's the decision path?" | Full matrix → algorithm synthesis | Algorithm + 10-second band |
+| `evidence_map` | "What does the literature say about solvent X vs Y?" | Full matrix → map/matrix | Evidence Map / Matrix |
+| `mechanism` | "What is the mechanism of the SN2 reaction?" | Mechanism pipeline (§6.3) | Mechanism diagram |
+| `fact_lookup` | "CRISPR-Cas9 off-target rate in study Z" | Targeted retrieval → verify | Answer card |
+| `comparison` | "Is A faster than B for reaction rate R?" | Matrix restricted to comparison | Matrix + grading |
+| `watch` | "Tell me weekly if the literature on this reaction changes" | Parse to JobSpec → confirm → schedule | Watch preview + digests |
+| `out_of_scope` | Clinical/medical advice for a specific person | None | Clear refusal + redirect |
 
 Mixed requests: answer the primary intent first and offer the secondary as a button.
 
@@ -89,24 +105,25 @@ Mixed requests: answer the primary intent first and offer the secondary as a but
 
 ### 6.1 Algorithm Generator
 
-- **Purpose:** a decision pathway for a condition that a clinician can read in under 10 seconds,
-  with every step backed by verified evidence.
-- **Input:** condition or generic scenario; optional setting (ED, inpatient, primary care,
-  low-resource) and generic parameters (age group, pregnancy, renal function) entered as chips,
-  never as free patient data.
+- **Purpose:** a decision pathway for a topic that a reader can read in under 10 seconds, with
+  every step backed by verified evidence (an experimental protocol decision tree, a troubleshooting
+  flowchart, a method-selection path).
+- **Input:** topic or generic scenario; optional context (in_vitro, in_vivo, in_silico,
+  theoretical, field_study, industrial_or_applied) and scope parameters (the system under study,
+  stated conditions) entered as chips, never as free personal data.
 - **Processing:** full Evidence Matrix → synthesis (P9) of a typed DAG from **verified claims
   only** → graph invariants check → receipt.
-- **Output:** `Node`/`Edge` graph (§8). Node types: `red_flag`, `assess`, `test`, `decision`,
-  `action`, `disposition`, `reassess`, `abstain`. Red flags first; every branch ends in
-  `disposition` or `abstain`.
-- **UI:** (1) 10-second band: red flags + first clinician action + confidence state; (2) vertical
+- **Output:** `Node`/`Edge` graph (§8). Node types: `critical_check`, `assess`, `method`,
+  `decision`, `action`, `outcome`, `iterate`, `abstain`. Critical checks first; every branch ends
+  in `outcome` or `abstain`.
+- **UI:** (1) 10-second band: critical checks + first action + confidence state; (2) vertical
   flow with two modes — "see all" and "walk the path" (selecting parameters collapses branches
   that do not apply; deterministic rules engine, not the LLM); (3) evidence drawer per node.
 - **Verification:** quote found, source exists, not retracted, support check, adversarial check;
   invariants (DAG, single start, structured edge conditions, every `action` has ≥1 claim).
 - **Governance:** provenance chip per node (Local / External / Both / Conflict); divergence card;
-  `needs_clinician_decision` for safety-critical divergences.
-- **Acceptance:** valid algorithm for ≥3 conditions end to end; 100% of shown claims have verified
+  safety-critical divergences need `requiresExpertReview`.
+- **Acceptance:** valid algorithm for ≥3 topics end to end; 100% of shown claims have verified
   quotes; abstention visible when evidence is insufficient.
 
 ### 6.2 Evidence Maps (map + concordance matrix)
@@ -116,7 +133,7 @@ Mixed requests: answer the primary intent first and offer the secondary as a but
   level 2 = claims with badges (certainty pips, strength arrow, provenance chip, verified tick).
   Cross-relations (agrees/differs) as dashed secondary edges, toggled on demand. Click a branch →
   opens the Algorithm or Matrix for that sub-topic (the map is the navigator of the product).
-- **Matrix view (priority):** rows = recommendations/questions; columns = Guideline A, Guideline B,
+- **Matrix view (priority):** rows = findings/questions; columns = Source A, Source B,
   Local protocol; cells = agrees / differs / absent with grade and quote. This is the main
   comparison tool and is never cut.
 - **Processing:** pure transformation `claimGraph → MapTree` (tested); deterministic layout
@@ -127,46 +144,57 @@ Mixed requests: answer the primary intent first and offer the secondary as a but
 - **Acceptance:** map and matrix render from the same graph; no overlapping node boxes
   (layout test); every node opens its evidence drawer.
 
-### 6.3 Pathophysiology Diagrams (mechanism canvas)
+### 6.3 Mechanism Diagrams (mechanism canvas)
 
-- **Purpose:** 2D representation of molecular mechanisms (ligands, receptors, membranes, second
-  messengers, kinases, effectors) generated from a natural-language question and grounded in the
-  same retrieval and verification system.
+**2026-10-29 pivot:** renamed from "Pathophysiology Diagrams." The underlying design — a verified
+mechanism graph the model proposes and code renders deterministically — was already general
+molecular-biology/biochemistry, not clinical-specific (UniProt/ChEBI/Reactome are general
+databases, not pharma-only). Extended with a parallel chemistry-reaction vocabulary so the same
+canvas covers both chosen demo domains.
+
+- **Purpose:** 2D representation of molecular or chemical mechanisms (biology: ligands, receptors,
+  second messengers, kinases; chemistry: reactants, catalysts, intermediates, transition states)
+  generated from a natural-language question and grounded in the same retrieval and verification
+  system.
 - **Core rule:** the model never draws. It proposes a **mechanism graph** (JSON); code validates
   it and renders it from an SVG glyph library with a deterministic layout.
-- **Processing:** (P16) scope the request to one signaling pathway/mechanism → (P17) extract
+- **Processing:** (P16) scope the request to one pathway/reaction mechanism → (P17) extract
   entities and interactions from retrieved passages with verbatim quotes → deterministic checks →
   (P18) graph-coherence judge → render.
-- **Deterministic checks:** quote found; entity cross-references exist (UniProt, ChEBI);
-  interaction corroborated by pathway/pharmacology databases when available (Reactome, IUPHAR
-  GtoPdb; check each license and attribute before use; avoid KEGG); every second messenger has a
+- **Deterministic checks:** quote found; entity cross-references exist (UniProt, ChEBI, PubChem);
+  interaction corroborated by reference databases when available (Reactome, Rhea; check each
+  license and attribute before use; avoid KEGG); every second messenger/intermediate has a
   producer and a consumer; signs are consistent. Edges without support are **not drawn**; they are
   listed as "unsupported".
-- **Canvas:** compartment lanes (extracellular, membrane, cytosol, nucleus); glyphs per entity kind
-  (ligand, GPCR, RTK, channel, G protein, enzyme, kinase, second messenger, transcription factor);
-  ordered step-through animation of the cascade.
-- **Sandbox (qualitative):** toggles (add agonist, block receptor, inhibit enzyme, knockout)
-  propagate signs along the graph and highlight downstream effects. Effect text comes from code
-  templates, each citing the path's edges. Always labelled: *qualitative graph propagation, not
-  kinetic simulation*. No doses, no treatment suggestions.
-- **Basis:** `background` (context, not a recommendation): no GRADE is shown.
-- **Bridge (stretch):** click a node → guideline claims involving drugs acting there, with grades.
-- **v1 scope:** one or two canonical pathways (e.g., GPCR → Gs → cAMP → PKA). Organ-level
-  pathophysiology (causal chains, e.g., heart failure) is out of v1.
-- **Risks:** drifting into an "education chatbot" (mitigate: verified canvas tied to clinical
+- **Canvas:** compartment/phase lanes (extracellular, membrane, cytosol, nucleus, solution,
+  surface, gas_phase); glyphs per entity kind (biology: ligand, GPCR, RTK, channel, G protein,
+  enzyme, kinase, second messenger, transcription factor; chemistry: reactant, catalyst,
+  intermediate, product, transition state); ordered step-through animation of the cascade/reaction.
+- **Sandbox (qualitative):** toggles (add agonist, block receptor/active site, inhibit enzyme,
+  remove catalyst) propagate signs along the graph and highlight downstream effects. Effect text
+  comes from code templates, each citing the path's edges. Always labelled: *qualitative graph
+  propagation, not kinetic simulation*. No treatment suggestions, no instructions for a specific
+  real-world case.
+- **Basis:** `background` (context, not a primary finding): no certainty grade is shown.
+- **Bridge (stretch):** click a node → literature claims involving that entity, with grades.
+- **v1 scope:** one or two canonical pathways/mechanisms per demo domain (e.g., GPCR → Gs → cAMP →
+  PKA for biology; SN2: nucleophile → transition state → product for chemistry). Organ-level
+  biological causal chains are out of v1, as is any clinical/physiological framing.
+- **Risks:** drifting into an "education chatbot" (mitigate: verified canvas tied to retrieved
   evidence); scope (mitigate: thin vertical slice, built only after core is done).
-- **Acceptance:** one pathway rendered from a natural-language question with 100% edges quoted,
+- **Acceptance:** one mechanism rendered from a natural-language question with 100% edges quoted,
   ≥3 sandbox toggles, step-through animation.
 
 ## 7. Supporting modules
 
-- **Local document pool and governance.** Users upload protocols (synthetic in demo). Documents
-  carry metadata (type, version, approval date, status, review date); without it they are used but
-  labelled "authority not verified". Retrieval: Postgres full-text + long-context reading of the
-  top documents; vectors only if a permitted embedding model exists. Governance never overwrites
-  the local protocol silently: divergence classified (outdated / legitimate adaptation / clinical
-  contradiction); safety-critical divergences require clinician decision. Reading order is local
-  first; the external search always runs in parallel.
+- **Local document pool and governance.** Users upload their own lab/standards protocols
+  (synthetic in demo). Documents carry metadata (type, version, approval date, status, review
+  date); without it they are used but labelled "authority not verified". Retrieval: Postgres
+  full-text + long-context reading of the top documents; vectors only if a permitted embedding
+  model exists. Governance never overwrites the local protocol silently: divergence classified
+  (outdated / legitimate adaptation / scientific contradiction); safety-critical divergences need
+  `requiresExpertReview`. Reading order is local first; the external search always runs in
+  parallel.
 - **Watches.** JobSpec from natural language (P13) or a block builder; user confirms a plain
   preview before saving; scheduler runs it; content-hash comparison means **zero model calls when
   nothing changed**; otherwise the pipeline runs only on what is new and a digest (P15) is composed
@@ -176,25 +204,29 @@ Mixed requests: answer the primary intent first and offer the secondary as a but
   retracted, supported, abstained, source mix, oldest source year.
 - **Answer card.** For `fact_lookup`, `comparison` and (without the canvas) `mechanism`
   fallbacks; headline ≤25 words, claims, basis, abstention.
-- **Auth & settings.** Supabase Auth; language (ES/EN); detail level; site profile (available
-  tests/drugs) for resource-aware branches (stretch).
+- **Auth & settings.** Supabase Auth; language (ES/EN); detail level; lab profile (available
+  equipment/reagents) for resource-aware branches (stretch).
 
 ## 8. Data model (zod is the source of truth; TS shown for reference)
 
 ```ts
-type SourceKind = 'guideline'|'systematic_review'|'rct'|'observational'|'local_protocol'|'pathway_db'|'other';
+// 2026-10-29 pivot: enums generalized from clinical evidence-design categories to
+// general science (docs/DECISIONS.md). meta_analysis and preprint are genuinely
+// new tiers general-science literature foregrounds more than clinical guidelines do.
+type SourceKind = 'meta_analysis'|'systematic_review'|'controlled_experiment'|'observational_study'|'preprint'|'reference_work'|'standards_body'|'dataset_or_database'|'local_protocol'|'other';
 type Source = { id: string; kind: SourceKind; title: string; issuer?: string; year?: number;
   version?: string; pmid?: string; doi?: string; url: string; accessedAt: string;
   contentHash: string; supersededBy?: string; retracted?: boolean;
-  appliesTo?: { country?: string; setting?: string; population?: string };
+  appliesTo?: { country?: string; setting?: string; scope?: string };
   nativeGradingSystem?: string };
 type Passage = { id: string; sourceId: string; locator: string; text: string }; // cached with TTL
+// `strength` (clinical recommendation strength) was dropped in the pivot — no
+// general-science analog; `certainty` is kept, it's already generically meaningful.
 type Grade = { certainty: 'high'|'moderate'|'low'|'very_low'|'ungraded';
-  strength?: { direction: 'for'|'against'; level: 'strong'|'conditional' };
   origin: 'source'|'ai_estimated'; nativeGrade?: string;
   domains?: Record<string, { rating: string; reason: string }> };
-type Claim = { id: string; text: string; basis: 'recommendation'|'background';
-  actionType: 'assess'|'test'|'treat'|'threshold'|'disposition'|'avoid'|'mechanism';
+type Claim = { id: string; text: string; basis: 'primary'|'background';
+  actionType: 'finding'|'method'|'measurement'|'theory'|'mechanism'|'limitation';
   conditions: { variable: string; op: '<'|'>'|'='|'in'; value: string|number; unit?: string }[];
   sourceId: string; passageId: string; quote: string; grade: Grade;
   verification: { exists: boolean; quoteFound: boolean; retracted: boolean;
@@ -202,10 +234,10 @@ type Claim = { id: string; text: string; basis: 'recommendation'|'background';
   safetyCritical: boolean };
 type Relation = { from: string; to: string;
   kind: 'agrees'|'differs'|'supersedes'|'contradicts'|'adapts'; evidence: string;
-  divergence?: { kind: 'outdated'|'legitimate_adaptation'|'clinical_contradiction';
-    requiresClinicianDecision: boolean; suggested: 'local'|'external'|'none'; rationale: string[] } };
+  divergence?: { kind: 'outdated'|'legitimate_adaptation'|'scientific_contradiction';
+    requiresExpertReview: boolean; suggested: 'local'|'external'|'none'; rationale: string[] } };
 // Algorithm view
-type Node = { id: string; type: 'red_flag'|'assess'|'test'|'decision'|'action'|'disposition'|'reassess'|'abstain';
+type Node = { id: string; type: 'critical_check'|'assess'|'method'|'decision'|'action'|'outcome'|'iterate'|'abstain';
   label: string; detail?: string; urgency?: 'immediate'|'minutes'|'hours'; claimIds: string[];
   provenance: 'local'|'external'|'both'|'conflict' };
 type Edge = { from: string; to: string;
@@ -215,14 +247,15 @@ type MapNode = { id: string; kind: 'root'|'subquestion'|'claim'; label: string;
   claimId?: string; children: MapNode[] };
 type Matrix = { rows: { question: string; claimByColumn: Record<string, string|null> }[];
   columns: { sourceId: string }[] };
-// Mechanism view
+// Mechanism view — kept the (already general) molecular-biology vocabulary and added
+// a parallel chemistry-reaction vocabulary so one schema covers both demo domains.
 type Entity = { id: string; label: string;
-  kind: 'ligand'|'receptor'|'channel'|'g_protein'|'enzyme'|'kinase'|'second_messenger'|'transcription_factor'|'other';
-  compartment: 'extracellular'|'membrane'|'cytosol'|'nucleus';
+  kind: 'ligand'|'receptor'|'channel'|'g_protein'|'enzyme'|'kinase'|'second_messenger'|'transcription_factor'|'reactant'|'catalyst'|'intermediate'|'product'|'transition_state'|'other';
+  compartment?: 'extracellular'|'membrane'|'cytosol'|'nucleus'|'solution'|'surface'|'gas_phase';
   xref?: { uniprot?: string; chebi?: string; go?: string } };
 type Interaction = { id: string; from: string; to: string;
-  type: 'binds'|'activates'|'inhibits'|'phosphorylates'|'produces'|'degrades'|'opens'|'closes'|'translocates';
-  sign: '+'|'-'|'0'; order: number; claimId: string; corroboratedBy?: ('reactome'|'gtopdb')[] };
+  type: 'binds'|'activates'|'inhibits'|'phosphorylates'|'produces'|'degrades'|'opens'|'closes'|'translocates'|'forms_bond'|'breaks_bond'|'transfers_electron'|'catalyzes';
+  sign: '+'|'-'|'0'; order: number; claimId: string; corroboratedBy?: ('reactome'|'pubchem'|'rhea')[] };
 type MechanismGraph = { scope: string; entities: Entity[]; interactions: Interaction[] };
 type Receipt = { claimsTotal: number; citationsExist: number; quotesFound: number; retracted: number;
   supported: number; abstained: number; sourcesByKind: Record<string, number>;
@@ -230,7 +263,7 @@ type Receipt = { claimsTotal: number; citationsExist: number; quotesFound: numbe
 type Run = { id: string; intent: string; stages: { name: string; ms: number; model?: string; ok: boolean }[];
   receipt: Receipt; costUsd: number; promptVersions: Record<string, string> };
 type JobSpec = { id: string; name: string; topic: { condition: string; subquestions?: string[] };
-  sources: { guidelines: boolean; pubmed: boolean; web: boolean; localPool: boolean };
+  sources: { standardsBodies: boolean; pubmed: boolean; web: boolean; localPool: boolean };
   analysis: ('detect_changes'|'grade_new_evidence'|'compare_sources'|'flag_inconsistencies')[];
   schedule: { cron: string; timezone: string }; delivery: { channel: 'in_app'; detail: 'brief'|'standard'|'detailed' };
   limits: { maxCostUsdPerRun: number; maxRunsPerDay: number }; status: 'active'|'paused' };
@@ -238,15 +271,19 @@ type JobSpec = { id: string; name: string; topic: { condition: string; subquesti
 
 **Invariants (enforced in code before anything is shown):** every displayed `Claim` has
 `quoteFound = true`; every `action` node has ≥1 claim; the algorithm graph is acyclic with one
-start and red flags first; edge conditions are structured; a dose without a quoted source is
-replaced by "per local protocol"; every mechanism `Interaction` has a verified claim.
+start and critical checks first; edge conditions are structured; a measurement without a quoted
+source is replaced by "per local protocol"; every mechanism `Interaction` has a verified claim.
 
-**Grading rules.** Source grade is imported verbatim (`origin: 'source'`). AI-estimated GRADE only
-for systematic reviews/trials with extracted data, always labelled; fewer than two judgeable
-domains → `ungraded`. Certainty and strength are separate fields. **Source score** (computed by
-code; the model supplies features only): `relevance × level × quality × currency × applicability`
-(level: guideline 1.00, SR 0.85, RCT 0.70, observational 0.45, other 0.20; currency 1.0 ≤3y,
-decaying to 0.5 at 10y, superseded 0.2; applicability 1.0/0.8/0.6). Initial values, to calibrate.
+**Grading rules.** Source grade is imported verbatim (`origin: 'source'`), never inferred — the
+2026-10-28 "no AI-inferred grades" decision (`docs/DECISIONS.md`) means there is no grade-estimator
+agent and never will be one; a source with no recognized certainty language stays `ungraded`,
+which is the honest default for most general-science sources (unlike clinical guidelines, papers
+rarely print a formal grade). **Source score** (computed by code; the model supplies features
+only): `relevance × level × quality × currency × applicability` (level: meta_analysis 1.00,
+standards_body/local_protocol 0.90/1.00, systematic_review 0.85, controlled_experiment 0.70,
+reference_work 0.60, observational_study 0.45, preprint 0.35, dataset_or_database/other 0.20;
+currency 1.0 ≤3y, decaying to 0.5 at 10y, superseded 0.2; applicability 1.0/0.8/0.6). Initial
+values, to calibrate.
 
 ## 9. Pipeline and performance
 
@@ -263,8 +300,8 @@ verify (support + adversarial) → synthesize view → invariants → receipt.
   timeout. Long work (watches, precomputation) runs outside the request path (job table + worker;
   Supabase Edge Functions + pg_cron or a Vercel-compatible equivalent — verify current Vercel
   plan limits for function duration and cron frequency on Day 1).
-- **Caching:** by `(condition, setting, source versions hash)`; precompute the 15 evaluation
-  conditions; source text cached with TTL (not committed, not persisted long-term).
+- **Caching:** by `(topic, context, source versions hash)`; precompute the 15 evaluation
+  topics; source text cached with TTL (not committed, not persisted long-term).
 - **Model tiers:** cheap/open model for routing, structuring, planning, classification; Muse Spark
   with medium reasoning for extraction/grading/relations; high reasoning only for synthesis,
   support verification and adversarial passes.
@@ -285,7 +322,7 @@ The product avoids sensitive data by design, and still applies baseline controls
   only), so they stay protected even if the database is read.
 - **Access control:** Supabase Auth (JWT) and **Row-Level Security on every table**; service role
   key only in server code; no client-side secrets; Meta API key only in server route handlers.
-- **Data minimization:** no patient data accepted; ephemeral mode by default; no scenario text or
+- **Data minimization:** no personal data accepted; ephemeral mode by default; no scenario text or
   document content in logs; log only ids, stage timings, costs, hashes.
 - **Persistence:** Postgres for sources (metadata + hashes + locators + minimal quotes), claims,
   relations, runs, jobs, digests, documents (encrypted). No full copyrighted texts are stored
@@ -295,11 +332,10 @@ The product avoids sensitive data by design, and still applies baseline controls
   schemas); strict CSP and security headers; rate limiting; dependency audit in CI; secret
   scanning in CI.
 - **Constant verification and agent-in-the-loop:** verifier and adversarial agents run on every
-  output; deterministic validators gate display; humans stay in the loop through explicit
-  clinician decisions on divergences, a "mark as reviewed" state, and confirmation before any
-  watch is saved.
+  output; deterministic validators gate display; humans stay in the loop through explicit expert
+  review on divergences, a "mark as reviewed" state, and confirmation before any watch is saved.
 - **Honesty:** this is a hackathon prototype, not a compliance certification. Production use would
-  need a formal data-protection and security review (e.g., Colombia's Law 1581 of 2012; HIPAA if US).
+  need a formal data-protection and security review (e.g., Colombia's Law 1581 of 2012).
 
 ## 11. UI/UX design system
 
@@ -316,7 +352,8 @@ where it matters, nothing decorative that costs legibility.
 - **Motion:** 150–250 ms ease; branches fan out from the center; step-through animation for
   cascades; honor `prefers-reduced-motion`.
 - **Semantics:** certainty pips (4); strength arrows (↑↑ strong for, ↑ conditional for, ↓ against);
-  badges "from source" / "AI-estimated"; currency chip ("Guideline 2024, verified today");
+  badges "from source" / "AI-estimated"; currency chip ("Standards body publication 2024,
+  verified today");
   provenance chip (Local / External / Both / Conflict); verification tick. Node shapes carry
   meaning (rounded rectangle = category, pill = claim, ellipse = open question) with a minimal
   legend.
@@ -405,7 +442,7 @@ plan's terms are suitable for this use.
 | --- | --- | --- |
 | Citations that exist | Automatic (PubMed, Crossref, URL fetch) | 100% of displayed |
 | Verbatim quotes found | String match on downloaded text | 100% of displayed |
-| Claim support | 60-claim sample reviewed by a clinically trained person | ≥ 90% |
+| Claim support | 60-claim sample reviewed by a subject-matter-expert reviewer | ≥ 90% |
 | Planted divergences detected | 5 planted in a synthetic local protocol | ≥ 4/5 |
 | Silent overrides of local protocol | Automatic | 0 |
 | Mechanism edges with quote | Automatic | 100% |
@@ -422,8 +459,8 @@ README states who reviewed what, sample sizes, and that targets are goals, not r
 | Day | Deliverable |
 | --- | --- |
 | 1 Tue Oct 27 | Scaffold, schemas, validators, Meta client, Supabase + RLS, tokens/layout shell; credits claimed; open decisions (§16) resolved |
-| 2 Wed Oct 28 | Retrieval (PubMed/Europe PMC, open guidelines, web grounding) + curation |
-| 3 Thu Oct 29 | Claim extraction (P5) + verification; 15 conditions preloaded |
+| 2 Wed Oct 28 | Retrieval (PubMed/Europe PMC, open standards bodies, web grounding) + curation |
+| 3 Thu Oct 29 | Claim extraction (P5) + verification; 15 topics preloaded; pivot to general-science domain (see `docs/DECISIONS.md`) |
 | 4 Fri Oct 30 | Source classification, scoring, grading |
 | 5 Sat Oct 31 | Relations, governance, synthetic local protocol with 5 planted divergences |
 | 6 Sun Nov 1 | Algorithm synthesis, support + adversarial verification |
@@ -432,27 +469,29 @@ README states who reviewed what, sample sizes, and that targets are goals, not r
 | 9 Wed Nov 4 | Final evaluation, baseline comparison, 3-minute video, README, submit before 6 PM Bogotá (deadline 9 PM EST) |
 
 **Cut order if time runs out (first to cut first):** mechanism sandbox toggles → bridge from
-mechanism to guidelines → answer card → block builder (keep natural language) → diff view →
+mechanism to sources → answer card → block builder (keep natural language) → diff view →
 printable card → "walk the path" mode → mechanism canvas entirely. **Never cut:** quote
 verification, receipt, concordance matrix, governance, evaluation.
 
 ## 15. Definition of done (for submission)
 
-- Public repository; no secrets, real patient data or full copyrighted texts; README distinguishes
+- Public repository; no secrets, real personal data or full copyrighted texts; README distinguishes
   what was built during the event and states the pre-event planning.
 - Deployed demo reachable without sign-in (precomputed) and a live path for signed-in users with
   cost protection.
 - 3-minute video showing only what was built during the event, including the baseline comparison.
-- Algorithm, Evidence Map/Matrix and at least one Pathophysiology Diagram working end to end.
+- Algorithm, Evidence Map/Matrix and at least one Mechanism Diagram working end to end.
 - Evaluation results in the README with declared limits.
 
 ## 16. Open decisions
 
-- Answer in #office-hours about the anti-project question (ask Oct 27; fallback = evidence auditor
-  built on the same core, without the algorithm view).
+- **Resolved 2026-10-29 (see `docs/DECISIONS.md`):** the anti-project question came back negative
+  for medical/clinical tools. Pivoted to general scientific evidence verification (any field,
+  excluding clinical medicine), demo domains chemistry and non-clinical biology/genetics.
 - Resolved on 2026-10-26 (see `docs/DAY0-VERIFICATION.md`): model ids, pricing, structured output,
   tools, search grounding; no embeddings, no native scheduling. Still open: whether Baseten-served
-  Muse Spark Open counts as Meta API use; GtoPdb share-alike/commercial terms (keep optional).
+  Muse Spark Open counts as Meta API use; reference-database licensing terms for the mechanism
+  module (Reactome, PubChem, Rhea — keep optional).
 - Vercel plan limits (function duration, cron frequency) vs Supabase-based scheduling.
-- Final list of 15 evaluation conditions; clinically trained reviewer for the sample.
+- Final list of 15 evaluation topics; subject-matter-expert reviewer for the sample.
 - Final product name.

@@ -1,6 +1,6 @@
 # P10 — Support judge
 
-Version: `P10@0.1`
+Version: `P10@0.2`
 Agent: `support-judge` (module 03, tier T2, 1 step, ~1,500 output tokens — see Notes)
 Shares the common preamble `P0`.
 
@@ -24,16 +24,17 @@ the text given below; never use outside knowledge of the topic.
 <surrounding_context>{{surrounding_context}}</surrounding_context>
 Return: {
  'support': 'supports'|'partial'|'no'|'unknown',
- 'issues': ['negation'|'wrong_population'|'wrong_threshold'|'wrong_strength'|'out_of_context'|'other'],
+ 'issues': ['negation'|'wrong_scope'|'wrong_threshold'|'wrong_strength'|'out_of_context'|'other'],
  'note': string   // one short sentence explaining the verdict, especially for partial/no/unknown
 }
 Rules:
-- 'supports' only if population, setting/comparator, and the recommended action in
+- 'supports' only if scope, system/comparator, and the stated finding in
   'claim_text' all match what the quote (read with its surrounding context) actually
   says — no scope drift.
-- Watch specifically for: negation ("should not" vs "should"), population mismatch
-  (e.g. claim says "adults", quote is about children), threshold/number mismatch,
-  and strength mismatch ("may be considered" vs "recommended" / "should").
+- Watch specifically for: negation ("does not increase" vs "increases"), scope
+  mismatch (e.g. claim says "in aqueous solution", quote is about an organic
+  solvent), threshold/number mismatch, and strength mismatch ("may increase" vs
+  "increases" / "significantly increases").
 - If the quote and context are ambiguous or don't contain enough information to
   decide, return 'unknown' — never guess 'supports' to be helpful.
 - 'no' means the quote actively contradicts or does not support the claim at all.
