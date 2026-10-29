@@ -68,9 +68,23 @@ describe('extractAndVerifySource', () => {
 
     expect(result.status).toBe('ok');
     if (result.status === 'ok') {
-      expect(result.claims).toHaveLength(1);
-      expect(result.dropped).toEqual([]);
-      expect(result.claims[0]?.verification.support).toBe('unknown');
+      expect(result.claims).toHaveLength(0);
+      expect(result.dropped).toEqual([{ reason: 'source support not confirmed' }]);
+    }
+  });
+
+  it('rejects a supported claim if its retraction status cannot be checked', async () => {
+    const claim = { text: FULL_TEXT, basis: 'primary', actionType: 'finding', conditions: [], quote: FULL_TEXT, passageId: 'src_1:0', safetyCritical: false };
+    const respond = vi.fn().mockResolvedValueOnce(fakeRespondResult({ claims: [claim] }))
+      .mockResolvedValueOnce(fakeRespondResult({ support: 'supports', issues: [], note: 'Supported' }));
+    const result = await extractAndVerifySource(
+      { runId: 'run_1', sourceId: 'src_1', sourceTitle: 'x', fullText: FULL_TEXT, subQuestions: [], doi: '10.1/missing' },
+      baseDeps({ respond, listModels: vi.fn() }),
+    );
+    expect(result.status).toBe('ok');
+    if (result.status === 'ok') {
+      expect(result.claims).toEqual([]);
+      expect(result.dropped[0]?.reason).toContain('retraction status unknown');
     }
   });
 

@@ -17,7 +17,7 @@ function fakeRespondResult(parsed: unknown): RespondResult {
 }
 
 function candidate(tempId: string, family: CandidateSource['family'] = 'europe_pmc'): CandidateSource {
-  return { tempId, family, title: `Source ${tempId}`, url: `https://example.org/${tempId}` };
+  return { tempId, family, title: `Source ${tempId}`, url: `https://example.org/${tempId}`, doi: '10.1/example' };
 }
 
 function fakeEuropePmc(fetchFullTextImpl: (source: string, id: string) => Promise<string | null>): EuropePmcClient {
@@ -25,7 +25,7 @@ function fakeEuropePmc(fetchFullTextImpl: (source: string, id: string) => Promis
 }
 
 function fakeCrossref(): CrossrefClient {
-  return { lookup: vi.fn().mockResolvedValue(null) };
+  return { lookup: vi.fn().mockResolvedValue({ doi: '10.1/example', retracted: false, updateNotices: [] }) };
 }
 
 const CLAIM_OUTPUT = {
@@ -70,13 +70,11 @@ describe('extractAndVerifyPool', () => {
   });
 
   it('extracts and verifies claims for a candidate with fetchable full text', async () => {
-    const respond = vi.fn().mockResolvedValue(
-      fakeRespondResult({
-        claims: [{ ...CLAIM_OUTPUT.claims[0], quote: 'Aspirin 325 mg should be given promptly.', passageId: 'europe_pmc:PMC:1:0' }],
-      }),
-    );
+    const respond = vi.fn()
+      .mockResolvedValueOnce(fakeRespondResult({ claims: [{ ...CLAIM_OUTPUT.claims[0], passageId: 'europe_pmc:PMC:1:0' }] }))
+      .mockResolvedValueOnce(fakeRespondResult({ support: 'supports', issues: [], note: 'Supported.' }));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
-    const europePmc = fakeEuropePmc(async () => 'Aspirin 325 mg should be given promptly.');
+    const europePmc = fakeEuropePmc(async () => 'Adding 50 mL of polar aprotic solvent increased the SN2 reaction rate.');
 
     const result = await extractAndVerifyPool(
       { runId: 'run_1', candidates: [candidate('europe_pmc:PMC:1')], classifications: [], subQuestions: ['first-line treatment'] },

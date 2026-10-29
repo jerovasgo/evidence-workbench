@@ -38,3 +38,7 @@ describe('loadPromptBody (regression check against the real prompt files)', () =
     expect(body).toContain("'out_of_scope'");
   });
 });
+
+it('accepts Windows line endings in prompt files', () => {
+  expect(extractPromptBody('```text\r\nhello\r\n```')).toBe('hello');
+});

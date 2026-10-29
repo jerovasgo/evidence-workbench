@@ -1,6 +1,6 @@
 # P5 — Claim extractor
 
-Version: `P5@0.2`
+Version: `P5@0.3`
 Agent: `claim-extractor` (module 03, tier T1, 1 step, ~3,000 output tokens, 25 s timeout)
 Shares the common preamble `P0`.
 
@@ -46,6 +46,12 @@ Return: {
 }
 Rules:
 - One claim = one finding/result; never merge content across passages.
+- For genetics, preserve experimental context explicitly stated in the cited passage:
+  gene or molecular entity, organism, cell or model, perturbation, measurement and
+  direction of effect where available. Record context in the claim text or conditions;
+  never infer missing species, causal direction, or generalize across models.
+- If the supplied passage lacks context needed to support a specific statement,
+  narrow the claim to what the passage actually says or omit it.
 - 'quote' must be copied character-for-character from the passage text given for
   that 'passageId' — never paraphrase or summarize inside 'quote'; 'text' may paraphrase.
 - Never state a measurement, threshold, or number in 'text'/'conditions' that is not

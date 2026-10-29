@@ -38,6 +38,8 @@ export function pairClaimsForRelations(claims: Claim[]): ClaimPair[] {
     for (let j = i + 1; j < claims.length; j++) {
       const a = claims[i]!;
       const b = claims[j]!;
+      if (a.verification.support !== 'supports' || b.verification.support !== 'supports') continue;
+      if (!a.verification.exists || !b.verification.exists || !a.verification.quoteFound || !b.verification.quoteFound || a.verification.retracted || b.verification.retracted) continue;
       if (a.sourceId === b.sourceId) continue;
       if (a.actionType !== b.actionType) continue;
       if (!conditionsCompatible(a.conditions, b.conditions)) continue;

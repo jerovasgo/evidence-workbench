@@ -106,7 +106,7 @@ export async function extractAndVerifySource(
   const verifiedClaims: Claim[] = [];
   const dropped: { reason: string }[] = [];
   for (const extracted of extractResult.value.claims) {
-    const verified = verifyClaim({ extracted, sourceId: input.sourceId, retracted: retraction.retracted }, passages);
+    const verified = verifyClaim({ extracted, sourceId: input.sourceId, retracted: retraction.status === 'retracted' }, passages);
     if (verified.outcome === 'kept') verifiedClaims.push(verified.claim);
     else dropped.push({ reason: verified.reason });
   }
@@ -143,7 +143,13 @@ export async function extractAndVerifySource(
     return applySupportJudgment(claim, result.value);
   });
 
-  const claims = judged.filter((c): c is Claim => c !== null);
+  // Only fully supported claims with a completed retraction check enter downstream views.
+  const claims = judged.filter((c): c is Claim => {
+    if (!c) { dropped.push({ reason: 'claim not supported by source' }); return false; }
+    if (c.verification.support !== 'supports') { dropped.push({ reason: 'source support not confirmed' }); return false; }
+    if (retraction.status === 'unknown') { dropped.push({ reason: `retraction status unknown: ${retraction.reason ?? 'check unavailable'}` }); return false; }
+    return true;
+  });
 
   return { sourceId: input.sourceId, status: 'ok', claims, dropped, costUsd: extractResult.usage.costUsd + judgeCostUsd };
 }

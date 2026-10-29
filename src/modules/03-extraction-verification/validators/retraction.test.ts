@@ -9,7 +9,7 @@ describe('checkRetraction', () => {
       { pubmedSummary: { pmid: '1', title: 'x', pubTypes: ['Journal Article', 'Retracted Publication'] } },
       { crossref },
     );
-    expect(result.retracted).toBe(true);
+    expect(result.status).toBe('retracted');
     expect(crossref.lookup).not.toHaveBeenCalled();
   });
 
@@ -22,7 +22,7 @@ describe('checkRetraction', () => {
       })),
     };
     const result = await checkRetraction({ doi: '10.1/retracted' }, { crossref });
-    expect(result).toEqual({ retracted: true, reason: expect.stringContaining('10.1/notice') });
+    expect(result).toEqual({ status: 'retracted', reason: expect.stringContaining('10.1/notice') });
   });
 
   it('flags retraction from a withdrawal banner in fetched text when no other signal exists', async () => {
@@ -31,13 +31,21 @@ describe('checkRetraction', () => {
       { fetchedText: 'Notice: this guideline has been withdrawn by the issuing society.' },
       { crossref },
     );
-    expect(result.retracted).toBe(true);
+    expect(result.status).toBe('retracted');
   });
 
-  it('returns not retracted when no signal indicates it', async () => {
+  it('returns unknown when Crossref has no record or fails', async () => {
+    const missing: CrossrefClient = { lookup: vi.fn().mockResolvedValue(null) };
+    const failed: CrossrefClient = { lookup: vi.fn().mockRejectedValue(new Error('offline')) };
+    expect((await checkRetraction({}, { crossref: missing })).status).toBe('unknown');
+    expect((await checkRetraction({ doi: '10.1/x' }, { crossref: missing })).status).toBe('unknown');
+    expect((await checkRetraction({ doi: '10.1/x' }, { crossref: failed })).status).toBe('unknown');
+  });
+
+  it('returns checked without a retraction signal when Crossref has a record', async () => {
     const crossref: CrossrefClient = { lookup: vi.fn(async () => ({ doi: '10.1/x', retracted: false, updateNotices: [] })) };
     const result = await checkRetraction({ doi: '10.1/x', fetchedText: 'Normal guideline content.' }, { crossref });
-    expect(result).toEqual({ retracted: false });
+    expect(result).toEqual({ status: 'checked_no_signal' });
   });
 });
 
