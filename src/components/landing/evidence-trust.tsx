@@ -7,33 +7,33 @@ import { Link2, GitBranch, TriangleAlert } from 'lucide-react';
 const POINTS = [
   {
     icon: Link2,
-    title: 'Every claim traces to a quote',
-    description: 'A finding is shown only if its exact wording was found, verbatim, in the source you can open yourself.',
+    title: 'Trace claims to source text',
+    description: 'Source quotations are checked against retrieved text, giving you a trail back to the evidence.',
   },
   {
     icon: GitBranch,
-    title: 'Sources, not summaries',
-    description: 'Each result links back to the standards-body publication, study or scientific source it came from — the model never answers from memory alone.',
+    title: 'Keep the research context',
+    description: 'Follow findings back to their publications and inspect the context behind the claim.',
   },
   {
     icon: TriangleAlert,
     title: 'Uncertainty is shown, not hidden',
-    description: 'What hasn’t been independently confirmed is labeled as such, not presented as settled.',
+    description: 'A matching quote shows what a source says; it does not establish that a claim is true.',
   },
 ];
 
 export function EvidenceTrust() {
   return (
     <section className="mx-auto max-w-4xl px-6 py-28">
-      <h2 className="text-center text-3xl font-semibold tracking-tight text-fg sm:text-4xl">Every insight has a source.</h2>
+      <h2 className="text-center text-3xl font-semibold tracking-tight text-fg sm:text-4xl">Evidence you can inspect.</h2>
       <p className="mx-auto mt-4 max-w-xl text-center text-base text-muted">
-        Explore the sources and relationships behind every result — provenance is one click away.
+        Move beyond a generated answer. Follow the evidence, examine its context, and see what remains uncertain.
       </p>
 
       <div className="mt-16 grid grid-cols-1 gap-10 sm:grid-cols-3">
         {POINTS.map((point) => (
           <div key={point.title} className="flex flex-col gap-3">
-            <point.icon className="h-5 w-5 text-fg" aria-hidden="true" />
+            <point.icon className="h-5 w-5 text-[#8debdc]" aria-hidden="true" />
             <h3 className="text-sm font-medium text-fg">{point.title}</h3>
             <p className="text-sm text-muted">{point.description}</p>
           </div>

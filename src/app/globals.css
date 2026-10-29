@@ -114,3 +114,65 @@ body {
 ::selection {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* Landing-only visual language: subtle luminous accents over deep graphite. */
+.landing-hero { background: radial-gradient(ellipse 60% 50% at 50% 30%, rgba(48, 164, 150, .14), transparent 72%), #030707; }
+
+.landing-eyebrow, .section-kicker { color: #8debdc; font-size: .68rem; font-weight: 600; letter-spacing: .18em; }
+.landing-eyebrow { display: inline-flex; align-items: center; gap: .6rem; margin-bottom: 1.7rem; padding: .55rem .85rem; border: 1px solid rgba(141,235,220,.2); border-radius: 999px; background: rgba(74,180,165,.06); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: #8debdc; box-shadow: 0 0 12px #8debdc; }
+.neon-text { color: #b3f4e9; text-shadow: 0 0 30px rgba(91, 224, 205, .24); }
+.hero-orbit { position: absolute; width: 580px; height: 580px; border: 1px solid rgba(139, 237, 222, .07); border-radius: 50%; pointer-events: none; animation: orbit-drift 18s ease-in-out infinite alternate; }
+.hero-orbit-one { top: 9%; left: -360px; box-shadow: 0 0 100px rgba(63, 213, 192, .08); }
+.hero-orbit-two { right: -390px; bottom: -200px; width: 700px; height: 700px; animation-delay: -7s; }
+.hero-search { border-radius: 16px; box-shadow: 0 0 55px rgba(76, 221, 201, .1); }
+.hero-search .glass { border-color: rgba(143, 236, 220, .25); background: rgba(12, 24, 23, .86); }
+.landing-section { scroll-margin-top: 60px; }
+.section-heading { max-width: 660px; margin: auto; text-align: center; }
+.section-heading h2 { margin-top: 1.1rem; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.12; font-weight: 600; letter-spacing: -.035em; }
+.section-heading p { margin: 1.2rem auto 0; max-width: 570px; color: var(--color-muted); line-height: 1.7; }
+.workflow-card { min-height: 220px; padding: 1.35rem; background: linear-gradient(145deg, rgba(110, 221, 203, .055), rgba(255,255,255,.015)); border: 1px solid rgba(139, 237, 222, .12); border-radius: 14px; transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease; }
+.workflow-card:hover { transform: translateY(-5px); border-color: rgba(139,237,222,.4); box-shadow: 0 12px 40px rgba(56, 194, 173, .09); }
+.workflow-icon { display: grid; place-items: center; width: 42px; height: 42px; color: #9ceee0; border: 1px solid rgba(139,237,222,.2); border-radius: 11px; background: rgba(139,237,222,.06); }
+.step-number { color: #627d78; font-size: .7rem; letter-spacing: .1em; }
+.workflow-card h3 { margin-top: 1.5rem; font-size: .95rem; font-weight: 600; }
+.workflow-card p { margin-top: .65rem; color: var(--color-muted); font-size: .83rem; line-height: 1.6; }
+.visual-stage { position: relative; overflow: hidden; border: 1px solid rgba(143,236,220,.2); background: radial-gradient(ellipse at 50% 50%, rgba(57, 185, 164, .13), transparent 65%), linear-gradient(145deg, #091413, #050909); }
+
+.visual-stage svg { position: relative; max-width: 620px; filter: drop-shadow(0 0 8px rgba(105, 239, 216, .4)); animation: visual-arrive .7s ease both; }
+.visual-stage svg circle { animation: node-pulse 3s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+.visual-stage svg circle:nth-child(even) { animation-delay: -1.4s; }
+.final-cta { border: 1px solid rgba(143,236,220,.15); border-radius: 22px; background: radial-gradient(ellipse at 50% 100%, rgba(55,177,159,.13), transparent 65%), #080e0d; }
+@keyframes orbit-drift { to { transform: translate(35px, -25px) scale(1.06); } }
+@keyframes visual-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes node-pulse { from { opacity: .55; transform: scale(.85); } to { opacity: 1; transform: scale(1.2); } }
+
+/* A research workflow presented as five alternating, animated stages. */
+.workflow-sequence { display: flex; flex-direction: column; gap: 1.25rem; }
+.workflow-row { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 3rem; min-height: 250px; padding: 1.5rem 2.5rem; border: 1px solid rgba(139,237,222,.1); border-radius: 20px; background: linear-gradient(120deg, rgba(87,188,171,.055), rgba(255,255,255,.012)); }
+.workflow-row:nth-child(even) .workflow-copy { order: 2; }
+.workflow-row:nth-child(even) .workflow-graphic { order: 1; }
+.workflow-copy { max-width: 400px; padding: 1rem 0; }
+.workflow-topline { display: flex; align-items: center; gap: .85rem; }
+.workflow-copy h3 { margin-top: 1.35rem; font-size: clamp(1.35rem, 2.5vw, 1.8rem); font-weight: 600; letter-spacing: -.025em; }
+.workflow-copy p { margin-top: .75rem; color: var(--color-muted); line-height: 1.7; }
+.workflow-detail { display: inline-block; margin-top: 1.5rem; color: #83c8bb; font-size: .62rem; letter-spacing: .14em; }
+.workflow-graphic { display: grid; place-items: center; min-height: 210px; border-radius: 14px; background: radial-gradient(ellipse, rgba(71,200,179,.11), transparent 70%); overflow: hidden; }
+.workflow-graphic svg { width: 100%; max-width: 400px; filter: drop-shadow(0 0 7px rgba(99,230,208,.2)); }
+.graphic-frame { fill: rgba(10,29,26,.8); stroke: rgba(143,236,220,.35); stroke-width: 1.2; }
+.graphic-line, .graphic-accent, .scan-beam { fill: none; stroke: rgba(151,231,218,.55); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.graphic-accent { stroke: #a2f5e5; stroke-dasharray: 300; animation: graphic-draw 5s ease-in-out infinite; }
+.graphic-fill { fill: #a2f5e5; animation: graphic-pulse 3s ease-in-out infinite; }
+.graphic-node { fill: #a2f5e5; stroke: rgba(141,235,220,.25); stroke-width: 8; animation: graphic-pulse 3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.graphic-node:nth-child(even), .source-node:nth-child(even) { animation-delay: -1.5s; }
+.source-node { animation: graphic-pulse 4s ease-in-out infinite; }
+.scan-highlight { fill: rgba(122,239,214,.12); animation: graphic-pulse 3s ease-in-out infinite; }
+.scan-beam { stroke: #a2f5e5; animation: scan-sweep 4s ease-in-out infinite; }
+.evidence-sketch line, .evidence-sketch path, .evidence-sketch rect { stroke-dasharray: 500; animation: evidence-draw 6s ease-in-out infinite; }
+.evidence-sketch circle { animation: node-pulse 3s ease-in-out infinite alternate; }
+@keyframes evidence-draw { 0%, 8% { stroke-dashoffset: 500; opacity: .15; } 45%, 78% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: -500; opacity: .15; } }
+@keyframes graphic-draw { 0%, 10% { stroke-dashoffset: 300; opacity: .25; } 45%, 80% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: -300; opacity: .25; } }
+@keyframes graphic-pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+@keyframes scan-sweep { 0%, 100% { transform: translateY(0); opacity: .2; } 50% { transform: translateY(92px); opacity: 1; } }
+@media (max-width: 639px) { .workflow-row { grid-template-columns: 1fr; gap: .5rem; padding: 1.5rem; } .workflow-row:nth-child(even) .workflow-copy, .workflow-row:nth-child(even) .workflow-graphic { order: initial; } .workflow-graphic { min-height: 170px; } }
+@media (prefers-reduced-motion: reduce) { .evidence-sketch line, .evidence-sketch path, .evidence-sketch rect, .graphic-accent { stroke-dasharray: none; opacity: 1; } }

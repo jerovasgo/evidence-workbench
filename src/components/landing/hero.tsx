@@ -7,10 +7,10 @@ import { SearchBar } from '@/components/search-bar';
 import { DEFAULT_MODE, type Mode } from '@/lib/modes';
 
 const SUGGESTIONS = [
-  'Map the evidence behind a standards-body publication.',
-  'Build a decision algorithm from recent chemistry experiments.',
-  'Compare competing findings and their supporting evidence.',
-  'Trace how a lab protocol has evolved over time.',
+  'What evidence links HIF-1 alpha to the response to hypoxia?',
+  'Compare studies of gene expression under hypoxia.',
+  'Trace the evidence behind a gene regulatory relationship.',
+  'Where do experimental findings on gene regulation disagree?',
 ];
 
 const ROTATE_MS = 6000;
@@ -36,17 +36,17 @@ export function Hero() {
   }
 
   return (
-    <section className="flex min-h-screen flex-col items-center justify-center px-6 pt-14">
-      <div className="mx-auto flex w-full max-w-2xl flex-col items-center text-center">
+    <section className="landing-hero relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-6 pt-28 pb-20">
+      <div className="hero-orbit hero-orbit-one" aria-hidden="true" /><div className="hero-orbit hero-orbit-two" aria-hidden="true" /><div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center text-center">
         <h1 className="text-4xl font-semibold tracking-tight text-fg sm:text-5xl md:text-6xl">
-          From evidence to clarity.
+          Follow the evidence.<br /><span className="neon-text">Understand the biology.</span>
         </h1>
         <p className="mt-5 max-w-lg text-balance text-base text-muted sm:text-lg">
-          Discover, refine, and connect information. Turn complex evidence into clear, actionable visual knowledge.
+          Investigate genetic research with an agentic evidence workbench built to trace claims to their sources, reveal context, and surface uncertainty.
         </p>
 
-        <div className="mt-10 w-full">
-          <SearchBar value={query} onChange={setQuery} mode={mode} onModeChange={setMode} onSubmit={() => submit(query)} autoFocus />
+        <div className="hero-search mt-10 w-full">
+          <SearchBar value={query} onChange={setQuery} mode={mode} onModeChange={setMode} onSubmit={() => submit(query)} placeholder="Explore a genetic mechanism or research claim..." />
         </div>
 
         <div
