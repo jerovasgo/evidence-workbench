@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const DivergenceSchema = z.object({
-  kind: z.enum(['outdated', 'legitimate_adaptation', 'clinical_contradiction']),
-  requiresClinicianDecision: z.boolean(),
+  kind: z.enum(['outdated', 'legitimate_adaptation', 'scientific_contradiction']),
+  requiresExpertReview: z.boolean(),
   suggested: z.enum(['local', 'external', 'none']),
   rationale: z.array(z.string()),
 });

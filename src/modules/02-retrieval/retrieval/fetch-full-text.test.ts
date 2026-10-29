@@ -56,7 +56,7 @@ describe('fetchFullTextForCandidate', () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       new Response('<html><body><p>Real guideline text</p></body></html>', { status: 200, headers: { 'Content-Type': 'text/html' } }),
     ) as unknown as typeof fetch;
-    const candidate: CandidateSource = { tempId: 'web:1', family: 'guideline', title: 'A guideline', url: 'https://www.cdc.gov/x' };
+    const candidate: CandidateSource = { tempId: 'web:1', family: 'standards_body', title: 'A standards body publication', url: 'https://www.cdc.gov/x' };
 
     const result = await fetchFullTextForCandidate(candidate, europePmc, { allowedDomains: ['cdc.gov'], fetchImpl });
 

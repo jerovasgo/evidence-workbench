@@ -35,7 +35,7 @@ describe('classifySourcesBatched', () => {
       const prompt = params.input[1]!.content;
       // Return one classification per sourceId mentioned in that batch's prompt.
       const ids = [...prompt.matchAll(/"sourceId":"(s\d+)"/g)].map((m) => m[1]);
-      return fakeRespondResult({ classifications: ids.map((sourceId) => ({ sourceId, kind: 'rct', isScientific: true, confidence: 'medium' })) });
+      return fakeRespondResult({ classifications: ids.map((sourceId) => ({ sourceId, kind: 'controlled_experiment', isScientific: true, confidence: 'medium' })) });
     });
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
 
@@ -70,7 +70,7 @@ describe('classifySourcesBatched', () => {
     const respond = vi.fn().mockImplementation(async (params: { input: { content: string }[] }) => {
       const prompt = params.input[1]!.content;
       if (prompt.includes('"s15"')) return fakeRespondResult({ classifications: 'not-an-array' });
-      return fakeRespondResult({ classifications: [{ sourceId: 'ok', kind: 'rct', isScientific: true, confidence: 'medium' }] });
+      return fakeRespondResult({ classifications: [{ sourceId: 'ok', kind: 'controlled_experiment', isScientific: true, confidence: 'medium' }] });
     });
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
 

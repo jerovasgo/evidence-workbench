@@ -8,34 +8,35 @@ export const ConditionSchema = z.object({
 });
 export type Condition = z.infer<typeof ConditionSchema>;
 
+// 2026-10-29 pivot (docs/DECISIONS.md): `strength` (clinical recommendation
+// strength — "strong/conditional, for/against") is dropped, not kept-but-unused —
+// it has no general-science analog. `certainty` survives unchanged: high/moderate/
+// low/very_low/ungraded is already generically meaningful evidence-certainty
+// language despite its GRADE origin.
 export const GradeSchema = z.object({
   certainty: z.enum(['high', 'moderate', 'low', 'very_low', 'ungraded']),
-  strength: z
-    .object({
-      direction: z.enum(['for', 'against']),
-      level: z.enum(['strong', 'conditional']),
-    })
-    .optional(),
   origin: z.enum(['source', 'ai_estimated']),
   nativeGrade: z.string().optional(),
   domains: z.record(z.string(), z.object({ rating: z.string(), reason: z.string() })).optional(),
 });
 export type Grade = z.infer<typeof GradeSchema>;
 
+// 2026-10-29 pivot: replaces the clinical-workflow verbs (assess/test/treat/
+// threshold/disposition/avoid) with a general-science claim taxonomy. `mechanism`
+// is unchanged (feeds module 08 either way).
 export const ActionTypeSchema = z.enum([
-  'assess',
-  'test',
-  'treat',
-  'threshold',
-  'disposition',
-  'avoid',
+  'finding',
+  'method',
+  'measurement',
+  'theory',
   'mechanism',
+  'limitation',
 ]);
 export type ActionType = z.infer<typeof ActionTypeSchema>;
 
 export const SupportIssueSchema = z.enum([
   'negation',
-  'wrong_population',
+  'wrong_scope',
   'wrong_threshold',
   'wrong_strength',
   'out_of_context',
@@ -57,7 +58,7 @@ export type ClaimVerification = z.infer<typeof ClaimVerificationSchema>;
 export const ClaimSchema = z.object({
   id: z.string(),
   text: z.string(),
-  basis: z.enum(['recommendation', 'background']),
+  basis: z.enum(['primary', 'background']),
   actionType: ActionTypeSchema,
   conditions: z.array(ConditionSchema),
   sourceId: z.string(),

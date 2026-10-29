@@ -6,29 +6,27 @@ describe('gradeClaim', () => {
     expect(gradeClaim(undefined)).toEqual({ certainty: 'ungraded', origin: 'ai_estimated' });
   });
 
-  it('maps a recognized native grade to the real certainty/strength, origin source', () => {
-    expect(gradeClaim('Class I, LOE A')).toEqual({
+  it('maps recognized certainty language to the real certainty, origin source', () => {
+    expect(gradeClaim('This is a well-established result in the field')).toEqual({
       certainty: 'high',
-      strength: { direction: 'for', level: 'strong' },
       origin: 'source',
-      nativeGrade: 'Class I, LOE A',
+      nativeGrade: 'This is a well-established result in the field',
     });
   });
 
-  it('keeps the raw text and falls back to ungraded, origin still source, for an unrecognized scheme', () => {
-    expect(gradeClaim('Local hospital protocol grade 2')).toEqual({
+  it('keeps the raw text and falls back to ungraded, origin still source, for unrecognized phrasing', () => {
+    expect(gradeClaim('Local lab protocol, internal grade 2')).toEqual({
       certainty: 'ungraded',
       origin: 'source',
-      nativeGrade: 'Local hospital protocol grade 2',
+      nativeGrade: 'Local lab protocol, internal grade 2',
     });
   });
 
-  it('omits strength when the mapped scheme does not carry one (e.g. Oxford CEBM)', () => {
-    expect(gradeClaim('Oxford CEBM Level 2a')).toEqual({
-      certainty: 'moderate',
-      strength: undefined,
+  it('maps a disputed/controversial result to very_low certainty', () => {
+    expect(gradeClaim('This result remains disputed among experts')).toEqual({
+      certainty: 'very_low',
       origin: 'source',
-      nativeGrade: 'Oxford CEBM Level 2a',
+      nativeGrade: 'This result remains disputed among experts',
     });
   });
 });

@@ -47,7 +47,7 @@ export async function POST(request: Request): Promise<Response> {
       return NextResponse.json(
         {
           error:
-            'This request appears to reference a specific patient or personal contact details; rephrase without identifying information.',
+            'This request appears to reference a specific identifiable person or personal contact details; rephrase without identifying information.',
           findingKinds: outcome.findings.map((f) => f.kind),
         },
         { status: 422 },

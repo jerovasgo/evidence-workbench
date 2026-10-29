@@ -5,9 +5,9 @@ import { pairClaimsForRelations } from './pair-claims';
 function claim(overrides: Partial<Claim>): Claim {
   return {
     id: 'c',
-    text: 'Give aspirin.',
-    basis: 'recommendation',
-    actionType: 'treat',
+    text: 'A polar aprotic solvent increases the SN2 reaction rate.',
+    basis: 'primary',
+    actionType: 'finding',
     conditions: [],
     sourceId: 's1',
     passageId: 'p1',
@@ -38,8 +38,8 @@ describe('pairClaimsForRelations', () => {
   });
 
   it('never pairs claims with different actionType', () => {
-    const a = claim({ id: 'a', sourceId: 's1', actionType: 'treat' });
-    const b = claim({ id: 'b', sourceId: 's2', actionType: 'test' });
+    const a = claim({ id: 'a', sourceId: 's1', actionType: 'finding' });
+    const b = claim({ id: 'b', sourceId: 's2', actionType: 'method' });
 
     expect(pairClaimsForRelations([a, b])).toEqual([]);
   });

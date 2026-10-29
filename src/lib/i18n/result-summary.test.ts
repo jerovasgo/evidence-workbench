@@ -9,16 +9,16 @@ const baseReceipt: Receipt = {
   retracted: 0,
   supported: 2,
   abstained: 0,
-  sourcesByKind: { guideline: 1, rct: 2, other: 5 },
+  sourcesByKind: { standards_body: 1, controlled_experiment: 2, other: 5 },
   generatedAt: '2026-10-28T00:00:00.000Z',
 };
 
 function claim(overrides: Partial<Claim> = {}): Claim {
   return {
     id: 'c1',
-    text: 'Give aspirin.',
-    basis: 'recommendation',
-    actionType: 'treat',
+    text: 'A polar aprotic solvent increases the SN2 reaction rate.',
+    basis: 'primary',
+    actionType: 'finding',
     conditions: [],
     sourceId: 's1',
     passageId: 'p1',

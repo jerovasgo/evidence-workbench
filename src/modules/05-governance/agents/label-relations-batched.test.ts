@@ -30,8 +30,8 @@ function baseClaim() {
   return {
     id: 'c1',
     text: 'Give aspirin.',
-    basis: 'recommendation' as const,
-    actionType: 'treat' as const,
+    basis: 'primary' as const,
+    actionType: 'finding' as const,
     conditions: [],
     sourceId: 's1',
     passageId: 'p1',

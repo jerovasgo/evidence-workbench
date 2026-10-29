@@ -58,13 +58,13 @@ function baseDeps(metaClient: MetaClient, overrides: Partial<Parameters<typeof r
 }
 
 const STRUCTURE_OUTPUT = {
-  setting: 'emergency' as const,
-  subQuestions: ['first-line treatment'],
-  genericParameters: {},
+  context: 'in_vitro' as const,
+  subQuestions: ['which solvents accelerate the reaction'],
+  scopeParameters: {},
 };
-const PLAN_OUTPUT = { queries: [{ family: 'pubmed' as const, text: 'acs', purpose: 'first-line treatment' }] };
+const PLAN_OUTPUT = { queries: [{ family: 'pubmed' as const, text: 'sn2 reaction', purpose: 'which solvents accelerate the reaction' }] };
 const CLASSIFY_OUTPUT = {
-  classifications: [{ sourceId: 'pubmed:111', kind: 'rct' as const, isScientific: true, confidence: 'high' as const }],
+  classifications: [{ sourceId: 'pubmed:111', kind: 'controlled_experiment' as const, isScientific: true, confidence: 'high' as const }],
 };
 
 describe('runRetrievalPipeline', () => {
@@ -83,7 +83,7 @@ describe('runRetrievalPipeline', () => {
     });
 
     const result = await runRetrievalPipeline(
-      { runId: 'run_1', freeText: 'adult with chest pain', routerCondition: 'suspected ACS' },
+      { runId: 'run_1', freeText: 'SN2 reaction rate in polar aprotic solvent', routerCondition: 'SN2 reaction rate' },
       baseDeps(metaClient, { pubmed }),
     );
 
@@ -92,11 +92,11 @@ describe('runRetrievalPipeline', () => {
     expect(result.retrieval.status).toBe('ok');
     expect(result.retrieval.value).toHaveLength(1);
     expect(result.classification.status).toBe('ok');
-    // The model classified sourceId pubmed:111 as 'rct', but its PubMed type is
-    // "Practice Guideline" — the deterministic override must win.
-    expect(result.classification.value?.[0]).toMatchObject({ sourceId: 'pubmed:111', kind: 'guideline' });
+    // The model classified sourceId pubmed:111 as 'controlled_experiment', but its
+    // PubMed type is "Practice Guideline" — the deterministic override must win.
+    expect(result.classification.value?.[0]).toMatchObject({ sourceId: 'pubmed:111', kind: 'standards_body' });
     // Module 04 Part B: source scores are computed from the (overridden) classification.
-    expect(result.sourceScores['pubmed:111']?.level).toBeCloseTo(1.0, 5); // guideline level weight
+    expect(result.sourceScores['pubmed:111']?.level).toBeCloseTo(0.9, 5); // standards_body level weight
   });
 
   it('falls back to the router condition for planning when structure fails', async () => {
@@ -104,19 +104,19 @@ describe('runRetrievalPipeline', () => {
     // (runAgent's harness), so it takes 2 calls before abstaining; plan's call is the 3rd.
     const respond = vi
       .fn()
-      .mockResolvedValueOnce(fakeRespondResult({ setting: 'bogus' }))
-      .mockResolvedValueOnce(fakeRespondResult({ setting: 'bogus' }))
+      .mockResolvedValueOnce(fakeRespondResult({ context: 'bogus' }))
+      .mockResolvedValueOnce(fakeRespondResult({ context: 'bogus' }))
       .mockResolvedValueOnce(fakeRespondResult({ queries: [] }));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
 
     const result = await runRetrievalPipeline(
-      { runId: 'run_1', freeText: 'x', routerCondition: 'suspected ACS' },
+      { runId: 'run_1', freeText: 'x', routerCondition: 'SN2 reaction rate' },
       baseDeps(metaClient),
     );
 
     expect(result.structure.status).toBe('failed');
     const planPrompt = (respond.mock.calls[2]?.[0] as { input: { content: string }[] }).input[1]?.content;
-    expect(planPrompt).toContain('suspected ACS');
+    expect(planPrompt).toContain('SN2 reaction rate');
     expect(result.plan.status).toBe('ok');
   });
 

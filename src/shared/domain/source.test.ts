@@ -4,9 +4,9 @@ import { PassageSchema, SourceSchema } from './source';
 describe('SourceSchema', () => {
   const base = {
     id: 'src_1',
-    kind: 'guideline' as const,
-    title: 'ACC/AHA Chest Pain Guideline',
-    url: 'https://example.org/guideline',
+    kind: 'standards_body' as const,
+    title: 'IUPAC Nomenclature of Organic Chemistry',
+    url: 'https://example.org/iupac',
     accessedAt: '2026-10-27T00:00:00.000Z',
     contentHash: 'abc123',
   };
@@ -19,7 +19,7 @@ describe('SourceSchema', () => {
     const withExtras = {
       ...base,
       year: 2023,
-      appliesTo: { country: 'CO', setting: 'emergency' },
+      appliesTo: { country: 'CO', setting: 'emergency', scope: 'organic synthesis' },
       nativeGradingSystem: 'GRADE',
       retracted: false,
     };

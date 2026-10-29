@@ -6,10 +6,10 @@ import type { SourceClassification } from '../schemas/classification';
 // the only thing allowed to change `kind` after the model has proposed one.
 
 const DECISIVE_PUBMED_TYPES: { match: string; kind: SourceClassification['kind'] }[] = [
-  { match: 'practice guideline', kind: 'guideline' },
+  { match: 'practice guideline', kind: 'standards_body' },
   { match: 'systematic review', kind: 'systematic_review' },
-  { match: 'meta-analysis', kind: 'systematic_review' },
-  { match: 'randomized controlled trial', kind: 'rct' },
+  { match: 'meta-analysis', kind: 'meta_analysis' },
+  { match: 'randomized controlled trial', kind: 'controlled_experiment' },
 ];
 
 /**

@@ -31,11 +31,11 @@ function fakeCrossref(): CrossrefClient {
 const CLAIM_OUTPUT = {
   claims: [
     {
-      text: 'Give aspirin 325 mg for suspected ACS.',
-      basis: 'recommendation' as const,
-      actionType: 'treat' as const,
+      text: 'Adding 50 mL of polar aprotic solvent increases the SN2 reaction rate.',
+      basis: 'primary' as const,
+      actionType: 'finding' as const,
       conditions: [],
-      quote: 'Aspirin 325 mg should be given promptly.',
+      quote: 'Adding 50 mL of polar aprotic solvent increased the SN2 reaction rate.',
       passageId: 'placeholder',
       safetyCritical: false,
     },
@@ -108,8 +108,8 @@ describe('extractAndVerifyPool', () => {
       return null;
     });
     const classifications: SourceClassification[] = [
-      { sourceId: 'europe_pmc:PMC:rct', kind: 'rct', isScientific: true, confidence: 'high' },
-      { sourceId: 'europe_pmc:PMC:guideline', kind: 'guideline', isScientific: true, confidence: 'high' },
+      { sourceId: 'europe_pmc:PMC:rct', kind: 'controlled_experiment', isScientific: true, confidence: 'high' },
+      { sourceId: 'europe_pmc:PMC:guideline', kind: 'standards_body', isScientific: true, confidence: 'high' },
     ];
 
     await extractAndVerifyPool(

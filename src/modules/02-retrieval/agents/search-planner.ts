@@ -6,7 +6,7 @@ import { SearchPlanSchema, type SearchPlan } from '../schemas/retrieval';
 
 // Module 02 `search-planner` agent (P3). `subQuestions` normally comes from module
 // 01's `scenario-structurer` (P2) output; this schema intentionally stays narrower
-// than that full structured-scenario object (no population/genericParameters) since
+// than that full structured-scenario object (no scope/scopeParameters) since
 // search-planner only needs condition + sub-questions + setting/country to plan
 // queries.
 

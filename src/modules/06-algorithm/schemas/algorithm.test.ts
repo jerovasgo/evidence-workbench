@@ -2,25 +2,25 @@ import { describe, expect, it } from 'vitest';
 import { AlgorithmGraphSchema } from './algorithm';
 
 describe('AlgorithmGraphSchema', () => {
-  it('accepts a small graph with a red flag and a disposition', () => {
+  it('accepts a small graph with a critical check and an outcome', () => {
     const graph = {
       nodes: [
         {
           id: 'n1',
-          type: 'red_flag' as const,
-          label: 'Hemodynamic instability?',
+          type: 'critical_check' as const,
+          label: 'Reagent air-sensitive?',
           claimIds: ['claim_1'],
           provenance: 'external' as const,
         },
         {
           id: 'n2',
-          type: 'disposition' as const,
-          label: 'Admit to monitored bed',
+          type: 'outcome' as const,
+          label: 'Run under inert atmosphere',
           claimIds: ['claim_2'],
           provenance: 'both' as const,
         },
       ],
-      edges: [{ from: 'n1', to: 'n2', condition: { variable: 'sbp', op: '<' as const, value: 90 } }],
+      edges: [{ from: 'n1', to: 'n2', condition: { variable: 'humidity', op: '<' as const, value: 5 } }],
     };
     expect(AlgorithmGraphSchema.parse(graph)).toEqual(graph);
   });

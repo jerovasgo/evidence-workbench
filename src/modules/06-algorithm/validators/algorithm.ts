@@ -11,7 +11,7 @@ const NODE_CAP = 35;
 export type AlgorithmInvariantViolation =
   | { kind: 'cycle'; nodeIds: string[] }
   | { kind: 'no_start' | 'multiple_starts'; nodeIds: string[] }
-  | { kind: 'red_flag_after_non_red_flag'; edge: { from: string; to: string } }
+  | { kind: 'critical_check_after_non_critical'; edge: { from: string; to: string } }
   | { kind: 'leaf_not_terminal'; nodeId: string }
   | { kind: 'action_node_missing_claim'; nodeId: string }
   | { kind: 'claim_id_not_in_pool'; nodeId: string; claimId: string }
@@ -53,37 +53,37 @@ export function validateAlgorithmGraph(
     violations.push({ kind: 'multiple_starts', nodeIds: starts.map((s) => s.id) });
   }
 
-  // Invariant 2 (red flags precede non-red-flags on every path): no edge may lead
-  // INTO a red_flag node from a non-red_flag node — that would place the red flag
-  // after a non-red-flag step on that path.
+  // Invariant 2 (critical checks precede non-critical steps on every path): no
+  // edge may lead INTO a critical_check node from a non-critical_check node — that
+  // would place the critical check after a non-critical step on that path.
   for (const edge of graph.edges) {
     const from = nodesById.get(edge.from);
     const to = nodesById.get(edge.to);
-    if (to?.type === 'red_flag' && from && from.type !== 'red_flag') {
-      violations.push({ kind: 'red_flag_after_non_red_flag', edge: { from: edge.from, to: edge.to } });
+    if (to?.type === 'critical_check' && from && from.type !== 'critical_check') {
+      violations.push({ kind: 'critical_check_after_non_critical', edge: { from: edge.from, to: edge.to } });
     }
   }
 
-  // Invariant 1: acyclic, except an explicit `reassess` back-edge (bounded). A
-  // reassess node's outgoing edges are the sanctioned back-edges, so they are
+  // Invariant 1: acyclic, except an explicit `iterate` back-edge (bounded). An
+  // iterate node's outgoing edges are the sanctioned back-edges, so they are
   // excluded from cycle detection; any other cycle is a real violation.
-  const cycleEdges = graph.edges.filter((e) => nodesById.get(e.from)?.type !== 'reassess');
+  const cycleEdges = graph.edges.filter((e) => nodesById.get(e.from)?.type !== 'iterate');
   const cycle = detectCycle(graph.nodes.map((n) => n.id), cycleEdges);
   if (cycle) {
     violations.push({ kind: 'cycle', nodeIds: cycle });
   }
 
-  // Invariant 3: every leaf is disposition or abstain.
+  // Invariant 3: every leaf is outcome or abstain.
   for (const node of graph.nodes) {
     const isLeaf = (outgoing.get(node.id)?.length ?? 0) === 0;
-    if (isLeaf && node.type !== 'disposition' && node.type !== 'abstain') {
+    if (isLeaf && node.type !== 'outcome' && node.type !== 'abstain') {
       violations.push({ kind: 'leaf_not_terminal', nodeId: node.id });
     }
   }
 
-  // Invariant 4: action/test nodes need >=1 claim; every cited claimId exists in the verified pool.
+  // Invariant 4: action/method nodes need >=1 claim; every cited claimId exists in the verified pool.
   for (const node of graph.nodes) {
-    if ((node.type === 'action' || node.type === 'test') && node.claimIds.length === 0) {
+    if ((node.type === 'action' || node.type === 'method') && node.claimIds.length === 0) {
       violations.push({ kind: 'action_node_missing_claim', nodeId: node.id });
     }
     for (const claimId of node.claimIds) {

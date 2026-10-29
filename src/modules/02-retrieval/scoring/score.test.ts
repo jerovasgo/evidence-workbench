@@ -34,11 +34,11 @@ describe('computeCurrency', () => {
 describe('computeSourceScore', () => {
   const now = new Date(2026, 0, 1);
 
-  it('scores a current, applicable guideline near 1.0 when relevance and quality are high', () => {
+  it('scores a current, applicable meta-analysis near 1.0 when relevance and quality are high', () => {
     const score = computeSourceScore({
       relevance: 1,
       quality: 1,
-      kind: 'guideline',
+      kind: 'meta_analysis',
       year: 2025,
       isSuperseded: false,
       applicability: 'match',
@@ -47,11 +47,11 @@ describe('computeSourceScore', () => {
     expect(score).toBeCloseTo(1.0, 5);
   });
 
-  it('scores an old observational study with a mismatched population much lower', () => {
+  it('scores an old observational study with a mismatched context much lower', () => {
     const score = computeSourceScore({
       relevance: 0.8,
       quality: 0.6,
-      kind: 'observational',
+      kind: 'observational_study',
       year: 2010,
       isSuperseded: false,
       applicability: 'mismatch',
@@ -61,25 +61,25 @@ describe('computeSourceScore', () => {
     expect(score).toBeCloseTo(0.8 * 0.45 * 0.6 * 0.5 * 0.6, 5);
   });
 
-  it('a superseded guideline scores lower than a current RCT despite the higher level weight', () => {
-    const supersededGuideline = computeSourceScore({
+  it('a superseded standards-body publication scores lower than a current controlled experiment despite the higher level weight', () => {
+    const supersededStandardsBody = computeSourceScore({
       relevance: 1,
       quality: 1,
-      kind: 'guideline',
+      kind: 'standards_body',
       year: 2026,
       isSuperseded: true,
       applicability: 'match',
       now,
     });
-    const currentRct = computeSourceScore({
+    const currentControlledExperiment = computeSourceScore({
       relevance: 1,
       quality: 1,
-      kind: 'rct',
+      kind: 'controlled_experiment',
       year: 2026,
       isSuperseded: false,
       applicability: 'match',
       now,
     });
-    expect(supersededGuideline).toBeLessThan(currentRct);
+    expect(supersededStandardsBody).toBeLessThan(currentControlledExperiment);
   });
 });

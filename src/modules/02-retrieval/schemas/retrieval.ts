@@ -3,7 +3,11 @@ import { SourceKindSchema } from '@/shared/domain';
 
 // Module 02 contracts: SearchPlan, CandidateSource, CoverageReport.
 
-export const SourceFamilySchema = z.enum(['guideline', 'pubmed', 'europe_pmc', 'web', 'local']);
+// 2026-10-29 pivot: 'guideline' -> 'standards_body' (IUPAC/NIST/ISO-style
+// publications). pubmed/europe_pmc/web/local are kept as-is — both literature
+// databases index plenty of non-clinical biology/biochemistry and need no
+// connector change for the chosen demo domains (chemistry, biology/genetics).
+export const SourceFamilySchema = z.enum(['standards_body', 'pubmed', 'europe_pmc', 'web', 'local']);
 export type SourceFamily = z.infer<typeof SourceFamilySchema>;
 
 export const SearchQuerySchema = z.object({

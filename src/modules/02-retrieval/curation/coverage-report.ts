@@ -5,16 +5,19 @@ import type { SourceKind } from '@/shared/domain';
 // sources found, best level, oldest year, 'thin' flag."
 
 const LEVEL_RANK: Record<SourceKind, number> = {
-  guideline: 4,
+  meta_analysis: 5,
+  standards_body: 4,
   local_protocol: 4,
   systematic_review: 3,
-  rct: 2,
-  observational: 1,
-  pathway_db: 0,
+  controlled_experiment: 2,
+  observational_study: 1,
+  preprint: 1,
+  reference_work: 1,
+  dataset_or_database: 0,
   other: 0,
 };
 
-const STRONG_LEVELS = new Set<SourceKind>(['guideline', 'local_protocol', 'systematic_review']);
+const STRONG_LEVELS = new Set<SourceKind>(['meta_analysis', 'standards_body', 'local_protocol', 'systematic_review']);
 
 export interface SubQuestionCoverageInput {
   subQuestion: string;
@@ -23,7 +26,8 @@ export interface SubQuestionCoverageInput {
 
 /**
  * "Thin" (module 01's stop rule / module 02's coverage flag): no sources at all, or
- * fewer than 2 sources and none of them a guideline/local protocol/systematic review.
+ * fewer than 2 sources and none of them a meta-analysis/standards body/local
+ * protocol/systematic review.
  */
 function isThin(sources: { kind: SourceKind }[]): boolean {
   if (sources.length === 0) return true;

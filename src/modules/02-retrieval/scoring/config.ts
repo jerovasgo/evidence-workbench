@@ -4,16 +4,24 @@ import type { SourceKind } from '@/shared/domain';
 // Initial values, to calibrate." These are exactly that — Day-1 starting weights, not
 // tuned against real outcomes yet.
 
+// 2026-10-29 pivot: rekeyed to the general-science SourceKind (shared/domain/
+// source.ts). meta_analysis/systematic_review keep the top tier (aggregate
+// evidence); controlled_experiment/observational_study replace rct/observational
+// at the same relative weights; preprint is new (not yet peer-reviewed, scored
+// below a controlled experiment but above a raw dataset); standards_body
+// (IUPAC/NIST/ISO-style) takes the old guideline weight; local_protocol keeps the
+// same full weight for *this* lab's own context; dataset_or_database is
+// corroboration-only data (never itself a finding), scored low like 'other'.
 export const LEVEL_WEIGHTS: Record<SourceKind, number> = {
-  guideline: 1.0,
+  meta_analysis: 1.0,
   systematic_review: 0.85,
-  rct: 0.7,
-  observational: 0.45,
-  // Not in SPEC's example list; local_protocol carries the same authority weight as
-  // a guideline for *this* clinician's setting, pathway_db is corroboration-only data
-  // (never itself a recommendation), scored low like 'other'.
+  controlled_experiment: 0.7,
+  observational_study: 0.45,
+  preprint: 0.35,
+  reference_work: 0.6,
+  standards_body: 0.9,
+  dataset_or_database: 0.2,
   local_protocol: 1.0,
-  pathway_db: 0.2,
   other: 0.2,
 };
 

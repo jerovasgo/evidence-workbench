@@ -197,8 +197,8 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
   // on a resumed run with no fresh free text, every fallback here can legitimately
   // be empty/missing, and that schema throws synchronously rather than failing
   // gracefully (it's meant to catch a caller bug, not handle untrusted input).
-  const planCondition = input.routerCondition || structure.value?.population || input.freeText || 'unspecified clinical condition';
-  const planSetting = structure.value?.setting !== 'unknown' ? structure.value?.setting : input.routerSetting;
+  const planCondition = input.routerCondition || structure.value?.scope || input.freeText || 'unspecified topic';
+  const planSetting = structure.value?.context !== 'unknown' ? structure.value?.context : input.routerSetting;
 
   let plan = resumeStage('plan', SearchPlanSchema, latest);
   const planResumed = plan !== null;
@@ -348,7 +348,7 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
   // UI can show "why ranked here" for any source a claim cites.
   const sourceScores: Record<string, ScoreBreakdown> = {};
   for (const c of classification.value ?? []) {
-    sourceScores[c.sourceId] = buildSourceScore(c, structure.value?.setting ?? 'unknown');
+    sourceScores[c.sourceId] = buildSourceScore(c, structure.value?.context ?? 'unknown');
   }
 
   // --- extract + verify (P5 + deterministic checks, module 03) --- only runs if

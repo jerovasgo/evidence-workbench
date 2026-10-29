@@ -28,8 +28,8 @@ describe('classifySources', () => {
   it('returns valid classifications for a batch of sources', async () => {
     const output = {
       classifications: [
-        { sourceId: 's1', kind: 'guideline' as const, isScientific: true, confidence: 'high' as const },
-        { sourceId: 's2', kind: 'rct' as const, isScientific: true, confidence: 'medium' as const },
+        { sourceId: 's1', kind: 'standards_body' as const, isScientific: true, confidence: 'high' as const },
+        { sourceId: 's2', kind: 'controlled_experiment' as const, isScientific: true, confidence: 'medium' as const },
       ],
     };
     const respond = vi.fn().mockResolvedValue(fakeRespondResult(output));

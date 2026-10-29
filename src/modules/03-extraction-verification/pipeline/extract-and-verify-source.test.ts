@@ -31,7 +31,7 @@ function baseDeps(metaClient: MetaClient, crossref: CrossrefClient = fakeCrossre
   };
 }
 
-const FULL_TEXT = 'Aspirin 325 mg should be given promptly in suspected ACS.';
+const FULL_TEXT = 'Adding 50 mL of polar aprotic solvent increased the SN2 reaction rate.';
 
 describe('extractAndVerifySource', () => {
   it('returns status no_text when the source has no fetchable full text', async () => {
@@ -48,11 +48,11 @@ describe('extractAndVerifySource', () => {
     const output = {
       claims: [
         {
-          text: 'Give aspirin 325 mg for suspected ACS.',
-          basis: 'recommendation' as const,
-          actionType: 'treat' as const,
+          text: 'Adding 50 mL of polar aprotic solvent increases the SN2 reaction rate.',
+          basis: 'primary' as const,
+          actionType: 'finding' as const,
           conditions: [],
-          quote: 'Aspirin 325 mg should be given promptly in suspected ACS.',
+          quote: 'Adding 50 mL of polar aprotic solvent increased the SN2 reaction rate.',
           passageId: 'src_1:0',
           safetyCritical: false,
         },
@@ -62,7 +62,7 @@ describe('extractAndVerifySource', () => {
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
 
     const result = await extractAndVerifySource(
-      { runId: 'run_1', sourceId: 'src_1', sourceTitle: 'ACS Guideline', fullText: FULL_TEXT, subQuestions: ['first-line treatment'] },
+      { runId: 'run_1', sourceId: 'src_1', sourceTitle: 'SN2 Reaction Kinetics', fullText: FULL_TEXT, subQuestions: ['first-line treatment'] },
       baseDeps(metaClient),
     );
 
@@ -78,11 +78,11 @@ describe('extractAndVerifySource', () => {
     const output = {
       claims: [
         {
-          text: 'Give aspirin 325 mg for suspected ACS.',
-          basis: 'recommendation' as const,
-          actionType: 'treat' as const,
+          text: 'Adding 50 mL of polar aprotic solvent increases the SN2 reaction rate.',
+          basis: 'primary' as const,
+          actionType: 'finding' as const,
           conditions: [],
-          quote: 'Aspirin 325 mg should be given promptly in suspected ACS.',
+          quote: 'Adding 50 mL of polar aprotic solvent increased the SN2 reaction rate.',
           passageId: 'src_1:0',
           safetyCritical: false,
         },

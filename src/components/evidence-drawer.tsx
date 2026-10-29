@@ -4,7 +4,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import type { Claim } from '@/shared/domain';
 import type { ScoreBreakdown } from '@/modules/04-grading-scoring';
 import { Chip } from '@/components/ui/chip';
-import { NOT_GRADED_TOOLTIP, gradeCertaintyLabel, gradeProvenanceLabel, gradeStrengthLabel } from '@/lib/i18n/grade-labels';
+import { NOT_GRADED_TOOLTIP, gradeCertaintyLabel, gradeProvenanceLabel } from '@/lib/i18n/grade-labels';
 
 // SPEC §11 screen (3): Evidence drawer — "provenance always one click away."
 
@@ -17,7 +17,7 @@ const SUPPORT_CHIP: Record<Claim['verification']['support'], { label: string; to
 
 const ISSUE_LABEL: Record<string, string> = {
   negation: 'Negation mismatch',
-  wrong_population: 'Population mismatch',
+  wrong_scope: 'Scope mismatch',
   wrong_threshold: 'Threshold mismatch',
   wrong_strength: 'Strength mismatch',
   out_of_context: 'Out of context',
@@ -87,12 +87,6 @@ export function EvidenceDrawer({
                   {gradeCertaintyLabel(claim.grade)}
                   {claim.grade.certainty === 'ungraded' && <span className="mt-0.5 block text-muted">{NOT_GRADED_TOOLTIP}</span>}
                 </dd>
-                {claim.grade.strength && (
-                  <>
-                    <dt className="text-muted">Strength</dt>
-                    <dd className="text-fg">{gradeStrengthLabel(claim.grade.strength)}</dd>
-                  </>
-                )}
                 {gradeProvenanceLabel(claim.grade) && (
                   <>
                     <dt className="text-muted">Source grade</dt>

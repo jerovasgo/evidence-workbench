@@ -27,7 +27,7 @@ export function buildResultSummary(status: RunStatus, receipt: Receipt | null, c
   if (status === 'streaming') return null;
 
   if (status === 'abstained') {
-    return 'This doesn’t read as a clinical evidence question I can investigate — try rephrasing around a specific condition, setting or question.';
+    return 'This doesn’t read as a scientific evidence question I can investigate — try rephrasing around a specific finding, topic or question.';
   }
 
   if (status === 'failed' || !receipt) return null;

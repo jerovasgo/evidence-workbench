@@ -5,16 +5,16 @@ import type { JudgeSupportOutput } from '../schemas/support-judge';
 import { applySupportJudgment, verifyClaim } from './verify-claim';
 
 const passages: Passage[] = [
-  { id: 'p1', sourceId: 'src_1', locator: '¶1', text: 'Aspirin 325 mg should be given promptly in suspected ACS.' },
+  { id: 'p1', sourceId: 'src_1', locator: '¶1', text: 'Adding 50 mL of polar aprotic solvent to the SN2 reaction increased its rate.' },
 ];
 
 function baseExtracted(overrides: Partial<ExtractedClaim> = {}): ExtractedClaim {
   return {
-    text: 'Give aspirin 325 mg for suspected ACS.',
-    basis: 'recommendation',
-    actionType: 'treat',
+    text: 'Adding 50 mL of polar aprotic solvent increases the SN2 reaction rate.',
+    basis: 'primary',
+    actionType: 'finding',
     conditions: [],
-    quote: 'Aspirin 325 mg should be given promptly in suspected ACS.',
+    quote: 'Adding 50 mL of polar aprotic solvent to the SN2 reaction increased its rate.',
     passageId: 'p1',
     safetyCritical: false,
     ...overrides,
@@ -32,18 +32,17 @@ describe('verifyClaim', () => {
     }
   });
 
-  it('maps a recognized printed grade (module 04) onto the kept claim', () => {
+  it('maps a recognized printed certainty (module 04) onto the kept claim', () => {
     const result = verifyClaim(
-      { extracted: baseExtracted({ nativeGrade: 'Class I, LOE A' }), sourceId: 'src_1', retracted: false },
+      { extracted: baseExtracted({ nativeGrade: 'This is a well-established result in the field' }), sourceId: 'src_1', retracted: false },
       passages,
     );
     expect(result.outcome).toBe('kept');
     if (result.outcome === 'kept') {
       expect(result.claim.grade).toEqual({
         certainty: 'high',
-        strength: { direction: 'for', level: 'strong' },
         origin: 'source',
-        nativeGrade: 'Class I, LOE A',
+        nativeGrade: 'This is a well-established result in the field',
       });
     }
   });
@@ -69,23 +68,23 @@ describe('verifyClaim', () => {
     expect(result).toEqual({ outcome: 'dropped', reason: 'source is retracted or withdrawn' });
   });
 
-  it("softens an unverified dose to 'per local protocol' instead of dropping the claim", () => {
+  it("softens an unverified measurement to 'per local protocol' instead of dropping the claim", () => {
     const result = verifyClaim(
       {
-        extracted: baseExtracted({ text: 'Give aspirin 500 mg for suspected ACS.' }), // 500 mg not in the quote (325 mg)
+        extracted: baseExtracted({ text: 'Adding 80 mL of polar aprotic solvent increases the SN2 reaction rate.' }), // 80 mL not in the quote (50 mL)
         sourceId: 'src_1',
         retracted: false,
       },
       passages,
     );
     expect(result.outcome).toBe('kept');
-    if (result.outcome === 'kept') expect(result.claim.text).toBe('Give aspirin per local protocol for suspected ACS.');
+    if (result.outcome === 'kept') expect(result.claim.text).toBe('Adding per local protocol of polar aprotic solvent increases the SN2 reaction rate.');
   });
 
-  it('drops a claim with a non-dose number not present in the quote', () => {
+  it('drops a claim with a non-measurement number not present in the quote', () => {
     const result = verifyClaim(
       {
-        extracted: baseExtracted({ text: 'Give aspirin 325 mg within 90 minutes for suspected ACS.' }), // "90 minutes" not in quote
+        extracted: baseExtracted({ text: 'Adding 50 mL of solvent over 90 minutes increases the SN2 reaction rate.' }), // "90 minutes" not in quote
         sourceId: 'src_1',
         retracted: false,
       },
@@ -98,14 +97,14 @@ describe('verifyClaim', () => {
     const result = verifyClaim(
       {
         extracted: baseExtracted({
-          text: 'Consider anticoagulation.',
-          quote: 'Anticoagulation should be considered in all patients.',
+          text: 'Handle with care, the reagent is toxic.',
+          quote: 'This reagent is highly toxic and must be handled in a fume hood.',
           safetyCritical: false,
         }),
         sourceId: 'src_1',
         retracted: false,
       },
-      [{ id: 'p1', sourceId: 'src_1', locator: '¶1', text: 'Anticoagulation should be considered in all patients.' }],
+      [{ id: 'p1', sourceId: 'src_1', locator: '¶1', text: 'This reagent is highly toxic and must be handled in a fume hood.' }],
     );
     expect(result.outcome).toBe('kept');
     if (result.outcome === 'kept') expect(result.claim.safetyCritical).toBe(true);
@@ -115,13 +114,13 @@ describe('verifyClaim', () => {
 describe('applySupportJudgment', () => {
   const baseClaim: Claim = {
     id: 'c1',
-    text: 'Give aspirin.',
-    basis: 'recommendation',
-    actionType: 'treat',
+    text: 'An SN2 reaction rate increases in a polar aprotic solvent.',
+    basis: 'primary',
+    actionType: 'finding',
     conditions: [],
     sourceId: 'src_1',
     passageId: 'p1',
-    quote: 'Aspirin.',
+    quote: 'Polar aprotic solvents accelerate SN2 reactions.',
     grade: { certainty: 'ungraded', origin: 'ai_estimated' },
     verification: { exists: true, quoteFound: true, retracted: false, support: 'unknown' },
     safetyCritical: false,
@@ -139,11 +138,11 @@ describe('applySupportJudgment', () => {
   });
 
   it('keeps the claim as partial with a visible caveat (issues + note)', () => {
-    const judgment: JudgeSupportOutput = { support: 'partial', issues: ['wrong_strength'], note: 'Quote says "may be considered".' };
+    const judgment: JudgeSupportOutput = { support: 'partial', issues: ['wrong_strength'], note: 'Quote says "may increase".' };
     const result = applySupportJudgment(baseClaim, judgment);
     expect(result?.verification.support).toBe('partial');
     expect(result?.verification.supportIssues).toEqual(['wrong_strength']);
-    expect(result?.verification.supportNote).toBe('Quote says "may be considered".');
+    expect(result?.verification.supportNote).toBe('Quote says "may increase".');
   });
 
   it('keeps the claim as unknown when the judge could not decide', () => {

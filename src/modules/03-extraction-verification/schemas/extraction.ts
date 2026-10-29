@@ -21,9 +21,9 @@ export const ExtractClaimsInputSchema = z.object({
 export type ExtractClaimsInput = z.infer<typeof ExtractClaimsInputSchema>;
 
 export const ExtractedClaimSchema = z.object({
-  /** Clinician-addressed ("assess", "consider ordering"), target <=35 words. */
+  /** Reader-addressed, target <=35 words. */
   text: z.string().min(1).max(280),
-  basis: z.enum(['recommendation', 'background']),
+  basis: z.enum(['primary', 'background']),
   actionType: ActionTypeSchema,
   conditions: z.array(ConditionSchema),
   /** Verbatim from the cited passage, <=300 chars — never paraphrased. */

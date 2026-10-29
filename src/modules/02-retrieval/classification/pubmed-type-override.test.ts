@@ -7,32 +7,32 @@ function classification(kind: SourceClassification['kind']): SourceClassificatio
 }
 
 describe('applyPubmedTypeOverride', () => {
-  it('forces kind to guideline when PubMed pubTypes includes "Practice Guideline"', () => {
+  it('forces kind to standards_body when PubMed pubTypes includes "Practice Guideline"', () => {
     const result = applyPubmedTypeOverride(classification('other'), ['Journal Article', 'Practice Guideline']);
-    expect(result.kind).toBe('guideline');
+    expect(result.kind).toBe('standards_body');
   });
 
-  it('forces kind to systematic_review for "Systematic Review" or "Meta-Analysis"', () => {
-    expect(applyPubmedTypeOverride(classification('rct'), ['Systematic Review']).kind).toBe('systematic_review');
-    expect(applyPubmedTypeOverride(classification('rct'), ['Meta-Analysis']).kind).toBe('systematic_review');
+  it('forces kind to systematic_review for "Systematic Review" and meta_analysis for "Meta-Analysis"', () => {
+    expect(applyPubmedTypeOverride(classification('controlled_experiment'), ['Systematic Review']).kind).toBe('systematic_review');
+    expect(applyPubmedTypeOverride(classification('controlled_experiment'), ['Meta-Analysis']).kind).toBe('meta_analysis');
   });
 
-  it('forces kind to rct for "Randomized Controlled Trial"', () => {
-    expect(applyPubmedTypeOverride(classification('observational'), ['Randomized Controlled Trial']).kind).toBe('rct');
+  it('forces kind to controlled_experiment for "Randomized Controlled Trial"', () => {
+    expect(applyPubmedTypeOverride(classification('observational_study'), ['Randomized Controlled Trial']).kind).toBe('controlled_experiment');
   });
 
   it('leaves kind untouched when no PubMed pubType is decisive', () => {
-    const original = classification('observational');
+    const original = classification('observational_study');
     expect(applyPubmedTypeOverride(original, ['Journal Article', 'Comment'])).toEqual(original);
   });
 
   it('leaves kind untouched when the model already agrees with the decisive type', () => {
-    const original = classification('guideline');
+    const original = classification('standards_body');
     const result = applyPubmedTypeOverride(original, ['Practice Guideline']);
     expect(result).toEqual(original);
   });
 
   it('is case-insensitive when matching pubTypes', () => {
-    expect(applyPubmedTypeOverride(classification('other'), ['PRACTICE GUIDELINE']).kind).toBe('guideline');
+    expect(applyPubmedTypeOverride(classification('other'), ['PRACTICE GUIDELINE']).kind).toBe('standards_body');
   });
 });

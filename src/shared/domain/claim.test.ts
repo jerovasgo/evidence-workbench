@@ -3,9 +3,9 @@ import { ClaimSchema, VerifiedClaimSchema } from './claim';
 
 const baseClaim = {
   id: 'claim_1',
-  text: 'Consider aspirin for suspected ACS.',
-  basis: 'recommendation' as const,
-  actionType: 'treat' as const,
+  text: 'A polar aprotic solvent increases the SN2 reaction rate.',
+  basis: 'primary' as const,
+  actionType: 'finding' as const,
   conditions: [{ variable: 'age', op: '>' as const, value: 18 }],
   sourceId: 'src_1',
   passageId: 'pas_1',

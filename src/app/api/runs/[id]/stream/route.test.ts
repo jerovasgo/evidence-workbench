@@ -137,7 +137,7 @@ describe('GET /api/runs/[id]/stream', () => {
     const persistedStructure = {
       stage: 'structure',
       status: 'ok',
-      value: { setting: 'emergency', subQuestions: [], genericParameters: {} },
+      value: { context: 'in_vitro', subQuestions: [], scopeParameters: {} },
       metrics: { ms: 1, costUsd: 0.001 },
       createdAt: '2026-10-27T00:00:00Z',
     };
@@ -167,8 +167,8 @@ describe('GET /api/runs/[id]/stream', () => {
     const claimA = {
       id: 'claim_a',
       text: 'Give aspirin.',
-      basis: 'recommendation' as const,
-      actionType: 'treat' as const,
+      basis: 'primary' as const,
+      actionType: 'finding' as const,
       conditions: [],
       sourceId: 's1',
       passageId: 'p1',
@@ -184,7 +184,7 @@ describe('GET /api/runs/[id]/stream', () => {
       insert: vi.fn(),
       getLatestPerStage: vi.fn().mockResolvedValue(
         new Map([
-          ['structure', { stage: 'structure', status: 'ok', value: { setting: 'emergency', subQuestions: [], genericParameters: {} }, metrics, createdAt: 'x' }],
+          ['structure', { stage: 'structure', status: 'ok', value: { context: 'in_vitro', subQuestions: [], scopeParameters: {} }, metrics, createdAt: 'x' }],
           ['plan', { stage: 'plan', status: 'ok', value: { queries: [] }, metrics, createdAt: 'x' }],
           ['retrieve', { stage: 'retrieve', status: 'ok', value: [], metrics, createdAt: 'x' }],
           ['classify', { stage: 'classify', status: 'ok', value: [], metrics, createdAt: 'x' }],
@@ -216,8 +216,8 @@ describe('GET /api/runs/[id]/stream', () => {
     const claimA = {
       id: 'claim_a',
       text: 'Give aspirin.',
-      basis: 'recommendation' as const,
-      actionType: 'treat' as const,
+      basis: 'primary' as const,
+      actionType: 'finding' as const,
       conditions: [],
       sourceId: 's1',
       passageId: 'p1',
@@ -232,7 +232,7 @@ describe('GET /api/runs/[id]/stream', () => {
       insert: vi.fn(),
       getLatestPerStage: vi.fn().mockResolvedValue(
         new Map([
-          ['structure', { stage: 'structure', status: 'ok', value: { setting: 'emergency', subQuestions: [], genericParameters: {} }, metrics, createdAt: 'x' }],
+          ['structure', { stage: 'structure', status: 'ok', value: { context: 'in_vitro', subQuestions: [], scopeParameters: {} }, metrics, createdAt: 'x' }],
           ['plan', { stage: 'plan', status: 'ok', value: { queries: [] }, metrics, createdAt: 'x' }],
           ['retrieve', { stage: 'retrieve', status: 'ok', value: [], metrics, createdAt: 'x' }],
           ['classify', { stage: 'classify', status: 'ok', value: [], metrics, createdAt: 'x' }],

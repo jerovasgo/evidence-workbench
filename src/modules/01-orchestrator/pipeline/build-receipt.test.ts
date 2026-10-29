@@ -10,26 +10,26 @@ function ok<T>(stage: string, value: T, counts?: Record<string, number>): StageR
 
 const claim: Claim = {
   id: 'c1',
-  text: 'Give aspirin.',
-  basis: 'recommendation',
-  actionType: 'treat',
+  text: 'A polar aprotic solvent increases the SN2 reaction rate.',
+  basis: 'primary',
+  actionType: 'finding',
   conditions: [],
   sourceId: 's1',
   passageId: 'p1',
-  quote: 'Aspirin.',
+  quote: 'Polar aprotic solvents accelerate SN2 reactions.',
   grade: { certainty: 'ungraded', origin: 'ai_estimated' },
   verification: { exists: true, quoteFound: true, retracted: false, support: 'unknown' },
   safetyCritical: false,
 };
 
 const classifications: SourceClassification[] = [
-  { sourceId: 's1', kind: 'guideline', isScientific: true, confidence: 'high', publicationYear: 2022 },
-  { sourceId: 's2', kind: 'rct', isScientific: true, confidence: 'medium', publicationYear: 2018 },
+  { sourceId: 's1', kind: 'standards_body', isScientific: true, confidence: 'high', publicationYear: 2022 },
+  { sourceId: 's2', kind: 'controlled_experiment', isScientific: true, confidence: 'medium', publicationYear: 2018 },
 ];
 
 function baseResult(overrides: Partial<RunRetrievalResult> = {}): RunRetrievalResult {
   return {
-    structure: ok('structure', { setting: 'unknown', subQuestions: [], genericParameters: {} }),
+    structure: ok('structure', { context: 'unknown', subQuestions: [], scopeParameters: {} }),
     plan: ok('plan', { queries: [] }),
     retrieval: ok('retrieve', []),
     classification: ok('classify', classifications),
@@ -49,7 +49,7 @@ describe('buildReceipt', () => {
     expect(receipt.retracted).toBe(1);
     expect(receipt.supported).toBe(0);
     expect(receipt.abstained).toBe(0);
-    expect(receipt.sourcesByKind).toEqual({ guideline: 1, rct: 1 });
+    expect(receipt.sourcesByKind).toEqual({ standards_body: 1, controlled_experiment: 1 });
     expect(receipt.oldestSourceYear).toBe(2018);
   });
 

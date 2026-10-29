@@ -47,7 +47,7 @@ export async function createRun(request: CreateRunRequest, deps: CreateRunDeps):
   const parsed = CreateRunRequestSchema.parse(request);
 
   // Identifier pre-filter runs before anything else — CLAUDE.md rule 3, module 01:
-  // a request naming a patient never reaches the model at all.
+  // a request naming a specific, identifiable real person never reaches the model at all.
   const identifierCheck = checkForIdentifiers(parsed.freeText);
   if (identifierCheck.rejected) {
     return { status: 'rejected_identifiers', findings: identifierCheck.findings };

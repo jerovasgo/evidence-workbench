@@ -14,12 +14,12 @@ function node(overrides: Partial<AlgorithmGraph['nodes'][number]> & { id: string
 describe('validateAlgorithmGraph', () => {
   const verifiedClaimIds = new Set(['claim_1', 'claim_2']);
 
-  it('passes a well-formed red-flag -> action -> disposition graph', () => {
+  it('passes a well-formed critical-check -> action -> outcome graph', () => {
     const graph: AlgorithmGraph = {
       nodes: [
-        node({ id: 'n1', type: 'red_flag' }),
+        node({ id: 'n1', type: 'critical_check' }),
         node({ id: 'n2', type: 'action', claimIds: ['claim_1'] }),
-        node({ id: 'n3', type: 'disposition' }),
+        node({ id: 'n3', type: 'outcome' }),
       ],
       edges: [
         { from: 'n1', to: 'n2', condition: { variable: 'sbp', op: '<', value: 90 } },
@@ -29,9 +29,9 @@ describe('validateAlgorithmGraph', () => {
     expect(validateAlgorithmGraph(graph, verifiedClaimIds)).toEqual({ ok: true, violations: [] });
   });
 
-  it('flags a cycle that is not a reassess back-edge', () => {
+  it('flags a cycle that is not an iterate back-edge', () => {
     const graph: AlgorithmGraph = {
-      nodes: [node({ id: 'n1', type: 'action', claimIds: ['claim_1'] }), node({ id: 'n2', type: 'disposition' })],
+      nodes: [node({ id: 'n1', type: 'action', claimIds: ['claim_1'] }), node({ id: 'n2', type: 'outcome' })],
       edges: [
         { from: 'n1', to: 'n2', condition: { variable: 'x', op: '=', value: 1 } },
         { from: 'n2', to: 'n1', condition: { variable: 'x', op: '=', value: 0 } },
@@ -42,16 +42,16 @@ describe('validateAlgorithmGraph', () => {
     expect(result.violations.some((v) => v.kind === 'cycle')).toBe(true);
   });
 
-  it('allows a bounded back-edge through an explicit reassess node', () => {
+  it('allows a bounded back-edge through an explicit iterate node', () => {
     const graph: AlgorithmGraph = {
       nodes: [
         node({ id: 'n1', type: 'action', claimIds: ['claim_1'] }),
-        node({ id: 'n2', type: 'reassess' }),
-        node({ id: 'n3', type: 'disposition' }),
+        node({ id: 'n2', type: 'iterate' }),
+        node({ id: 'n3', type: 'outcome' }),
       ],
       edges: [
         { from: 'n1', to: 'n2', condition: { variable: 'x', op: '=', value: 1 } },
-        { from: 'n2', to: 'n1', condition: { variable: 'x', op: '=', value: 0 } }, // reassess back-edge
+        { from: 'n2', to: 'n1', condition: { variable: 'x', op: '=', value: 0 } }, // iterate back-edge
         { from: 'n2', to: 'n3', condition: { variable: 'x', op: '=', value: 1 } },
       ],
     };
@@ -61,40 +61,40 @@ describe('validateAlgorithmGraph', () => {
 
   it('flags multiple start nodes (more than one node with no incoming edge)', () => {
     const graph: AlgorithmGraph = {
-      nodes: [node({ id: 'n1', type: 'red_flag' }), node({ id: 'n2', type: 'disposition' }), node({ id: 'n3', type: 'disposition' })],
+      nodes: [node({ id: 'n1', type: 'critical_check' }), node({ id: 'n2', type: 'outcome' }), node({ id: 'n3', type: 'outcome' })],
       edges: [{ from: 'n1', to: 'n2', condition: { variable: 'x', op: '=', value: 1 } }],
     };
     const result = validateAlgorithmGraph(graph, verifiedClaimIds);
     expect(result.violations).toContainEqual({ kind: 'multiple_starts', nodeIds: ['n1', 'n3'] });
   });
 
-  it('flags a red_flag node that is reachable only after a non-red-flag node', () => {
+  it('flags a critical_check node that is reachable only after a non-critical-check node', () => {
     const graph: AlgorithmGraph = {
-      nodes: [node({ id: 'n1', type: 'assess' }), node({ id: 'n2', type: 'red_flag' }), node({ id: 'n3', type: 'disposition' })],
+      nodes: [node({ id: 'n1', type: 'assess' }), node({ id: 'n2', type: 'critical_check' }), node({ id: 'n3', type: 'outcome' })],
       edges: [
         { from: 'n1', to: 'n2', condition: { variable: 'x', op: '=', value: 1 } },
         { from: 'n2', to: 'n3', condition: { variable: 'x', op: '=', value: 1 } },
       ],
     };
     const result = validateAlgorithmGraph(graph, verifiedClaimIds);
-    expect(result.violations).toContainEqual({ kind: 'red_flag_after_non_red_flag', edge: { from: 'n1', to: 'n2' } });
+    expect(result.violations).toContainEqual({ kind: 'critical_check_after_non_critical', edge: { from: 'n1', to: 'n2' } });
   });
 
-  it('flags a leaf node that is neither disposition nor abstain', () => {
+  it('flags a leaf node that is neither outcome nor abstain', () => {
     const graph: AlgorithmGraph = {
-      nodes: [node({ id: 'n1', type: 'red_flag' }), node({ id: 'n2', type: 'action', claimIds: ['claim_1'] })],
+      nodes: [node({ id: 'n1', type: 'critical_check' }), node({ id: 'n2', type: 'action', claimIds: ['claim_1'] })],
       edges: [{ from: 'n1', to: 'n2', condition: { variable: 'x', op: '=', value: 1 } }],
     };
     const result = validateAlgorithmGraph(graph, verifiedClaimIds);
     expect(result.violations).toContainEqual({ kind: 'leaf_not_terminal', nodeId: 'n2' });
   });
 
-  it('flags an action node with no claims, and a test node citing an unknown claim', () => {
+  it('flags an action node with no claims, and a method node citing an unknown claim', () => {
     const graph: AlgorithmGraph = {
       nodes: [
         node({ id: 'n1', type: 'action', claimIds: [] }),
-        node({ id: 'n2', type: 'test', claimIds: ['claim_999'] }),
-        node({ id: 'n3', type: 'disposition' }),
+        node({ id: 'n2', type: 'method', claimIds: ['claim_999'] }),
+        node({ id: 'n3', type: 'outcome' }),
       ],
       edges: [
         { from: 'n1', to: 'n2', condition: { variable: 'x', op: '=', value: 1 } },
@@ -112,10 +112,10 @@ describe('validateAlgorithmGraph', () => {
     // start (n1), yet n3/n4 are unreachable from it.
     const graph: AlgorithmGraph = {
       nodes: [
-        node({ id: 'n1', type: 'red_flag' }),
-        node({ id: 'n2', type: 'disposition' }),
-        node({ id: 'n3', type: 'disposition' }),
-        node({ id: 'n4', type: 'disposition' }),
+        node({ id: 'n1', type: 'critical_check' }),
+        node({ id: 'n2', type: 'outcome' }),
+        node({ id: 'n3', type: 'outcome' }),
+        node({ id: 'n4', type: 'outcome' }),
       ],
       edges: [
         { from: 'n1', to: 'n2', condition: { variable: 'x', op: '=', value: 1 } },
@@ -130,7 +130,7 @@ describe('validateAlgorithmGraph', () => {
   });
 
   it('flags a graph over the 35-node readability cap', () => {
-    const nodes = Array.from({ length: 36 }, (_, i) => node({ id: `n${i}`, type: i === 0 ? 'red_flag' : 'disposition' }));
+    const nodes = Array.from({ length: 36 }, (_, i) => node({ id: `n${i}`, type: i === 0 ? 'critical_check' : 'outcome' }));
     const graph: AlgorithmGraph = { nodes, edges: [] };
     const result = validateAlgorithmGraph(graph, verifiedClaimIds);
     expect(result.violations).toContainEqual({ kind: 'node_cap_exceeded', count: 36, cap: 35 });

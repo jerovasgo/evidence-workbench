@@ -1,16 +1,23 @@
 import { z } from 'zod';
 import { ConditionSchema } from '@/shared/domain';
 
+// 2026-10-29 pivot (docs/DECISIONS.md): node-type vocabulary generalized from a
+// clinical-triage workflow to any verified decision pathway. `red_flag` ->
+// `critical_check` (a safety/critical constraint checked first, e.g. "is the
+// reagent air-sensitive?"); `test` -> `method` (perform an analytical/experimental
+// method); `disposition` -> `outcome` (the pathway's terminal result/conclusion);
+// `reassess` -> `iterate` (loop back and re-evaluate). Same 8-node shape, same
+// invariants (renamed in validators/algorithm.ts).
 export const AlgorithmNodeSchema = z.object({
   id: z.string(),
   type: z.enum([
-    'red_flag',
+    'critical_check',
     'assess',
-    'test',
+    'method',
     'decision',
     'action',
-    'disposition',
-    'reassess',
+    'outcome',
+    'iterate',
     'abstain',
   ]),
   label: z.string(),

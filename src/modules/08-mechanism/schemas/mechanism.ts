@@ -1,5 +1,15 @@
 import { z } from 'zod';
 
+// 2026-10-29 pivot (docs/DECISIONS.md): this schema was already closer to
+// general-science than clinical (UniProt/ChEBI/GO are general molecular-biology
+// databases, not clinical ones) — kept the biology/biochemistry vocabulary as-is
+// (it's exactly what the biology/genetics demo domain needs) and added a parallel
+// chemistry-reaction vocabulary so the same mechanism canvas covers both chosen
+// demo domains: reactant/catalyst/intermediate/product/transition_state entities,
+// forms_bond/breaks_bond/transfers_electron/catalyzes interactions. `corroboratedBy`
+// drops `gtopdb` (pharmacology-specific, drug-target database) for `pubchem`/`rhea`
+// (chemistry compound / enzyme-reaction databases); keeps `reactome` (general
+// biology pathways).
 export const EntitySchema = z.object({
   id: z.string(),
   label: z.string(),
@@ -12,9 +22,17 @@ export const EntitySchema = z.object({
     'kinase',
     'second_messenger',
     'transcription_factor',
+    'reactant',
+    'catalyst',
+    'intermediate',
+    'product',
+    'transition_state',
     'other',
   ]),
-  compartment: z.enum(['extracellular', 'membrane', 'cytosol', 'nucleus']),
+  // 'solution'/'surface'/'gas_phase' added for chemistry reaction mechanisms,
+  // which have no cellular compartment; optional since a chemistry entity may not
+  // cleanly fit any of these either.
+  compartment: z.enum(['extracellular', 'membrane', 'cytosol', 'nucleus', 'solution', 'surface', 'gas_phase']).optional(),
   xref: z
     .object({
       uniprot: z.string().optional(),
@@ -39,11 +57,15 @@ export const InteractionSchema = z.object({
     'opens',
     'closes',
     'translocates',
+    'forms_bond',
+    'breaks_bond',
+    'transfers_electron',
+    'catalyzes',
   ]),
   sign: z.enum(['+', '-', '0']),
   order: z.number().int().nonnegative(),
   claimId: z.string(),
-  corroboratedBy: z.array(z.enum(['reactome', 'gtopdb'])).optional(),
+  corroboratedBy: z.array(z.enum(['reactome', 'pubchem', 'rhea'])).optional(),
 });
 export type Interaction = z.infer<typeof InteractionSchema>;
 

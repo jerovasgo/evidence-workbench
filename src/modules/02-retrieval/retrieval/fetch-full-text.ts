@@ -40,7 +40,7 @@ export async function fetchFullTextForCandidate(
     return europePmc.fetchFullText('MED', candidate.pmid);
   }
 
-  if ((candidate.family === 'web' || candidate.family === 'guideline') && webFetch) {
+  if ((candidate.family === 'web' || candidate.family === 'standards_body') && webFetch) {
     try {
       // fetchUrlText already extracts readable text from the raw HTML/XML body.
       const page = await fetchUrlText(candidate.url, { allowedDomains: webFetch.allowedDomains, fetchImpl: webFetch.fetchImpl });

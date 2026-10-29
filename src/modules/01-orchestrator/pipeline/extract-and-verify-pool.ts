@@ -16,14 +16,21 @@ import { extractAndVerifySource } from '@/modules/03-extraction-verification';
 // once at the end, so a caller (the SSE route) can stream the first source's
 // verified claims (~9-10s per a live smoke test) while the rest are still in
 // flight, instead of waiting for the whole pool. Capped to `maxSources` (default
-// 10) and prioritized by evidence kind (guideline/local_protocol > systematic
-// review > RCT > everything else) rather than processing every deduped candidate —
+// 10) and prioritized by evidence kind (meta_analysis/standards_body/local_protocol
+// > systematic review > controlled experiment > everything else) rather than
+// processing every deduped candidate —
 // a real ranking (module 02's `scoring/score.ts`) isn't wired in yet (SECURITY.md
 // known gap), but "prefer stronger evidence first" is a reasonable, principled
 // stand-in using what classification already produced, and keeps latency/cost
 // bounded regardless of how large the retrieved pool is.
 
-const KIND_PRIORITY: Record<string, number> = { guideline: 3, local_protocol: 3, systematic_review: 2, rct: 1 };
+const KIND_PRIORITY: Record<string, number> = {
+  meta_analysis: 4,
+  standards_body: 3,
+  local_protocol: 3,
+  systematic_review: 2,
+  controlled_experiment: 1,
+};
 const DEFAULT_MAX_SOURCES = 10;
 const DEFAULT_MAX_CONCURRENCY = 6;
 
@@ -47,7 +54,7 @@ export interface ExtractAndVerifyPoolDeps {
   budgetGuard: BudgetGuard;
   crossref: CrossrefClient;
   europePmc: EuropePmcClient;
-  /** Lets `web`/`guideline`-family candidates re-fetch their own URL for extraction; omit to leave them as no_full_text. */
+  /** Lets `web`/`standards_body`-family candidates re-fetch their own URL for extraction; omit to leave them as no_full_text. */
   webFetch?: { allowedDomains: readonly string[]; fetchImpl?: typeof fetch };
   p0Preamble: string;
   p5PromptTemplate: string;

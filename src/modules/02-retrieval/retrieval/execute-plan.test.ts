@@ -111,7 +111,7 @@ describe('executeSearchPlan', () => {
     const plan: SearchPlan = {
       queries: [
         { family: 'web', text: 'controversy', purpose: 'adversarial' },
-        { family: 'guideline', text: 'AHA ACS', purpose: 'society guideline' },
+        { family: 'standards_body', text: 'IUPAC nomenclature', purpose: 'standards body publication' },
         { family: 'local', text: 'local protocol', purpose: 'local pool' },
       ],
     };
@@ -173,13 +173,13 @@ describe('executeSearchPlan', () => {
     expect(result).toEqual({ candidates: [], skipped: [], failed: [] });
   });
 
-  describe('webSearch (web/guideline families)', () => {
-    it('runs a web/guideline query via web_search + fetch_url_text when webSearch deps are provided', async () => {
+  describe('webSearch (web/standards_body families)', () => {
+    it('runs a web/standards_body query via web_search + fetch_url_text when webSearch deps are provided', async () => {
       const respond = vi.fn().mockResolvedValue(
-        fakeRespondResult([{ title: 'CDC guidance', url: 'https://www.cdc.gov/acs-guidance', snippet: 'x' }]),
+        fakeRespondResult([{ title: 'IUPAC guidance', url: 'https://iupac.org/nomenclature', snippet: 'x' }]),
       );
       const metaClient: MetaClient = { respond, listModels: vi.fn() };
-      const plan: SearchPlan = { queries: [{ family: 'guideline', text: 'ACS guideline', purpose: 'society guideline' }] };
+      const plan: SearchPlan = { queries: [{ family: 'standards_body', text: 'IUPAC nomenclature', purpose: 'standards body publication' }] };
 
       const result = await executeSearchPlan(plan, {
         pubmed: fakePubmed(),
@@ -188,14 +188,14 @@ describe('executeSearchPlan', () => {
           runId: 'run_1',
           metaClient,
           budgetGuard: createInMemoryBudgetGuard({ runCostCapUsd: 1, dailyBudgetUsd: 10 }),
-          allowedDomains: ['cdc.gov'],
+          allowedDomains: ['iupac.org'],
           fetchImpl: fakeHttpFetch('<html><body><p>Real page text</p></body></html>'),
         },
       });
 
       expect(result.skipped).toEqual([]);
       expect(result.candidates).toHaveLength(1);
-      expect(result.candidates[0]).toMatchObject({ family: 'guideline', title: 'CDC guidance', url: 'https://www.cdc.gov/acs-guidance' });
+      expect(result.candidates[0]).toMatchObject({ family: 'standards_body', title: 'IUPAC guidance', url: 'https://iupac.org/nomenclature' });
     });
 
     it('discards a web_search result whose URL is not on the allow-list', async () => {

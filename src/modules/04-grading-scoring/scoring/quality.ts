@@ -14,7 +14,7 @@ export function computeQuality(
   // P4's own rule: "use the field's absence when the text does not say; never guess."
   // Only an EXPLICIT false penalizes quality — an unknown/absent flag never does.
   if (classification.declaresConflictsOfInterest === false) quality *= 0.8;
-  if (classification.kind === 'guideline' && classification.hasExplicitMethods === false) quality *= 0.85;
+  if (classification.kind === 'standards_body' && classification.hasExplicitMethods === false) quality *= 0.85;
 
   return quality;
 }

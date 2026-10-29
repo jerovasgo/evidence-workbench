@@ -56,8 +56,8 @@ describe('CoverageReportSchema', () => {
   it('accepts a report with a thin and a well-covered sub-question', () => {
     const report = {
       entries: [
-        { subQuestion: 'first-line treatment', sourcesFound: 3, bestLevel: 'guideline' as const, oldestYear: 2020, thin: false },
-        { subQuestion: 'rare complication rate', sourcesFound: 0, bestLevel: null, thin: true },
+        { subQuestion: 'reaction rate', sourcesFound: 3, bestLevel: 'standards_body' as const, oldestYear: 2020, thin: false },
+        { subQuestion: 'rare side reaction', sourcesFound: 0, bestLevel: null, thin: true },
       ],
     };
     expect(CoverageReportSchema.parse(report)).toEqual(report);

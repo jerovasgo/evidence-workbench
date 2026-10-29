@@ -12,7 +12,7 @@ import { CandidateSourceSchema, type CandidateSource, type SearchPlan, type Sear
 // deterministic code, not an agent — "model proposes [what to search], code
 // verifies/executes [how]" (CLAUDE.md rule 5's principle applied to retrieval).
 //
-// 'pubmed'/'europe_pmc' always run. 'web'/'guideline' run too when `deps.webSearch`
+// 'pubmed'/'europe_pmc' always run. 'web'/'standards_body' run too when `deps.webSearch`
 // is provided: `findWebSources` (web_search grounding) proposes candidate URLs,
 // `assertSafeUrl` keeps only ones on the allow-list (the model's own domain
 // preference is a hint, never trusted alone — DAY0-VERIFICATION.md: "domain
@@ -183,7 +183,7 @@ export async function executeSearchPlan(plan: SearchPlan, deps: ExecutePlanDeps)
     | { kind: 'failed'; error: string };
 
   async function runOne(query: SearchQuery): Promise<QueryOutcome> {
-    const isWebFamily = query.family === 'web' || query.family === 'guideline';
+    const isWebFamily = query.family === 'web' || query.family === 'standards_body';
     if (isWebFamily && !deps.webSearch) {
       return { kind: 'skipped', reason: `No connector implemented yet for family "${query.family}" (webSearch deps not configured)` };
     }

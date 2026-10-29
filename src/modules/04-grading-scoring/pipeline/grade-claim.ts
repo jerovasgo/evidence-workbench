@@ -13,8 +13,7 @@ import { mapNativeGrade } from '../scoring/grade-maps';
  *   for "nothing printed, nothing estimated" — unchanged from module 03's prior
  *   default; `origin` has no third "none" option in `GradeSchema`).
  * - `nativeGrade` present and a known scheme recognizes it -> the mapped
- *   `certainty`/`strength`, `origin: 'source'` (principle 1: copied verbatim, not
- *   estimated).
+ *   `certainty`, `origin: 'source'` (principle 1: copied verbatim, not estimated).
  * - `nativeGrade` present but no scheme recognizes it -> keep the raw text,
  *   `certainty: 'ungraded'`, `origin: 'source'` still (the text did come from the
  *   source, it just doesn't map to this project's scale) — architecture doc's own
@@ -31,5 +30,5 @@ export function gradeClaim(nativeGrade?: string): Grade {
     return { certainty: 'ungraded', origin: 'source', nativeGrade };
   }
 
-  return { certainty: mapped.certainty, strength: mapped.strength, origin: 'source', nativeGrade };
+  return { certainty: mapped.certainty, origin: 'source', nativeGrade };
 }

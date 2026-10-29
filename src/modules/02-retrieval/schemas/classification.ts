@@ -30,7 +30,7 @@ export const SourceClassificationSchema = z.object({
     .object({
       country: z.string().optional(),
       setting: z.string().optional(),
-      population: z.string().optional(),
+      scope: z.string().optional(),
     })
     .optional(),
   supersedesOrSupersededBy: z.string().optional(),

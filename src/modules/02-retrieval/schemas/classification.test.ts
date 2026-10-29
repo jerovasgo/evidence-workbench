@@ -3,7 +3,7 @@ import { ClassifySourcesOutputSchema, SourceClassificationSchema } from './class
 
 describe('SourceClassificationSchema', () => {
   it('accepts a minimal classification with only the required fields', () => {
-    const c = { sourceId: 's1', kind: 'guideline' as const, isScientific: true, confidence: 'high' as const };
+    const c = { sourceId: 's1', kind: 'standards_body' as const, isScientific: true, confidence: 'high' as const };
     expect(SourceClassificationSchema.parse(c)).toEqual(c);
   });
 
@@ -23,8 +23,8 @@ describe('ClassifySourcesOutputSchema', () => {
   it('accepts a batch of classifications in input order', () => {
     const output = {
       classifications: [
-        { sourceId: 's1', kind: 'guideline' as const, isScientific: true, confidence: 'high' as const },
-        { sourceId: 's2', kind: 'rct' as const, isScientific: true, confidence: 'medium' as const },
+        { sourceId: 's1', kind: 'standards_body' as const, isScientific: true, confidence: 'high' as const },
+        { sourceId: 's2', kind: 'controlled_experiment' as const, isScientific: true, confidence: 'medium' as const },
       ],
     };
     expect(ClassifySourcesOutputSchema.parse(output)).toEqual(output);

@@ -1,16 +1,26 @@
-// Module 03 step 7: "Safety-critical raise: a rule list (anticoagulation,
-// thrombolysis, insulin, opioids, pediatric dosing, contraindication language, 'do
-// not') can set safetyCritical=true regardless of the model." Code can only RAISE
-// this flag, never lower a safetyCritical=true the model already set.
+// Module 03 step 7: "Safety-critical raise: a rule list can set safetyCritical=true
+// regardless of the model." Code can only RAISE this flag, never lower a
+// safetyCritical=true the model already set. 2026-10-29 pivot (docs/DECISIONS.md):
+// the keyword list moves from clinical/pharmacological hazard language to general
+// lab/chemical/biological/physical hazard language — the underlying concept (a
+// claim that, acted on wrongly, could cause real harm) generalizes cleanly from
+// medicine to chemistry (reactive/toxic/explosive handling), biology (biohazard/
+// pathogen handling) and physics (radiation/high-energy hazards).
 
 const SAFETY_CRITICAL_PATTERNS: RegExp[] = [
-  /anticoagul/i,
-  /thromboly/i,
-  /\binsulin\b/i,
-  /\bopioid/i,
-  /pediatric dos/i,
-  /\bcontraindicat/i,
-  /\bdo not\b/i,
+  /\bexplosive/i,
+  /\btoxic/i,
+  /\bcorrosive/i,
+  /\bflammable/i,
+  /\bcarcinogen/i,
+  /\bmutagen/i,
+  /\bradioactive/i,
+  /\bbiohazard/i,
+  /\bpathogenic/i,
+  /\binfectious/i,
+  /\blethal\b/i,
+  /\bfatal\b/i,
+  /\bdo not mix\b/i,
 ];
 
 export function detectSafetyCritical(text: string): boolean {

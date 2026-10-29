@@ -10,11 +10,11 @@ describe('ExtractClaimsOutputSchema', () => {
     const output = {
       claims: [
         {
-          text: 'Consider aspirin for suspected ACS.',
-          basis: 'recommendation' as const,
-          actionType: 'treat' as const,
+          text: 'A polar aprotic solvent increases the SN2 reaction rate.',
+          basis: 'primary' as const,
+          actionType: 'finding' as const,
           conditions: [],
-          quote: 'Aspirin 325 mg should be given promptly.',
+          quote: 'Polar aprotic solvents accelerate SN2 reactions.',
           passageId: 'p1',
           safetyCritical: false,
         },

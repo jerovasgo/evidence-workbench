@@ -24,18 +24,18 @@ function baseDeps(metaClient: MetaClient) {
   };
 }
 
-const PASSAGES = [{ passageId: 'p1', locator: '¶1', text: 'Aspirin 325 mg should be given promptly in suspected ACS.' }];
+const PASSAGES = [{ passageId: 'p1', locator: '¶1', text: 'Adding 50 mL of polar aprotic solvent increased the SN2 reaction rate.' }];
 
 describe('extractClaims', () => {
   it('returns valid claims for a well-formed model response', async () => {
     const output = {
       claims: [
         {
-          text: 'Consider aspirin for suspected ACS.',
-          basis: 'recommendation' as const,
-          actionType: 'treat' as const,
+          text: 'Adding a polar aprotic solvent increases the SN2 reaction rate.',
+          basis: 'primary' as const,
+          actionType: 'finding' as const,
           conditions: [],
-          quote: 'Aspirin 325 mg should be given promptly in suspected ACS.',
+          quote: 'Adding 50 mL of polar aprotic solvent increased the SN2 reaction rate.',
           passageId: 'p1',
           safetyCritical: false,
         },
@@ -46,7 +46,7 @@ describe('extractClaims', () => {
 
     const result = await extractClaims(
       'run_1',
-      { sourceTitle: 'ACS Guideline', passages: PASSAGES, subQuestions: ['first-line treatment'] },
+      { sourceTitle: 'SN2 Reaction Kinetics', passages: PASSAGES, subQuestions: ['which solvents accelerate the reaction'] },
       baseDeps(metaClient),
     );
 
@@ -73,14 +73,14 @@ describe('extractClaims', () => {
 
     await extractClaims(
       'run_1',
-      { sourceTitle: 'ACS Guideline', passages: PASSAGES, subQuestions: ['first-line treatment'] },
+      { sourceTitle: 'SN2 Reaction Kinetics', passages: PASSAGES, subQuestions: ['which solvents accelerate the reaction'] },
       baseDeps(metaClient),
     );
 
     const sentPrompt = (respond.mock.calls[0]?.[0] as { input: { content: string }[] }).input[1]?.content;
-    expect(sentPrompt).toContain('ACS Guideline');
-    expect(sentPrompt).toContain('first-line treatment');
-    expect(sentPrompt).toContain('Aspirin 325 mg');
+    expect(sentPrompt).toContain('SN2 Reaction Kinetics');
+    expect(sentPrompt).toContain('which solvents accelerate the reaction');
+    expect(sentPrompt).toContain('50 mL');
   });
 
   it('abstains with reason invalid when the model invents a passageId not in the input', async () => {
@@ -88,7 +88,7 @@ describe('extractClaims', () => {
     // of error verify-claim.ts (code) must catch, not the schema -- this test only
     // documents that the schema itself does not reject it; see verify-claim.test.ts
     // for the real guard.
-    const output = { claims: [{ text: 'x', basis: 'recommendation', actionType: 'treat', conditions: [], quote: 'x', passageId: 'does-not-exist', safetyCritical: false }] };
+    const output = { claims: [{ text: 'x', basis: 'primary', actionType: 'finding', conditions: [], quote: 'x', passageId: 'does-not-exist', safetyCritical: false }] };
     const respond = vi.fn().mockResolvedValue(fakeRespondResult(output));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
 

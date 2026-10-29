@@ -2,7 +2,7 @@
 
 import type { Claim } from '@/shared/domain';
 import { CertaintyPips, Chip } from '@/components/ui/chip';
-import { NOT_GRADED_TOOLTIP, gradeStrengthLabel } from '@/lib/i18n/grade-labels';
+import { NOT_GRADED_TOOLTIP } from '@/lib/i18n/grade-labels';
 
 // `verification.support` now reflects a real support-judge (P10, module 03) verdict.
 // Only 'supports' gets a non-caveated chip — CLAUDE.md rule 5 ("no unverified but
@@ -12,8 +12,9 @@ import { NOT_GRADED_TOOLTIP, gradeStrengthLabel } from '@/lib/i18n/grade-labels'
 //
 // Grade: 2026-10-28 "no AI-inferred grades" policy (docs/DECISIONS.md) — certainty
 // only ever shows when it traces to a recognized printed grade; otherwise a neutral
-// "Not graded" tag, never a number the system produced itself. Strength is shown
-// independently of certainty (it can be known even when certainty isn't).
+// "Not graded" tag, never a number the system produced itself. 2026-10-29 pivot:
+// `Grade.strength` (clinical recommendation strength) is dropped — no general-
+// science analog.
 
 const SUPPORT_CHIP: Record<Claim['verification']['support'], { label: string; tone: 'default' | 'warning' }> = {
   supports: { label: 'Verified', tone: 'default' },
@@ -23,13 +24,12 @@ const SUPPORT_CHIP: Record<Claim['verification']['support'], { label: string; to
 };
 
 const ACTION_LABEL: Record<Claim['actionType'], string> = {
-  assess: 'Assess',
-  test: 'Test',
-  treat: 'Treat',
-  threshold: 'Threshold',
-  disposition: 'Disposition',
-  avoid: 'Avoid',
+  finding: 'Finding',
+  method: 'Method',
+  measurement: 'Measurement',
+  theory: 'Theory',
   mechanism: 'Mechanism',
+  limitation: 'Limitation',
 };
 
 export function ClaimCard({ claim, onOpenEvidence }: { claim: Claim; onOpenEvidence: (claim: Claim) => void }) {
@@ -53,7 +53,6 @@ export function ClaimCard({ claim, onOpenEvidence }: { claim: Claim; onOpenEvide
               <CertaintyPips certainty={claim.grade.certainty} />
             </>
           )}
-          {claim.grade.strength && <Chip>{gradeStrengthLabel(claim.grade.strength)}</Chip>}
         </div>
         <p className="mt-2 text-sm text-fg">{claim.text}</p>
         <p className="mt-1 truncate text-xs text-muted">View evidence &rsaquo;</p>

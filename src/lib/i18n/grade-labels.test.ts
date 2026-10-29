@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gradeCertaintyLabel, gradeProvenanceLabel, gradeStrengthLabel } from './grade-labels';
+import { gradeCertaintyLabel, gradeProvenanceLabel } from './grade-labels';
 
 describe('gradeCertaintyLabel', () => {
   it('shows the mapped certainty level', () => {
@@ -10,13 +10,6 @@ describe('gradeCertaintyLabel', () => {
   it('shows "Not graded" for ungraded, regardless of origin', () => {
     expect(gradeCertaintyLabel({ certainty: 'ungraded', origin: 'source' })).toBe('Not graded');
     expect(gradeCertaintyLabel({ certainty: 'ungraded', origin: 'ai_estimated' })).toBe('Not graded');
-  });
-});
-
-describe('gradeStrengthLabel', () => {
-  it('formats direction and level independently of certainty', () => {
-    expect(gradeStrengthLabel({ direction: 'for', level: 'strong' })).toBe('For, strong');
-    expect(gradeStrengthLabel({ direction: 'against', level: 'conditional' })).toBe('Against, conditional');
   });
 });
 

@@ -27,15 +27,15 @@ function baseDeps(metaClient: MetaClient) {
 describe('structureScenario', () => {
   it('returns a valid ScenarioStructure on a well-formed model response', async () => {
     const structure = {
-      population: 'adult with chest pain',
-      setting: 'emergency' as const,
-      subQuestions: ['first-line treatment'],
-      genericParameters: { ageGroup: 'adult' },
+      scope: 'SN2 reaction rate in polar aprotic solvents',
+      context: 'in_vitro' as const,
+      subQuestions: ['which solvents accelerate the reaction'],
+      scopeParameters: { system: 'alkyl halide + nucleophile' },
     };
     const respond = vi.fn().mockResolvedValue(fakeRespondResult(structure));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
 
-    const result = await structureScenario('run_1', { freeText: 'adult with chest pain, ED' }, baseDeps(metaClient));
+    const result = await structureScenario('run_1', { freeText: 'SN2 reaction rate, polar aprotic solvent' }, baseDeps(metaClient));
 
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value).toEqual(structure);
@@ -43,27 +43,27 @@ describe('structureScenario', () => {
 
   it('substitutes free text, condition and setting into the prompt template', async () => {
     const respond = vi.fn().mockResolvedValue(
-      fakeRespondResult({ setting: 'unknown', subQuestions: [], genericParameters: {} }),
+      fakeRespondResult({ context: 'unknown', subQuestions: [], scopeParameters: {} }),
     );
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
 
     await structureScenario(
       'run_1',
-      { freeText: 'suspected ACS, adult male', condition: 'suspected ACS', setting: 'emergency' },
+      { freeText: 'SN2 reaction rate, polar aprotic solvent', condition: 'SN2 reaction rate', setting: 'in_vitro' },
       baseDeps(metaClient),
     );
 
     const sentPrompt = (respond.mock.calls[0]?.[0] as { input: { content: string }[] }).input[1]?.content;
-    expect(sentPrompt).toContain('suspected ACS, adult male');
-    expect(sentPrompt).toContain('suspected ACS');
-    expect(sentPrompt).toContain('emergency');
+    expect(sentPrompt).toContain('SN2 reaction rate, polar aprotic solvent');
+    expect(sentPrompt).toContain('SN2 reaction rate');
+    expect(sentPrompt).toContain('in_vitro');
   });
 
   it('abstains with reason invalid when the model returns more than 6 sub-questions', async () => {
     const tooMany = {
-      setting: 'unknown' as const,
+      context: 'unknown' as const,
       subQuestions: Array.from({ length: 7 }, (_, i) => `q${i}`),
-      genericParameters: {},
+      scopeParameters: {},
     };
     const respond = vi.fn().mockResolvedValue(fakeRespondResult(tooMany));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
