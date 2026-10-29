@@ -107,7 +107,10 @@ export async function extractAndVerifySource(
   const dropped: { reason: string }[] = [];
   for (const extracted of extractResult.value.claims) {
     const verified = verifyClaim({ extracted, sourceId: input.sourceId, retracted: retraction.status === 'retracted' }, passages);
-    if (verified.outcome === 'kept') verifiedClaims.push(verified.claim);
+    if (verified.outcome === 'kept') {
+      if (verified.claim.subQuestionIndex !== undefined && verified.claim.subQuestionIndex >= input.subQuestions.length) verified.claim.subQuestionIndex = undefined;
+      verifiedClaims.push(verified.claim);
+    }
     else dropped.push({ reason: verified.reason });
   }
 

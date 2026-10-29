@@ -33,6 +33,7 @@ function baseClaim() {
     basis: 'primary' as const,
     actionType: 'finding' as const,
     conditions: [],
+    geneticContext: { gene: 'G', organism: 'human', model: 'cells', perturbation: 'hypoxia', measurement: 'expression' },
     sourceId: 's1',
     passageId: 'p1',
     quote: 'Aspirin.',

@@ -1,3 +1,4 @@
+import { toStructuredOutputFormat } from '@/shared/agents';
 import { describe, expect, it } from 'vitest';
 import {
   LabelRelationsInputSchema,
@@ -49,4 +50,8 @@ describe('LabelRelationsOutputSchema', () => {
   it('accepts an empty relations list (all pairs omitted as unclear)', () => {
     expect(() => LabelRelationsOutputSchema.parse({ relations: [] })).not.toThrow();
   });
+});
+
+it('converts the context-aware relation input schema within structured-output limits', () => {
+  expect(() => toStructuredOutputFormat('relation_input', LabelRelationsInputSchema)).not.toThrow();
 });

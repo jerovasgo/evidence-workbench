@@ -72,6 +72,7 @@ export function verifyClaim(input: VerifyClaimInput, passages: Passage[]): Verif
     actionType: extracted.actionType,
     conditions: extracted.conditions,
     geneticContext,
+    subQuestionIndex: extracted.subQuestionIndex,
     sourceId: input.sourceId,
     passageId: extracted.passageId,
     quote: extracted.quote,

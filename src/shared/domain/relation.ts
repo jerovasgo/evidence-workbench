@@ -13,6 +13,12 @@ export const RelationSchema = z.object({
   to: z.string(),
   kind: z.enum(['agrees', 'differs', 'supersedes', 'contradicts', 'adapts']),
   evidence: z.string(),
+  contextAssessment: z.object({
+    status: z.enum(['matching', 'review_needed']),
+    matching: z.array(z.string()),
+    different: z.array(z.string()),
+    missing: z.array(z.string()),
+  }).optional(),
   divergence: DivergenceSchema.optional(),
 });
 export type Relation = z.infer<typeof RelationSchema>;

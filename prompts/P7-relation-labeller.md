@@ -1,6 +1,6 @@
 # P7 — Relation labeller
 
-Version: `P7@0.2`
+Version: `P7@0.4`
 Agent: `relation-labeller` (module 05, tier T1, batched ≤10 pairs/call)
 Shares the common preamble `P0`.
 
@@ -22,20 +22,20 @@ since `Relation` has no third field.
 ## Task
 
 ```text
-Task: For each pair below, decide how claim A relates to claim B. Both claims
-are about the same question and come from different sources — judge only from
+Task: For each pair below, decide how claim A relates to claim B. Claims are candidate answers to the same question and come from different sources — judge only from
 the two quotes given; never use outside knowledge of the topic.
 <pairs>{{pairs_json}}</pairs>
 Each item is { 'pairId': number, 'claim_a': string, 'quote_a': string, 'claim_b': string, 'quote_b': string }.
 Return: { 'relations': [{ 'pairId': number, 'kind': 'agrees'|'differs'|'supersedes'|'contradicts'|'adapts', 'evidence': string }] }
 Rules:
-- Label only from the two quotes above — do not infer anything they do not say.
+- Label only from the two quotes and supplied genetic contexts; do not infer missing details.
+- Consider gene, organism, model, perturbation and measurement; terms may be equivalent despite different wording. Describe any uncertainty or difference in evidence. If the relationship is plausible but context is incomplete, a tentative relation may be proposed for expert review; do not state that the context is equivalent without support.
 - 'agrees': same action, same scope, same strength.
 - 'differs': same action, scope or strength diverges (population, threshold, timing).
 - 'adapts': B narrows or specializes A's scope in a way the quotes support.
 - 'supersedes': one quote explicitly updates or replaces the other (e.g. states a
   newer recommendation for the same question).
-- 'contradicts': ONLY when both quotes address the same scope and action and
+- 'contradicts': a tentative opposite finding when both quotes address a comparable scope and action and
   give opposite directions (e.g. "increases" vs "does not increase"). Prefer
   'differs' or 'adapts' over 'contradicts' whenever the scope differs at all.
 - If the relation is unclear or the quotes do not actually address the same

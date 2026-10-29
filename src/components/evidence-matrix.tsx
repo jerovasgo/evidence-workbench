@@ -1,6 +1,6 @@
 'use client';
 
-import type { Claim, GeneticContext } from '@/shared/domain';
+import type { Claim, GeneticContext, Relation } from '@/shared/domain';
 import { buildEvidenceMatrix } from '@/modules/07-map-matrix';
 
 const FIELDS: [keyof GeneticContext, string][] = [
@@ -8,12 +8,38 @@ const FIELDS: [keyof GeneticContext, string][] = [
   ['perturbation', 'Perturbation'], ['measurement', 'Measurement'], ['effect', 'Reported effect'],
 ];
 
-export function EvidenceMatrix({ claims, onOpenEvidence }: { claims: Claim[]; onOpenEvidence: (claim: Claim) => void }) {
+export function EvidenceMatrix({ claims, questions, relations, relationStatus, onOpenEvidence }: {
+  claims: Claim[]; questions: string[]; relations: Relation[]; relationStatus: 'pending' | 'ok' | 'partial' | 'failed'; onOpenEvidence: (claim: Claim) => void;
+}) {
   const sources = buildEvidenceMatrix(claims);
   if (!sources.length) return null;
   return <section className="rounded-[var(--radius-card)] border border-border p-4" aria-label="Evidence matrix">
-    <h3 className="text-sm font-semibold">Evidence matrix</h3>
+    <h3 className="text-sm font-semibold">Evidence comparison and concordance</h3>
     <p className="mt-2 text-xs leading-relaxed text-muted">Compare source findings and quoted experimental context. Missing context is unknown; placement does not imply agreement or contradiction.</p>
+    <div className="mt-5 space-y-4" aria-live="polite">
+      {relationStatus === 'pending' && <p className="text-xs text-muted">Comparing claims across sources…</p>}
+      {relationStatus === 'failed' && <p className="text-xs text-warning">Concordance could not be assessed. Source findings remain available below.</p>}
+      {relationStatus === 'partial' && <p className="text-xs text-warning">Some comparisons could not be assessed.</p>}
+      {questions.map((question, index) => {
+        const questionClaims = claims.filter((claim) => claim.subQuestionIndex === index);
+        const questionIds = new Set(questionClaims.map((claim) => claim.id));
+        const pairs = relations.filter((relation) => questionIds.has(relation.from) && questionIds.has(relation.to));
+        if (!questionClaims.length) return null;
+        return <div key={`${index}-${question}`} className="rounded-lg border border-border p-3"><h4 className="text-sm font-medium">{question}</h4>
+          {pairs.length === 0 && <p className="mt-2 text-xs text-muted">No assessed relationship available for this question.</p>}
+          <ul className="mt-2 space-y-3">{pairs.map((relation, i) => {
+            const a = questionClaims.find((claim) => claim.id === relation.from);
+            const b = questionClaims.find((claim) => claim.id === relation.to);
+            if (!a || !b) return null;
+            const label = relation.kind === 'agrees' ? 'Possible agreement' : relation.kind === 'contradicts' ? 'Possible contradiction' : 'Difference / context';
+            const context = relation.contextAssessment;
+            return <li key={`${relation.from}-${relation.to}-${i}`} className="text-xs leading-relaxed"><span className="font-semibold text-[#a2f5e5]">{label}</span><p className="mt-1 text-muted">{relation.evidence}</p>{context?.status === 'review_needed' && <div className="mt-2 rounded border border-warning/40 p-2 text-warning"><p>Context requires review. Different wording may represent a synonym or a genuine experimental difference.</p>{context.different.length > 0 && <p>Different wording: {context.different.map((key) => { const field = key as keyof GeneticContext; return `${key} (A: ${a.geneticContext?.[field]}; B: ${b.geneticContext?.[field]})`; }).join('; ')}</p>}{context.missing.length > 0 && <p>Missing in one or both quotes: {context.missing.join(', ')}</p>}</div>}<div className="mt-1 flex flex-wrap gap-2"><button className="underline underline-offset-4" type="button" onClick={() => onOpenEvidence(a)}>{a.sourceId}: {a.text}</button><button className="underline underline-offset-4" type="button" onClick={() => onOpenEvidence(b)}>{b.sourceId}: {b.text}</button></div></li>;
+          })}</ul>
+        </div>;
+      })}
+      {relationStatus !== 'pending' && !questions.some((_, i) => claims.some((claim) => claim.subQuestionIndex === i)) && <p className="text-xs text-muted">No findings have an assigned research question. No concordance can be inferred.</p>}
+      <p className="text-xs text-muted">Relations are tentative AI assessments, not verified facts. Review the quotations and flagged context before drawing conclusions.</p>
+    </div>
     <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[640px] border-collapse text-left text-xs">
       <caption className="sr-only">Findings grouped by source with experimental context</caption>
       <thead><tr><th scope="col" className="border-b border-border p-3 text-muted">Evidence</th>{sources.map((source) => <th scope="col" key={source.sourceId} className="min-w-52 border-b border-border p-3 font-medium">{source.sourceId}</th>)}</tr></thead>

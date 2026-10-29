@@ -125,7 +125,8 @@ describe('GET /api/runs/[id]/stream', () => {
     expect(events[0]).toEqual({ type: 'stage_started', runId: 'run_1', stage: 'structure' });
     expect(events.some((e) => e.type === 'band_ready')).toBe(true);
     expect(events.some((e) => e.type === 'receipt_ready')).toBe(true);
-    expect(events.at(-1)).toMatchObject({ type: 'done', runId: 'run_1' });
+    expect(events.some((event) => event.type === 'done')).toBe(true);
+    expect(events.at(-1)).toMatchObject({ type: 'relations_ready' });
     expect(runsRepository.updateRunStatus).toHaveBeenCalledWith('run_1', expect.any(String));
     // Consumed once — a second take() would return null (pending context's own test covers that directly).
   });
@@ -157,7 +158,8 @@ describe('GET /api/runs/[id]/stream', () => {
     expect(events.find((e) => e.type === 'stage_progress' && (e as { stage: string }).stage === 'structure')).toMatchObject({
       detail: expect.stringContaining('resumed'),
     });
-    expect(events.at(-1)).toMatchObject({ type: 'done', runId: 'run_1' });
+    expect(events.some((event) => event.type === 'done')).toBe(true);
+    expect(events.at(-1)).toMatchObject({ type: 'relations_ready' });
   });
 
   it('runs relation labelling after the terminal done event and persists it as a "relate" stage output, with no extra SSE frame', async () => {
@@ -170,6 +172,7 @@ describe('GET /api/runs/[id]/stream', () => {
       basis: 'primary' as const,
       actionType: 'finding' as const,
       conditions: [],
+      subQuestionIndex: 0,
       sourceId: 's1',
       passageId: 'p1',
       quote: 'Aspirin.',
@@ -201,7 +204,8 @@ describe('GET /api/runs/[id]/stream', () => {
     const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
     const events = await readAllEvents(res);
 
-    expect(events.at(-1)).toEqual({ type: 'done', runId: 'run_1', status: 'done' }); // no event rides after done
+    expect(events.at(-1)).toMatchObject({ type: 'relations_ready', status: 'ok' });
+    expect(events.findIndex((event) => event.type === 'done')).toBeLessThan(events.findIndex((event) => event.type === 'relations_ready'));
     expect(labelRelationsBatched).toHaveBeenCalledTimes(1);
     expect(vi.mocked(labelRelationsBatched).mock.calls[0]?.[1]).toEqual([{ a: claimA, b: claimB }]);
     expect(stageOutputsRepository.insert).toHaveBeenCalledWith(
@@ -219,6 +223,7 @@ describe('GET /api/runs/[id]/stream', () => {
       basis: 'primary' as const,
       actionType: 'finding' as const,
       conditions: [],
+      subQuestionIndex: 0,
       sourceId: 's1',
       passageId: 'p1',
       quote: 'Aspirin.',
@@ -249,7 +254,7 @@ describe('GET /api/runs/[id]/stream', () => {
     const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
     const events = await readAllEvents(res);
 
-    expect(events.at(-1)).toEqual({ type: 'done', runId: 'run_1', status: 'done' });
+    expect(events.at(-1)).toMatchObject({ type: 'relations_ready', status: 'failed' });
     expect(events.some((e) => e.type === 'error')).toBe(false);
   });
 });

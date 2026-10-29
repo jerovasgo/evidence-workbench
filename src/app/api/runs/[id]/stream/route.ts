@@ -80,9 +80,9 @@ function sseFrame(event: RunEvent): string {
 // long enough to finish safely before the handler returns and the instance can be
 // torn down. Never sends an SSE frame of its own; failures are logged, not surfaced
 // to a client that has already moved on.
-async function labelRelationsAfterDone(runId: string, claims: Claim[], runtime: ServerRuntime): Promise<void> {
+async function labelRelationsAfterDone(runId: string, claims: Claim[], runtime: ServerRuntime): Promise<{ relations: import('@/shared/domain').Relation[]; status: 'ok' | 'partial' }> {
   const pairs = pairClaimsForRelations(claims);
-  if (pairs.length === 0) return;
+  if (pairs.length === 0) return { relations: [], status: 'ok' };
 
   const started = Date.now();
   const result = await labelRelationsBatched(runId, pairs, {
@@ -103,6 +103,7 @@ async function labelRelationsAfterDone(runId: string, claims: Claim[], runtime: 
     metrics: { ms, costUsd: result.costUsd, counts: { pairs: pairs.length, relations: result.relations.length, failures: result.failures.length } },
   });
   console.log(JSON.stringify({ type: 'stage_latency', runId, stage: 'relate', status: 'ok', ms, resumed: false }));
+  return { relations: result.relations, status: result.failures.length ? 'partial' : 'ok' };
 }
 
 function computeFinalStatus(result: RunRetrievalResult): 'done' | 'partial' | 'failed' {
@@ -214,9 +215,13 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
         // Strictly after `done` — see labelRelationsAfterDone's own comment. Never
         // lets a relation-labelling failure surface as a stream `error` event.
-        await labelRelationsAfterDone(run.id, result.extraction.value ?? [], runtime).catch((err) => {
+        try {
+          const related = await labelRelationsAfterDone(run.id, result.extraction.value ?? [], runtime);
+          send({ type: 'relations_ready', runId: run.id, questions: result.structure.value?.subQuestions ?? [], ...related });
+        } catch (err) {
           console.log(JSON.stringify({ type: 'relate_error', runId: run.id, message: err instanceof Error ? err.message : 'Unknown error' }));
-        });
+          send({ type: 'relations_ready', runId: run.id, questions: result.structure.value?.subQuestions ?? [], relations: [], status: 'failed' });
+        }
       } catch (err) {
         send({ type: 'error', runId: run.id, message: err instanceof Error ? err.message : 'Unknown error' });
         await runtime.runsRepository.updateRunStatus(run.id, 'failed').catch(() => undefined);

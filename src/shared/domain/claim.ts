@@ -73,6 +73,7 @@ export const ClaimSchema = z.object({
   basis: z.enum(['primary', 'background']),
   actionType: ActionTypeSchema,
   conditions: z.array(ConditionSchema),
+  subQuestionIndex: z.number().int().nonnegative().max(5).optional(),
   geneticContext: GeneticContextSchema.optional(),
   sourceId: z.string(),
   passageId: z.string(),

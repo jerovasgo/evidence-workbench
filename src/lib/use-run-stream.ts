@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { Claim, Receipt, RunEvent } from '@/shared/domain';
+import type { Claim, Receipt, RunEvent, Relation } from '@/shared/domain';
 import type { ScoreBreakdown } from '@/modules/04-grading-scoring';
 
 // Client-side consumer of GET /api/runs/:id/stream (SSE). EventSource already
@@ -21,6 +21,9 @@ export interface RunStreamState {
   claims: Claim[] | null;
   sourceScores: Record<string, ScoreBreakdown> | null;
   receipt: Receipt | null;
+  relations: Relation[];
+  questions: string[];
+  relationStatus: 'pending' | 'ok' | 'partial' | 'failed';
   status: 'streaming' | 'done' | 'partial' | 'abstained' | 'failed';
   errorMessage: string | null;
 }
@@ -34,6 +37,7 @@ function initialState(): RunStreamState {
     claims: null,
     sourceScores: null,
     receipt: null,
+    relations: [], questions: [], relationStatus: 'pending',
     status: 'streaming',
     errorMessage: null,
   };
@@ -53,10 +57,11 @@ export function useRunStream(streamUrl: string | null): RunStreamState {
     source.onmessage = (event) => {
       const parsed: RunEvent = JSON.parse(event.data);
       setState((prev) => applyEvent(prev, parsed));
+      if (parsed.type === 'relations_ready') source.close();
     };
 
     source.onerror = () => {
-      setState((prev) => (prev.status === 'streaming' ? { ...prev, status: 'failed', errorMessage: prev.errorMessage ?? 'Connection to the server was lost.' } : prev));
+      setState((prev) => (prev.status === 'streaming' ? { ...prev, status: 'failed', errorMessage: prev.errorMessage ?? 'Connection to the server was lost.' } : prev.relationStatus === 'pending' ? { ...prev, relationStatus: 'failed' } : prev));
       source.close();
     };
 
@@ -88,6 +93,8 @@ function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamState {
       const payload = event.payload as { claims: Claim[]; sourceScores?: Record<string, ScoreBreakdown> };
       return { ...prev, claims: payload.claims, sourceScores: payload.sourceScores ?? null };
     }
+    case 'relations_ready':
+      return { ...prev, relations: event.relations, questions: event.questions, relationStatus: event.status };
     case 'receipt_ready':
       return { ...prev, receipt: event.receipt };
     case 'error':

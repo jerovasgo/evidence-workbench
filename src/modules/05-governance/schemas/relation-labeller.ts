@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { RelationSchema } from '@/shared/domain';
+import { GeneticContextSchema, RelationSchema } from '@/shared/domain';
 
 // Module 05 `relation-labeller` agent (P7, T1, batched <=10 pairs/call —
 // docs/architecture/05-governance-local-vs-external.md). Code pairs claims and
@@ -15,6 +15,8 @@ export const RelationCandidatePairSchema = z.object({
   claimAQuote: z.string(),
   claimBText: z.string(),
   claimBQuote: z.string(),
+  claimAContext: GeneticContextSchema.optional(),
+  claimBContext: GeneticContextSchema.optional(),
 });
 export type RelationCandidatePair = z.infer<typeof RelationCandidatePairSchema>;
 

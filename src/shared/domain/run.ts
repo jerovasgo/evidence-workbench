@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { RelationSchema } from './relation';
 
 export const ReceiptSchema = z.object({
   claimsTotal: z.number().int().nonnegative(),
@@ -46,6 +47,7 @@ export const RunEventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('band_ready'), runId: z.string(), payload: z.unknown() }),
   z.object({ type: z.literal('node_verified'), runId: z.string(), nodeId: z.string() }),
   z.object({ type: z.literal('view_ready'), runId: z.string(), view: z.string() }),
+  z.object({ type: z.literal('relations_ready'), runId: z.string(), questions: z.array(z.string()), relations: z.array(RelationSchema), status: z.enum(['ok', 'partial', 'failed']) }),
   z.object({ type: z.literal('receipt_ready'), runId: z.string(), receipt: ReceiptSchema }),
   z.object({ type: z.literal('error'), runId: z.string(), message: z.string() }),
   z.object({ type: z.literal('done'), runId: z.string(), status: z.enum(['done', 'partial', 'abstained', 'failed']) }),

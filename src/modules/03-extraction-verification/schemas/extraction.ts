@@ -26,6 +26,7 @@ export const ExtractedClaimSchema = z.object({
   basis: z.enum(['primary', 'background']),
   actionType: ActionTypeSchema,
   conditions: z.array(ConditionSchema),
+  subQuestionIndex: z.number().int().nonnegative().max(5).optional(),
   geneticContext: GeneticContextSchema.optional(),
   /** Verbatim from the cited passage, <=300 chars — never paraphrased. */
   quote: z.string().min(1).max(300),

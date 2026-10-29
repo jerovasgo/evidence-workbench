@@ -47,7 +47,7 @@ function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefin
 }
 
 export function RunResult({ runId, mode, intent }: { runId: string; mode?: Mode; intent?: Intent | null }) {
-  const { stages, sourceProgress, claims, sourceScores, receipt, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
+  const { stages, sourceProgress, claims, sourceScores, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const isStreaming = status === 'streaming';
@@ -90,7 +90,7 @@ export function RunResult({ runId, mode, intent }: { runId: string; mode?: Mode;
         )}
       </div>
 
-      {visibleClaims && <EvidenceMatrix claims={visibleClaims} onOpenEvidence={setSelectedClaim} />}
+      {visibleClaims && <EvidenceMatrix claims={visibleClaims} questions={questions} relations={relations} relationStatus={relationStatus} onOpenEvidence={setSelectedClaim} />}
 
       {receipt && (
         <footer className="rounded-[var(--radius-card)] border border-border bg-black/40 p-4 text-xs text-muted">

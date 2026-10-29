@@ -36,7 +36,26 @@ function toCandidatePair(pairId: number, pair: ClaimPair): RelationCandidatePair
     claimAQuote: pair.a.quote,
     claimBText: pair.b.text,
     claimBQuote: pair.b.quote,
+    claimAContext: pair.a.geneticContext,
+    claimBContext: pair.b.geneticContext,
   };
+}
+
+// Literal matching supplies an audit trail; different wording is not treated as
+// proof of biological difference or as a reason to discard a candidate relation.
+function assessContext(pair: ClaimPair): NonNullable<Relation['contextAssessment']> {
+  const fields = ['gene', 'organism', 'model', 'perturbation', 'measurement'] as const;
+  const matching: string[] = [];
+  const different: string[] = [];
+  const missing: string[] = [];
+  for (const field of fields) {
+    const a = pair.a.geneticContext?.[field]?.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+    const b = pair.b.geneticContext?.[field]?.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+    if (!a || !b) missing.push(field);
+    else if (a === b) matching.push(field);
+    else different.push(field);
+  }
+  return { status: different.length || missing.length ? 'review_needed' : 'matching', matching, different, missing };
 }
 
 export async function labelRelations(
@@ -51,7 +70,7 @@ export async function labelRelations(
 
   const result = await runAgent({
     name: 'relation-labeller',
-    promptVersion: 'P7@0.1',
+    promptVersion: 'P7@0.4',
     tier: 'T1',
     systemPreamble: deps.p0Preamble,
     prompt,
@@ -74,7 +93,7 @@ export async function labelRelations(
     // An out-of-range pairId is an invalid echo, not a real pair — drop it rather
     // than ever trusting a model-supplied index into claim data.
     if (!pair) continue;
-    relations.push({ from: pair.a.id, to: pair.b.id, kind: verdict.kind, evidence: verdict.evidence });
+    relations.push({ from: pair.a.id, to: pair.b.id, kind: verdict.kind, evidence: verdict.evidence, contextAssessment: assessContext(pair) });
   }
 
   return { ok: true, value: { relations }, usage: result.usage };

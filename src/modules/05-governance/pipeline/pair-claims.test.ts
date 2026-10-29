@@ -9,6 +9,7 @@ function claim(overrides: Partial<Claim>): Claim {
     basis: 'primary',
     actionType: 'finding',
     conditions: [],
+    subQuestionIndex: 0,
     sourceId: 's1',
     passageId: 'p1',
     quote: 'Aspirin.',
@@ -28,6 +29,12 @@ describe('pairClaimsForRelations', () => {
 
     expect(pairs).toHaveLength(1);
     expect(pairs[0]).toEqual({ a, b });
+  });
+
+  it('does not pair different or unassigned questions', () => {
+    const a = claim({ sourceId: 's1' });
+    expect(pairClaimsForRelations([a, claim({ sourceId: 's2', subQuestionIndex: 1 })])).toEqual([]);
+    expect(pairClaimsForRelations([a, claim({ sourceId: 's2', subQuestionIndex: undefined })])).toEqual([]);
   });
 
   it('never pairs two claims from the same source', () => {
@@ -58,11 +65,11 @@ describe('pairClaimsForRelations', () => {
     expect(pairClaimsForRelations([a, b])).toHaveLength(1);
   });
 
-  it('does not pair claims whose conditions share no variable', () => {
+  it('retains claims with differently named conditions for review', () => {
     const a = claim({ id: 'a', sourceId: 's1', conditions: [{ variable: 'age', op: '>', value: 65 }] });
     const b = claim({ id: 'b', sourceId: 's2', conditions: [{ variable: 'egfr', op: '<', value: 30 }] });
 
-    expect(pairClaimsForRelations([a, b])).toEqual([]);
+    expect(pairClaimsForRelations([a, b])).toHaveLength(1);
   });
 
   it('caps the number of pairs to avoid cost/latency blowup on a large claim set', () => {

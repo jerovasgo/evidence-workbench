@@ -1,6 +1,6 @@
 # P5 — Claim extractor
 
-Version: `P5@0.4`
+Version: `P5@0.5`
 Agent: `claim-extractor` (module 03, tier T1, 1 step, ~3,000 output tokens, 25 s timeout)
 Shares the common preamble `P0`.
 
@@ -38,6 +38,7 @@ Return: {
    'basis': 'primary'|'background',
    'actionType': 'finding'|'method'|'measurement'|'theory'|'mechanism'|'limitation',
    'conditions': [{'variable','op','value','unit'}]|[],
+   'subQuestionIndex': number|null, // zero-based index into sub_questions; null if uncertain
    'geneticContext': { 'gene': string|null, 'organism': string|null, 'model': string|null,
      'perturbation': string|null, 'measurement': string|null, 'effect': string|null }|null,
    'quote': string,             // verbatim from ONE passage, minimal span, <=300 chars
@@ -48,6 +49,7 @@ Return: {
 }
 Rules:
 - One claim = one finding/result; never merge content across passages.
+- Assign subQuestionIndex only when the claim directly answers that exact sub-question.
 - For genetics, geneticContext values must be exact contiguous excerpts of the quote; use null for missing values. Preserve experimental context explicitly stated in the cited passage:
   gene or molecular entity, organism, cell or model, perturbation, measurement and
   direction of effect where available. Record context in the claim text or conditions;

@@ -19,17 +19,6 @@ export interface ClaimPair {
   b: Claim;
 }
 
-/**
- * Two claims' `conditions` are "overlapping" if either is unconditioned (broadly
- * applicable, so could still relate to a conditioned claim) or they share at least
- * one condition on the same `variable` — the exact operator/value isn't compared
- * here; that finer judgement is the model's job (P7), not code's.
- */
-function conditionsCompatible(a: Claim['conditions'], b: Claim['conditions']): boolean {
-  if (a.length === 0 || b.length === 0) return true;
-  return a.some((ca) => b.some((cb) => ca.variable === cb.variable));
-}
-
 /** Deterministically finds candidate cross-source claim pairs worth asking the model to relate — never the model's own job to find pairs, only to judge ones code already selected. */
 export function pairClaimsForRelations(claims: Claim[]): ClaimPair[] {
   const pairs: ClaimPair[] = [];
@@ -40,9 +29,10 @@ export function pairClaimsForRelations(claims: Claim[]): ClaimPair[] {
       const b = claims[j]!;
       if (a.verification.support !== 'supports' || b.verification.support !== 'supports') continue;
       if (!a.verification.exists || !b.verification.exists || !a.verification.quoteFound || !b.verification.quoteFound || a.verification.retracted || b.verification.retracted) continue;
+      if (a.subQuestionIndex === undefined || a.subQuestionIndex !== b.subQuestionIndex) continue;
       if (a.sourceId === b.sourceId) continue;
       if (a.actionType !== b.actionType) continue;
-      if (!conditionsCompatible(a.conditions, b.conditions)) continue;
+
 
       pairs.push({ a, b });
       if (pairs.length >= MAX_PAIRS) break outer;

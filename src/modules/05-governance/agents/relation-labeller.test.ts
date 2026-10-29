@@ -36,6 +36,7 @@ function baseClaim() {
     basis: 'primary' as const,
     actionType: 'finding' as const,
     conditions: [],
+    geneticContext: { gene: 'G', organism: 'human', model: 'cells', perturbation: 'hypoxia', measurement: 'expression' },
     sourceId: 's1',
     passageId: 'p1',
     quote: 'Aspirin.',
@@ -59,7 +60,24 @@ describe('labelRelations', () => {
 
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.value.relations).toEqual([{ from: 'claim_a', to: 'claim_b', kind: 'agrees', evidence: 'both agree' }]);
+      expect(result.value.relations).toEqual([expect.objectContaining({ from: 'claim_a', to: 'claim_b', kind: 'agrees', evidence: 'both agree', contextAssessment: expect.objectContaining({ status: 'matching' }) })]);
+    }
+  });
+
+  it('retains tentative relations with explicit context warnings when context differs or is missing', async () => {
+    const a = claim({ id: 'a' });
+    const mismatched = claim({ id: 'b', sourceId: 's2', geneticContext: { ...a.geneticContext, organism: 'mouse' } });
+    const missing = claim({ id: 'c', sourceId: 's3', geneticContext: undefined });
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult({ relations: [
+      { pairId: 0, kind: 'contradicts', evidence: 'opposite' },
+      { pairId: 1, kind: 'agrees', evidence: 'same' },
+    ] }));
+    const result = await labelRelations('run_1', [{ a, b: mismatched }, { a, b: missing }], baseDeps({ respond, listModels: vi.fn() }));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.relations).toHaveLength(2);
+      expect(result.value.relations[0]?.contextAssessment).toMatchObject({ status: 'review_needed', different: ['organism'] });
+      expect(result.value.relations[1]?.contextAssessment).toMatchObject({ status: 'review_needed', missing: ['gene', 'organism', 'model', 'perturbation', 'measurement'] });
     }
   });
 
@@ -91,7 +109,7 @@ describe('labelRelations', () => {
     const result = await labelRelations('run_1', pairs, baseDeps(metaClient));
 
     expect(result.ok).toBe(true);
-    if (result.ok) expect(result.value.relations).toEqual([{ from: 'a2', to: 'b2', kind: 'differs', evidence: 'scope differs' }]);
+    if (result.ok) expect(result.value.relations).toEqual([expect.objectContaining({ from: 'a2', to: 'b2', kind: 'differs', evidence: 'scope differs' })]);
   });
 
   it('embeds the pairs as JSON in the prompt, never a claim id as pairId', async () => {
