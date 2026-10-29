@@ -13,7 +13,7 @@ const POINTS = [
   {
     icon: GitBranch,
     title: 'Sources, not summaries',
-    description: 'Each result links back to the guideline, trial or public-health page it came from — the model never answers from memory alone.',
+    description: 'Each result links back to the standards-body publication, study or scientific source it came from — the model never answers from memory alone.',
   },
   {
     icon: TriangleAlert,

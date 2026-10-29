@@ -5,7 +5,7 @@ import { normalizeForMatch } from '../validators/quote';
 // by code)"). Operates on normalized text (same normalization `findQuoteInPassage`
 // already used to confirm the quote is really there — ligatures/smart-quotes/
 // whitespace collapsed) so the quote reliably locates as a substring; this is model
-// input, not something shown to the clinician verbatim, so losing exact original
+// input, not something shown to the reader verbatim, so losing exact original
 // punctuation here is an acceptable tradeoff for reliable location.
 
 const DEFAULT_RADIUS_CHARS = 800;

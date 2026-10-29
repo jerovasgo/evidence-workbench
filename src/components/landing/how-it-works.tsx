@@ -1,8 +1,8 @@
 import { Compass, FolderTree, SlidersHorizontal, Share2, LayoutGrid } from 'lucide-react';
 
 const STEPS = [
-  { icon: Compass, label: 'Discover', description: 'Search across guidelines, trials and public-health sources.' },
-  { icon: FolderTree, label: 'Classify', description: 'Sources are typed by evidence kind — guideline, review, trial.' },
+  { icon: Compass, label: 'Discover', description: 'Search across standards bodies, studies and scientific literature.' },
+  { icon: FolderTree, label: 'Classify', description: 'Sources are typed by evidence kind — standards body, review, experiment.' },
   { icon: SlidersHorizontal, label: 'Refine', description: 'Duplicates removed, retracted sources excluded.' },
   { icon: Share2, label: 'Connect', description: 'Claims are extracted and matched to their exact source quote.' },
   { icon: LayoutGrid, label: 'Visualize', description: 'Structured, verifiable knowledge — not a wall of links.' },

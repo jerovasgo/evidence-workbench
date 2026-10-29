@@ -8,9 +8,9 @@ import * as Tabs from '@radix-ui/react-tabs';
 // view-tab names used there.
 
 const VIEWS = [
-  { value: 'algorithm', label: 'Algorithm', caption: 'A decision tree branches from assessment to action, conditioned on clinical findings.' },
+  { value: 'algorithm', label: 'Algorithm', caption: 'A decision tree branches from assessment to action, conditioned on verified findings.' },
   { value: 'map', label: 'Evidence Map', caption: 'Claims, sources and their relationships laid out as a connected network.' },
-  { value: 'matrix', label: 'Matrix', caption: 'Recommendations compared side by side across sources and certainty.' },
+  { value: 'matrix', label: 'Matrix', caption: 'Findings compared side by side across sources and certainty.' },
   { value: 'mechanism', label: 'Mechanism', caption: 'The underlying pathway, traced step by step with its supporting evidence.' },
 ] as const;
 

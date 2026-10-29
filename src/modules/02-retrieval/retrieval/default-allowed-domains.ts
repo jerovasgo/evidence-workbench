@@ -5,7 +5,7 @@
 // deliberately NOT exhaustive. `url-guard.ts`'s `assertSafeUrl` matches a domain or
 // any of its subdomains, so only apex domains are listed here.
 //
-// User-requested follow-up, not built yet: letting a clinician review/approve
+// User-requested follow-up, not built yet: letting a user review/approve
 // additional domains themselves (a settings UI) rather than only this hardcoded
 // default list — tracked in SECURITY.md until module 11 (UI) exists to host it.
 

@@ -5,9 +5,9 @@ import { SearchBar } from '@/components/search-bar';
 import { DEFAULT_MODE, type Mode } from '@/lib/modes';
 
 const SUGGESTIONS = [
-  'What is first-line management for suspected ACS?',
-  'Compare guideline recommendations for NSTEMI antiplatelet therapy.',
-  'What does recent evidence say about early reperfusion timing?',
+  'Does a polar aprotic solvent increase the rate of an SN2 reaction?',
+  'Compare the evidence for CRISPR-Cas9 off-target rates at different guide RNA lengths.',
+  'What does recent evidence say about horizontal gene transfer in antibiotic resistance?',
 ];
 
 export function EmptyState({ onSend }: { onSend: (text: string, mode: Mode) => void }) {

@@ -7,10 +7,10 @@ import { SearchBar } from '@/components/search-bar';
 import { DEFAULT_MODE, type Mode } from '@/lib/modes';
 
 const SUGGESTIONS = [
-  'Map the evidence behind a clinical guideline.',
-  'Build a decision algorithm from recent cardiology trials.',
-  'Compare competing recommendations and their supporting evidence.',
-  'Trace how a treatment protocol has evolved over time.',
+  'Map the evidence behind a standards-body publication.',
+  'Build a decision algorithm from recent chemistry experiments.',
+  'Compare competing findings and their supporting evidence.',
+  'Trace how a lab protocol has evolved over time.',
 ];
 
 const ROTATE_MS = 6000;
