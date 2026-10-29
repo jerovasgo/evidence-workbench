@@ -1,3 +1,4 @@
+import { toStructuredOutputFormat } from '@/shared/agents';
 import { describe, expect, it } from 'vitest';
 import { ExtractClaimsOutputSchema } from './extraction';
 
@@ -39,4 +40,8 @@ describe('ExtractClaimsOutputSchema', () => {
     };
     expect(() => ExtractClaimsOutputSchema.parse(output)).toThrow();
   });
+});
+
+it('converts the genetic extraction schema within Meta structured-output limits', () => {
+  expect(() => toStructuredOutputFormat('claims', ExtractClaimsOutputSchema)).not.toThrow();
 });

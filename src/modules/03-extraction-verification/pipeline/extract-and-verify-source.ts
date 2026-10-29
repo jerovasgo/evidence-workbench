@@ -148,6 +148,7 @@ export async function extractAndVerifySource(
     if (!c) { dropped.push({ reason: 'claim not supported by source' }); return false; }
     if (c.verification.support !== 'supports') { dropped.push({ reason: 'source support not confirmed' }); return false; }
     if (retraction.status === 'unknown') { dropped.push({ reason: `retraction status unknown: ${retraction.reason ?? 'check unavailable'}` }); return false; }
+    c.verification.retractionCheck = 'crossref_no_signal';
     return true;
   });
 

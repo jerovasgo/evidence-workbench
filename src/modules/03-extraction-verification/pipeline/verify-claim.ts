@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Claim, Passage } from '@/shared/domain';
 import { gradeClaim } from '@/modules/04-grading-scoring';
-import { applyDoseRule, checkNumbersPreserved, findQuoteInPassage } from '../validators/quote';
+import { applyDoseRule, checkNumbersPreserved, findQuoteInPassage, normalizeForMatch } from '../validators/quote';
 import { applySafetyCriticalRule } from '../validators/safety-critical';
 import type { ExtractedClaim } from '../schemas/extraction';
 import type { JudgeSupportOutput } from '../schemas/support-judge';
@@ -56,6 +56,13 @@ export function verifyClaim(input: VerifyClaimInput, passages: Passage[]): Verif
     return { outcome: 'dropped', reason: `number(s) not present in quote: ${numbersCheck.missing.join(', ')}` };
   }
 
+  // Context is extractive: never promote a model-proposed value absent from the quote.
+  const geneticContext = extracted.geneticContext && Object.fromEntries(
+    Object.entries(extracted.geneticContext).filter(([, value]) =>
+      typeof value === 'string' && normalizeForMatch(extracted.quote).includes(normalizeForMatch(value)),
+    ),
+  );
+
   const safetyCritical = applySafetyCriticalRule(extracted.safetyCritical, `${doseCorrectedText} ${extracted.quote}`);
 
   const claim: Claim = {
@@ -64,6 +71,7 @@ export function verifyClaim(input: VerifyClaimInput, passages: Passage[]): Verif
     basis: extracted.basis,
     actionType: extracted.actionType,
     conditions: extracted.conditions,
+    geneticContext,
     sourceId: input.sourceId,
     passageId: extracted.passageId,
     quote: extracted.quote,

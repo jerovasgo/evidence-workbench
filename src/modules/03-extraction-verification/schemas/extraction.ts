@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ActionTypeSchema, ConditionSchema } from '@/shared/domain';
+import { ActionTypeSchema, ConditionSchema, GeneticContextSchema } from '@/shared/domain';
 
 // Module 03 `claim-extractor` agent (P5) contracts
 // (docs/architecture/03-claim-extraction-and-verification.md). Output omits
@@ -26,6 +26,7 @@ export const ExtractedClaimSchema = z.object({
   basis: z.enum(['primary', 'background']),
   actionType: ActionTypeSchema,
   conditions: z.array(ConditionSchema),
+  geneticContext: GeneticContextSchema.optional(),
   /** Verbatim from the cited passage, <=300 chars — never paraphrased. */
   quote: z.string().min(1).max(300),
   /** Must be one of the input passages' `passageId`; code checks this, not the model. */

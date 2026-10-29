@@ -32,6 +32,14 @@ describe('verifyClaim', () => {
     }
   });
 
+  it('keeps only genetic context that appears in the cited quote', () => {
+    const quote = 'In human cells, HIF1A expression increased under hypoxia.';
+    const extracted = baseExtracted({ text: quote, quote, geneticContext: { gene: 'HIF1A', model: 'human cells', perturbation: 'hypoxia', organism: 'mouse', effect: 'increased' } });
+    const result = verifyClaim({ extracted, sourceId: 'src_1', retracted: false }, [{ id: 'p1', sourceId: 'src_1', locator: 'p1', text: quote }]);
+    expect(result.outcome).toBe('kept');
+    if (result.outcome === 'kept') expect(result.claim.geneticContext).toEqual({ gene: 'HIF1A', model: 'human cells', perturbation: 'hypoxia', effect: 'increased' });
+  });
+
   it('maps a recognized printed certainty (module 04) onto the kept claim', () => {
     const result = verifyClaim(
       { extracted: baseExtracted({ nativeGrade: 'This is a well-established result in the field' }), sourceId: 'src_1', retracted: false },

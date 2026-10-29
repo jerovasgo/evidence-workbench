@@ -44,11 +44,23 @@ export const SupportIssueSchema = z.enum([
 ]);
 export type SupportIssue = z.infer<typeof SupportIssueSchema>;
 
+/** Exact text fragments from the claim's quotation; missing context remains unknown. */
+export const GeneticContextSchema = z.object({
+  gene: z.string().min(1).max(150).optional(),
+  organism: z.string().min(1).max(150).optional(),
+  model: z.string().min(1).max(150).optional(),
+  perturbation: z.string().min(1).max(150).optional(),
+  measurement: z.string().min(1).max(150).optional(),
+  effect: z.string().min(1).max(150).optional(),
+});
+export type GeneticContext = z.infer<typeof GeneticContextSchema>;
+
 export const ClaimVerificationSchema = z.object({
   exists: z.boolean(),
   quoteFound: z.boolean(),
   retracted: z.boolean(),
   support: z.enum(['supports', 'partial', 'no', 'unknown']),
+  retractionCheck: z.literal('crossref_no_signal').optional(),
   /** Only set when support-judge actually ran (module 03, P10); explains a 'partial' or 'no' verdict — SPEC: "partial -> show with visible caveat". */
   supportIssues: z.array(SupportIssueSchema).optional(),
   supportNote: z.string().optional(),
@@ -61,6 +73,7 @@ export const ClaimSchema = z.object({
   basis: z.enum(['primary', 'background']),
   actionType: ActionTypeSchema,
   conditions: z.array(ConditionSchema),
+  geneticContext: GeneticContextSchema.optional(),
   sourceId: z.string(),
   passageId: z.string(),
   quote: z.string(),

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import type { Claim } from '@/shared/domain';
+import { buildEvidenceMatrix } from '@/modules/07-map-matrix';
+import { EvidenceMatrix } from '@/components/evidence-matrix';
 import { ClaimCard } from '@/components/claim-card';
 import { EvidenceDrawer } from '@/components/evidence-drawer';
 import { EvidenceSkeleton } from '@/components/evidence-skeleton';
@@ -50,7 +52,8 @@ export function RunResult({ runId, mode, intent }: { runId: string; mode?: Mode;
 
   const isStreaming = status === 'streaming';
   const note = unbuiltViewNote(mode, intent);
-  const summary = buildResultSummary(status, receipt, claims);
+  const visibleClaims = claims === null ? null : buildEvidenceMatrix(claims).flatMap((source) => source.claims);
+  const summary = buildResultSummary(status, receipt, visibleClaims);
 
   return (
     <div className="flex flex-col gap-6">
@@ -73,19 +76,21 @@ export function RunResult({ runId, mode, intent }: { runId: string; mode?: Mode;
 
       <div className="flex flex-col gap-3">
         {claims === null && isStreaming && <EvidenceSkeleton />}
-        {claims !== null && claims.length === 0 && (
+        {visibleClaims !== null && visibleClaims.length === 0 && (
           <p className="text-sm text-muted">
-            No claims passed verification yet. This is shown explicitly, not left blank — see the receipt below for what was checked.
+            No claims meet the current verification requirements. Older results may need a new run to check retraction status.
           </p>
         )}
-        {claims !== null && claims.length > 0 && (
+        {visibleClaims !== null && visibleClaims.length > 0 && (
           <ul className="flex flex-col gap-3">
-            {claims.map((claim) => (
+            {visibleClaims.map((claim) => (
               <ClaimCard key={claim.id} claim={claim} onOpenEvidence={setSelectedClaim} />
             ))}
           </ul>
         )}
       </div>
+
+      {visibleClaims && <EvidenceMatrix claims={visibleClaims} onOpenEvidence={setSelectedClaim} />}
 
       {receipt && (
         <footer className="rounded-[var(--radius-card)] border border-border bg-black/40 p-4 text-xs text-muted">
