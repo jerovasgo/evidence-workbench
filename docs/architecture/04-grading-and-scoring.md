@@ -1,9 +1,19 @@
 # 04 — Grading and scoring
 
+**Two standing decisions this file predates (see `docs/DECISIONS.md`):** (1) 2026-10-28, the
+`grade-estimator` agent described below was cancelled, not deferred — the platform never
+auto-infers a certainty grade; a claim is `ungraded` unless the source prints one. (2) 2026-10-29
+pivot: `strength` (clinical recommendation strength) was dropped from `Grade` entirely — no
+general-science analog — and the four hardcoded clinical schemes (ACC/AHA, GRADE, USPSTF, Oxford
+CEBM) were replaced with one general-science certainty-language mapper
+(`src/modules/04-grading-scoring/scoring/grade-maps.ts`). The sections below are kept for their
+still-relevant principles (import before estimate, scores vs grades) but the specific schemes,
+the estimator agent and the strength dimension are historical, not current.
+
 ## Purpose
-Give every verified claim an honest two-dimension grade (certainty of evidence; strength of
-recommendation) and every source a transparent score, while always showing **where the grade came
-from**: printed by the source, or estimated by the system.
+Give every verified claim an honest certainty grade and every source a transparent score, while
+always showing **where the grade came from**: printed by the source, or estimated by the system
+(never — see above).
 
 ## Position in the pipeline
 `verify → grade → relate`. Grading runs only on `verified` or `partial` claims.
@@ -50,20 +60,22 @@ locator) in a comment, and the table is reviewed by the clinical reviewer.
 ### `source-score features` (reuses `source-classifier` output, module 02)
 Features (relevance, quality flags) come from the model; the score is computed by code.
 
-## Source score (code, `src/lib/scoring/source-score.ts`)
+## Source score (code, `src/modules/04-grading-scoring/scoring/source-score.ts`)
 `score = relevance × level × quality × currency × applicability`
-- level: guideline 1.00, SR/meta-analysis 0.85, RCT 0.70, observational 0.45, other 0.20.
-- currency: 1.0 if ≤3 y; linear to 0.5 at 10 y; ×0.2 if superseded; unknown year → 0.6.
+- level: meta_analysis 1.00, standards_body/local_protocol 0.90/1.00, SR 0.85, controlled_experiment
+  0.70, reference_work 0.60, observational_study 0.45, preprint 0.35, dataset_or_database/other 0.20.
+- currency: 1.0 if ≤3 y; linear to 0.5 at 10 y; ×0.2 if superseded; unknown year → 0.7.
 - quality: 1.0 default; ×0.8 for no COI statement; ×0.7 for industry-only authorship;
-  ×0.85 for not systematic search (guidelines); flags come from the classifier and are shown.
-- applicability: 1.0 matches setting/population; 0.8 partial; 0.6 mismatch.
+  ×0.85 for not systematic search (standards-body publications); flags come from the classifier
+  and are shown.
+- applicability: 1.0 matches context/scope; 0.8 partial; 0.6 mismatch.
 - All weights in `config.ts`, **initial values to calibrate**; any change requires a test update and a
   DECISIONS entry. Show the factors in the UI tooltip ("why ranked here").
 
 ## Contracts
-`Grade` from SPEC §8; `GradeDomains`; `ScoreBreakdown = { relevance, level, quality, currency, applicability, total }`.
-UI label strings centralised (`src/lib/i18n/grade-labels.ts`): "From source: ACC/AHA Class I, LOE B-R"
-vs "AI-estimated (GRADE-style, 3 of 5 domains judged)".
+`Grade` from SPEC §8; `ScoreBreakdown = { relevance, level, quality, currency, applicability, total }`.
+UI label strings centralised (`src/lib/i18n/grade-labels.ts`): "From source: well-established result"
+vs "Not graded".
 
 ## Failure modes and fallbacks
 | Failure | Handling |
@@ -77,15 +89,15 @@ vs "AI-estimated (GRADE-style, 3 of 5 domains judged)".
 ## Evaluation
 - **Mapping tests:** 100% of fixture strings (≥40 real-format grade strings across schemes) map to the
   expected values; unknown schemes remain `ungraded`.
-- **Import fidelity:** on 60 claims from guidelines with printed grades, `nativeGrade` equals the printed
+- **Import fidelity:** on 60 claims from standards-body publications with printed grades, `nativeGrade` equals the printed
   string 100% (string match against quote/locator context).
 - **Estimator agreement:** compare AI-estimated certainty to published GRADE certainty (Cochrane
   Summary-of-Findings tables) on ≥10 SR outcomes: report exact agreement and within-one-level agreement
   (goal ≥70% within one level). If below goal, narrow eligibility or disable and say so.
 - **Label compliance:** automated UI test that every estimated grade renders the "AI-estimated" badge
   and never the same visual style as source grades.
-- **Score sanity:** property tests (monotonicity: newer ⇒ not lower; superseded ⇒ lower; guideline ≥ RCT
-  all else equal); rank-order review of 5 conditions by the clinical reviewer.
+- **Score sanity:** property tests (monotonicity: newer ⇒ not lower; superseded ⇒ lower; standards_body ≥ controlled_experiment
+  all else equal); rank-order review of 5 topics by the subject-matter-expert reviewer.
 - **Calibration note:** weights are a design hypothesis, not validated; README must say so.
 
 ## Build notes

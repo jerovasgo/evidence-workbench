@@ -1,7 +1,7 @@
 # 07 — Evidence map and concordance matrix
 
 ## Purpose
-Give the clinician an overview of *what the evidence says and who agrees with whom*, as two views of
+Give the reader an overview of *what the evidence says and who agrees with whom*, as two views of
 the same verified claim graph: the **Evidence Map** (radial overview/navigator) and the **Concordance
 Matrix** (rows = recommendations, columns = sources; the main comparison tool). Flagship component #2.
 
@@ -23,7 +23,7 @@ cheap labeller shortens text.
 ## Deterministic projections (`src/lib/projections/`)
 
 ### `toMapTree(claimGraph, options) → MapNode`
-1. Root = condition/question.
+1. Root = topic/question.
 2. Level 1 = sub-questions from the structurer (or, if absent, `actionType` groups: assess, test,
    treat, threshold, disposition, avoid).
 3. Level 2 = claims, sorted by (safetyCritical desc, certainty desc, strength desc).
@@ -35,7 +35,7 @@ cheap labeller shortens text.
    (`partial` shows a caveat icon).
 
 ### `toMatrix(claimGraph, columns) → Matrix`
-- Columns: each selected `Source` (guidelines; the local protocol as its own column; max 6 at once).
+- Columns: each selected `Source` (standards-body publications; the local protocol as its own column; max 6 at once).
 - Rows: **recommendation keys** derived by code: cluster claims by (`actionType`, normalized
   conditions, sub-question). Cluster merge uses structured keys first; where ambiguity remains, the
   `relation-labeller` pairs (module 05) decide equivalence — rows are never created by free text.
@@ -74,7 +74,7 @@ Also: `MatrixCell = { state, claimId?, gradeSummary?, note? }`; `ViewOptions`
 - **Fidelity:** every map node and matrix cell maps to a `claimId` that exists and is verified (100%,
   property test); no cell renders a claim not in the pool.
 - **Matrix correctness:** hand-built fixture graph with known agreements/disagreements → expected
-  cell states 100%; 5 real conditions reviewed by the clinical reviewer, row-clustering errors counted
+  cell states 100%; 5 real topics reviewed by the subject-matter-expert reviewer, row-clustering errors counted
   (target ≤10% of rows needing split/merge).
 - **Layout:** no overlapping boxes across 20 randomized trees (property test); bounding-box and
   min-gap assertions; performance: layout of 60 nodes <100 ms.
@@ -89,5 +89,5 @@ planted-divergence protocol. React Flow only renders; it never owns data. Dark-f
 §11; node shape semantics: rounded rectangle = category, pill = claim, ellipse = open question.
 
 ## Acceptance
-Map and matrix render from the same graph for ≥3 conditions; every node/cell opens the evidence
+Map and matrix render from the same graph for ≥3 topics; every node/cell opens the evidence
 drawer; disagreements are filterable; layout tests green.

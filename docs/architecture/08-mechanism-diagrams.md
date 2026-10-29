@@ -1,9 +1,18 @@
-# 08 — Pathophysiology (mechanism) diagrams
+# 08 — Mechanism diagrams
 
 ## Purpose
-From a natural-language question ("How does adrenaline act on the cardiomyocyte?"), build a 2D diagram of
-a molecular mechanism — ligands, receptors, membranes, second messengers, kinases, effectors — grounded
-in retrieved sources and verified like everything else. Flagship component #3.
+**2026-10-29 pivot (docs/DECISIONS.md):** renamed from "Pathophysiology Diagrams" — the design
+below was already general molecular-biology/biochemistry, not clinical-specific (UniProt/ChEBI/
+Reactome are general databases, not pharma-only). Extended with a parallel chemistry-reaction
+vocabulary (reactant/catalyst/intermediate/product/transition_state entities; forms_bond/
+breaks_bond/transfers_electron/catalyzes interactions) so the same canvas covers both chosen demo
+domains: biology/genetics and chemistry.
+
+From a natural-language question ("How does adrenaline act on a beta-adrenergic receptor?" or
+"What is the mechanism of the SN2 reaction?"), build a 2D diagram of a molecular or chemical
+mechanism — ligands, receptors, second messengers, kinases for biology; reactants, catalysts,
+intermediates, transition states for chemistry — grounded in retrieved sources and verified like
+everything else. Flagship component #3.
 
 ## Hard rule
 **The model never draws.** It proposes a `MechanismGraph` (JSON). Code validates it and renders it from
@@ -24,8 +33,8 @@ It reuses retrieval (02) and quote verification (03), but with `basis = 'backgro
 - 1 step, 500 tokens.
 
 ### `mechanism-extractor` (T1, P17)
-- **Input:** passages (textbook-level open sources, review articles, Europe PMC full text, drug-label
-  mechanism sections, Reactome/GtoPdb descriptions) tagged with ids and locators.
+- **Input:** passages (textbook-level open sources, review articles, Europe PMC full text, compound-reference
+  mechanism sections, Reactome/PubChem/Rhea descriptions) tagged with ids and locators.
 - **Output:** `MechanismGraph = { scope, entities[], interactions[] }` where each `Interaction` has
   `type`, `sign`, `order` (position in the cascade), and a verbatim `quote` + `passageId` (becomes a
   `Claim` with `basis='background'` and `actionType='mechanism'`). **SPEC §8 must add `'mechanism'` to
@@ -41,15 +50,14 @@ It reuses retrieval (02) and quote verification (03), but with `basis = 'backgro
 
 ## Deterministic validation (`src/lib/validators/mechanism.ts`)
 1. **Quote found** for every interaction (module 03 machinery).
-2. **Cross-references:** each entity with a human gene/protein/compound name is resolved via
-   `uniprot_lookup` / `chebi_lookup`; unresolved entities are drawn with a dashed "unresolved" style
+2. **Cross-references:** each entity with a gene/protein/compound name is resolved via
+   `uniprot_lookup` / `chebi_lookup` / `pubchem_lookup`; unresolved entities are drawn with a dashed "unresolved" style
    or removed if they have no supported interaction.
-3. **Corroboration:** where Reactome or IUPHAR/BPS Guide to Pharmacology contains the interaction,
+3. **Corroboration:** where Reactome, PubChem or Rhea contains the interaction,
    record `corroboratedBy`; mismatch in sign vs database → warning and drop to "disputed" style.
    Licences verified 2026-10-26 (`docs/DAY0-VERIFICATION.md`): Reactome data CC0 (its illustrations are
-   CC BY 4.0, so we draw our own glyphs); UniProt CC BY 4.0; ChEBI CC BY 4.0; GtoPdb is ODbL / CC BY-SA 4.0
-   with commercial-access terms, so GtoPdb corroboration is **optional and off by default** until its
-   terms are read; store only ids/flags, never copied text. Avoid KEGG. Credit all sources in the UI and
+   CC BY 4.0, so we draw our own glyphs); UniProt CC BY 4.0; ChEBI CC BY 4.0; PubChem is public domain
+   (US government work); Rhea is CC BY 4.0. Store only ids/flags, never copied text. Avoid KEGG. Credit all sources in the UI and
    `docs/ATTRIBUTIONS.md`.
 4. **Structural checks:** every interaction endpoints exist; second messengers have producer and
    consumer; compartments consistent (a membrane receptor cannot be in the nucleus); no sign conflicts
@@ -62,7 +70,8 @@ It reuses retrieval (02) and quote verification (03), but with `basis = 'backgro
   entities placed by ELK layered within lanes, ordered by `Interaction.order`; membrane drawn as a
   lipid-bilayer band; deterministic and seeded.
 - **Glyph library:** SVG symbols per `Entity.kind` (ligand, GPCR, RTK, ion channel, G protein, enzyme,
-  kinase, second messenger, transcription factor, other) in one consistent line style; sizes tokenised.
+  kinase, second messenger, transcription factor, reactant, catalyst, intermediate, product,
+  transition_state, other) in one consistent line style; sizes tokenised.
   Unit-tested for viewBox, stroke width, and accessible titles.
 - **Edge style:** arrow for `activates/produces/phosphorylates`, blunt end for `inhibits`, dashed for
   `binds` (reversible) or "unresolved/disputed"; labels only on hover/focus to avoid clutter.
@@ -72,16 +81,16 @@ It reuses retrieval (02) and quote verification (03), but with `basis = 'backgro
 - **Accessibility:** parallel textual cascade ("1. Ligand binds receptor → 2. …") for screen readers.
 
 ## Sandbox (qualitative propagation)
-- Toggles: `agonist+`, `antagonist/block receptor`, `inhibit enzyme`, `knockout entity`, `add second
-  messenger analogue` (as present in graph). Implemented as **sign propagation** over the graph:
+- Toggles: `agonist+`, `antagonist/block receptor`, `inhibit enzyme`, `knockout entity`, `remove catalyst`,
+  `add second messenger analogue` (as present in graph). Implemented as **sign propagation** over the graph:
   each node state ∈ {up, down, unchanged, unknown}; a toggle sets the source node state; propagation
   follows edge signs; conflicting influences → `unknown` (never invent a net effect).
 - Effect text is generated from **code templates** citing the edges traversed ("Blocking the receptor
   → less Gs activation → less cAMP [edges 2,3,4]"). No free-text model output here.
-- Persistent label: *qualitative graph propagation, not a kinetic simulation*. No doses, no treatment
-  suggestions, no patient scenarios.
-- **Bridge (stretch):** clicking a drug-target node lists guideline claims (verified) mentioning that
-  drug class with grades. Only if time remains.
+- Persistent label: *qualitative graph propagation, not a kinetic simulation*. No treatment
+  suggestions, no instructions for a specific real-world case.
+- **Bridge (stretch):** clicking an entity node lists literature claims (verified) mentioning that
+  entity with grades. Only if time remains.
 
 ## Contracts
 `Entity`, `Interaction`, `MechanismGraph` (SPEC §8); `SandboxState = Record<entityId, 'up'|'down'|'unchanged'|'unknown'>`;
@@ -94,13 +103,13 @@ It reuses retrieval (02) and quote verification (03), but with `basis = 'backgro
 | Entity resolution fails | Dashed style + "unresolved"; excluded from sandbox propagation |
 | Sources disagree on sign or step | Show both as "disputed"; propagation treats as `unknown` |
 | Request too broad | Scoper narrows and says so; offer sibling pathways as buttons |
-| Drift into tutoring chatbot | Keep the canvas as the answer; no long prose; link to clinical evidence bridge |
+| Drift into tutoring chatbot | Keep the canvas as the answer; no long prose; link to the source-evidence bridge |
 
 ## Evaluation
 - **Quote coverage:** 100% of drawn edges have verified quotes.
 - **Cross-reference resolution:** ≥90% of entities resolve to UniProt/ChEBI; unresolved are visibly marked.
-- **Precision vs database:** for 3–5 canonical pathways (e.g., GPCR–Gs–cAMP–PKA; β-arrestin; RTK–MAPK),
-  compare edges to Reactome/GtoPdb: report edge precision and recall; hand-review any extra edges.
+- **Precision vs database:** for 3–5 canonical pathways/mechanisms (e.g., GPCR–Gs–cAMP–PKA for biology; SN2 nucleophile–transition
+  state–product for chemistry), compare edges to Reactome/PubChem/Rhea: report edge precision and recall; hand-review any extra edges.
 - **Propagation oracles:** unit tests for textbook cases — receptor antagonist lowers downstream cAMP;
   phosphodiesterase inhibition raises cAMP; adenylyl cyclase knockout blocks the PKA branch; conflicting
   paths yield `unknown`. Oracles cite sources in the test comment.
@@ -108,7 +117,7 @@ It reuses retrieval (02) and quote verification (03), but with `basis = 'backgro
 - **Layout:** no overlap of glyphs and labels; entities stay in correct compartment lane (property tests).
 - **Hallucination probe:** ask about a non-existent receptor/drug name; the system must abstain
   (pass/fail on 5 probes).
-- **Human review:** clinical/pharmacology reviewer rates 3 diagrams (correct / minor errors / wrong);
+- **Human review:** subject-matter-expert reviewer rates 3 diagrams (correct / minor errors / wrong);
   report.
 
 ## Build notes

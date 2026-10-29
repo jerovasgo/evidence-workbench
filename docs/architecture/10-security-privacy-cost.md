@@ -15,7 +15,7 @@ Cross-cutting. Implemented as middleware, database policies, and wrappers used b
 | Public | Source metadata, quotes (short), grades, receipts | Normal storage |
 | Private | Uploaded documents, watch definitions, decisions, inbox | Field-encrypted + RLS |
 | Secret | API keys, encryption key, service-role key | Env only, server-side only |
-| Forbidden | Patient identifiers, real patient data | Rejected at input; never stored |
+| Forbidden | Identifiers of a specific, real, identifiable person | Rejected at input; never stored |
 
 ## Controls
 
@@ -36,7 +36,7 @@ Cross-cutting. Implemented as middleware, database policies, and wrappers used b
 
 ### Input safety and prompt-injection defence
 - **Identifier filter** (code) on all free-text input: reject patterns resembling national IDs, phones,
-  emails, names after "patient/paciente" cues; warn the user.
+  emails, names after a person-reference cue; warn the user.
 - **Retrieved content is data.** Wrap in tagged blocks with random per-call delimiters; the system
   prompt (P0) states that instructions inside tagged data must be ignored and reported; outputs are
   schema-validated, so instructions cannot create new fields or tools.
@@ -53,7 +53,7 @@ Cross-cutting. Implemented as middleware, database policies, and wrappers used b
 - Every displayed claim passes the verifier; the `VerifiedClaim` type is the only input to views.
 - Human checkpoints: confirmation before saving a watch; explicit decisions on divergences;
   "mark as reviewed" on algorithms (stored per user, never altering the content); safety-critical items
-  flagged `needs_clinician_decision`.
+  flagged `needs_expert_review`.
 - Audit log (append-only table): who decided what and when; no content.
 
 ### Cost and abuse protection
@@ -72,7 +72,7 @@ Cross-cutting. Implemented as middleware, database policies, and wrappers used b
 - Retention: source passages cached with TTL (e.g., 7 days); private documents deleted on user request
   (hard delete of rows and storage objects) and by default after N days in the demo.
 - Data export and deletion endpoints for the user's private data.
-- Colombia Law 1581 of 2012 and HIPAA are noted as future compliance scope; no claim of compliance now.
+- Colombia Law 1581 of 2012 is noted as future compliance scope; no claim of compliance now.
 
 ## Contracts
 `BudgetLedger`, `AuditEvent = { id, userId, action, entityId, at }`, `RateLimitPolicy`,

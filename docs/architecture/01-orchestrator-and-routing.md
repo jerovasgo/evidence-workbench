@@ -29,15 +29,19 @@ source-version hash, prompt versions).
 - **Output:** `{ intent, secondary?: intent, condition?, setting?, confidence, reject?: {reason} }`
   with `intent ∈ algorithm|evidence_map|mechanism|fact_lookup|comparison|watch|out_of_scope`.
 - **Tools:** none. **Limits:** 1 step, 300 output tokens, 4 s.
-- **Rules:** patient-specific requests (identifiers, "my patient X…", dosing for a named patient) →
-  `out_of_scope` with a redirect message; mixed requests return `secondary`. Low confidence → ask one
-  clarifying chip set in the UI, never guess silently.
+- **Rules:** requests naming a specific, identifiable real person (identifiers, "my colleague X…",
+  individual advice for a named private individual) → `out_of_scope` with a redirect message; mixed
+  requests return `secondary`. Low confidence → ask one clarifying chip set in the UI, never guess
+  silently.
 - **Pre-filter (code, before the model):** regex/NER-lite for identifiers (national ID patterns, phone,
-  email, names after "paciente/patient") → reject with warning. The model is second line of defence.
+  email, names after a person-reference cue) → reject with warning. The model is second line of
+  defence.
 
 ### `scenario-structurer` (T0, P2)
-- Converts the condition/scenario into PICO-like structure: population, setting, key questions
-  (≤6 sub-questions), generic parameters (age group, pregnancy, renal function) as typed chips.
+- Converts the topic/scenario into a structured shape: scope, context, key questions
+  (≤6 sub-questions), scope parameters (the system under study, stated conditions) as typed chips.
+  (2026-10-29 pivot, docs/DECISIONS.md: generalized from a clinical PICO-like shape — population/
+  setting/age-pregnancy-renal-function — to any scientific topic.)
 - Output is shown to the user as editable chips ("What I'm going to look up") before expensive stages
   when the run is interactive; skipped for precomputed runs and watches.
 
@@ -54,7 +58,7 @@ source-version hash, prompt versions).
   Global per-run cap on in-flight model calls (start at 6; tune on Day 2).
 - **Budget guard:** before each agent/tool call, check run cost cap, daily budget, per-user quota; if
   exceeded, stage returns `partial` or `abstain` with reason `budget`.
-- **Cache:** key `(condition, setting, sourceVersionsHash, promptVersionsHash)` → full result and per
+- **Cache:** key `(topic, context, sourceVersionsHash, promptVersionsHash)` → full result and per
   stage. Source text cached with TTL (not committed). Precomputed set for the evaluation conditions.
 - **Streaming:** SSE event types: `stage_started`, `stage_progress`, `band_ready` (10-second band),
   `node_verified`, `view_ready`, `receipt_ready`, `error`, `done`. The band is emitted as soon as the
@@ -79,7 +83,7 @@ between server and client so the UI is type-checked against the stream).
 
 ## Evaluation
 - **Router:** 60-item labelled set (10 per intent incl. 10 out-of-scope and 10 mixed). Target:
-  ≥90% intent accuracy; 100% of patient-identifier fixtures rejected; 0 out-of-scope requests proceeding
+  ≥90% intent accuracy; 100% of identifiable-person fixtures rejected; 0 out-of-scope requests proceeding
   to retrieval.
 - **Orchestrator:** property tests: no stage runs before its inputs exist; every run ends in a terminal
   state; resume after killed process yields same output hash; budget guard never lets cost exceed cap

@@ -9,23 +9,23 @@ prompts are iterated against it.
 ## Principles
 1. **Deterministic checks first; model judges second; humans calibrate the judges.**
 2. **Report what we measured, how, on what sample, and who reviewed.** Targets are goals, not results.
-3. **Never evaluate on data used to tune prompts** — keep a held-out set (≥5 of the 15 conditions).
+3. **Never evaluate on data used to tune prompts** — keep a held-out set (≥5 of the 15 topics).
 4. **Everything reproducible:** fixtures recorded, prompt versions pinned, run ids stored.
-5. **No patient data, no real institutional protocols** — synthetic only.
+5. **No personal data, no real institutional protocols** — synthetic only.
 
 ## Datasets (`/evals/`, `/data/synthetic/`)
 | Set | Content | Size | Built by |
 | --- | --- | --- | --- |
-| `conditions.json` | 15 evaluation conditions across specialties (10 tuning, 5 held-out) | 15 | you + clinical reviewer |
-| `gold-sources/` | Must-find sources per condition (ids/DOIs) | ≥3 each | you |
-| `gold-claims/` | Hand-annotated recommendations from 3 guidelines | ~60 | you + reviewer |
+| `topics.json` | 15 evaluation topics across fields (10 tuning, 5 held-out) | 15 | you + subject-matter-expert reviewer |
+| `gold-sources/` | Must-find sources per topic (ids/DOIs) | ≥3 each | you |
+| `gold-claims/` | Hand-annotated findings from 3 standards-body publications | ~60 | you + reviewer |
 | `mutations/` | Programmatic corruptions of verified claims | ~200 generated | code |
 | `planted-protocol/` | Synthetic local protocol with 5 planted divergences | 1 | you |
-| `retraction-fixtures/` | Retracted paper, superseded guideline, duplicates, fake title | ~10 | you |
+| `retraction-fixtures/` | Retracted paper, superseded standards-body publication, duplicates, fake title | ~10 | you |
 | `injection/` | Prompt-injection documents and snippets | ≥20 | you |
 | `router.jsonl` | Labelled requests for intent routing | 60 | you |
 | `watch-feed/` | Versioned feed with planted changes | 6 snapshots | you |
-| `mechanism-gold/` | 3–5 pathways with expected edges (from Reactome/GtoPdb) | ~100 edges | you |
+| `mechanism-gold/` | 3–5 pathways/mechanisms with expected edges (from Reactome/PubChem/Rhea) | ~100 edges | you |
 
 ## Runner (`pnpm eval`)
 - Loads fixtures, runs modules in **offline mode** (recorded HTTP) for deterministic tests and in **live
@@ -62,7 +62,7 @@ prompts are iterated against it.
 - Never use a judge to verify existence or quotes (code does that).
 
 ## Baseline comparison
-- **Design:** same 10 questions (conditions/sub-questions) posed to the *same Meta model* in plain chat
+- **Design:** same 10 questions (topics/sub-questions) posed to the *same Meta model* in plain chat
   (no retrieval, no verification) and to the pipeline.
 - **Measures:** (1) citations produced that do not exist or cannot be located; (2) statements with no
   verifiable source; (3) doses/thresholds not traceable; (4) conflicts surfaced vs hidden. Scored by
@@ -83,7 +83,7 @@ prompts are iterated against it.
 - Every prompt has a test bank in `/prompts/<id>/tests/` (input fixtures → expected structured
   properties, not exact text). Changing a prompt requires: version bump, offline suite pass, and the
   relevant live metrics not regressing >5 points (or a DECISIONS note).
-- Snapshot the selected sources and verified claim ids per condition; review diffs when they change.
+- Snapshot the selected sources and verified claim ids per topic; review diffs when they change.
 - Cost/latency budgets are tests too: CI fails if a stage's recorded p95 on fixtures exceeds its budget.
 
 ## Failure analysis
@@ -92,10 +92,10 @@ what we changed, what remains). Judges and reviewers will value honest limits mo
 numbers; this also feeds the "what we would do next" slide in the demo.
 
 ## Build notes
-Stand up the runner and fixtures on Day 1 with 3 conditions; extend daily. The mutation suite, planted
+Stand up the runner and fixtures on Day 1 with 3 topics; extend daily. The mutation suite, planted
 protocol, retraction fixtures and injection set are cheap and high-value: build them before polishing
 any prompt. Reserve Day 9 morning for the final live run and README table.
 
 ## Acceptance
 `pnpm eval` reproduces the README table; offline CI is green; baseline comparison, reviewer details and
-limitations are documented; held-out conditions are reported separately from tuning conditions.
+limitations are documented; held-out topics are reported separately from tuning topics.

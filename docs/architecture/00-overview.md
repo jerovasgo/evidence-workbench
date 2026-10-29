@@ -112,7 +112,7 @@ caching, and a per-tool rate limiter. Agents only see the tools on their allow-l
 | `europe_pmc_search` / `europe_pmc_fulltext` | Open full text for quote checking | scout, verifier | Prefer open-access XML |
 | `crossref_lookup` | DOI existence, metadata, update/retraction notices | verifier | Also Retraction Watch data if exposed; verify |
 | `web_search` | Meta Model API search grounding (Responses API only; $2.50/1k queries) | scout | Discovery only; no documented domain filter, so filter result URLs against our allow-list in code |
-| `fetch_url_text` | Fetch and extract readable text/PDF text | scout, verifier | Allow-list domains for guidelines; size cap; no executing content |
+| `fetch_url_text` | Fetch and extract readable text/PDF text | scout, verifier | Allow-list domains for standards-body publications; size cap; no executing content |
 | `local_search` | Full-text over user's pool | scout | RLS-scoped to the user |
 | `uniprot_lookup`, `chebi_lookup`, `reactome_query`, `gtopdb_query` | Mechanism xrefs | mechanism pipeline | Check each license before use |
 | `store_*` | Persist stage outputs | orchestrator only | Not exposed to agents |
@@ -148,7 +148,7 @@ Receipt. Traces store ids and hashes, never content. A dev-only `/runs/[id]` pag
 ## Non-goals
 
 No autonomous browsing beyond allow-listed fetches; no agent that edits the repo or data at runtime;
-no patient-specific reasoning; no model-generated layout; no cross-user data access.
+no reasoning tied to a specific real-world case or individual; no model-generated layout; no cross-user data access.
 
 ## Module boundaries (added 2026-10-27, `docs/DECISIONS.md`)
 

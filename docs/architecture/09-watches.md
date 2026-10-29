@@ -1,7 +1,7 @@
 # 09 — Watches (scheduled searches and digests)
 
 ## Purpose
-Let the clinician say, in natural language or with blocks, "watch this topic and tell me when something
+Let the user say, in natural language or with blocks, "watch this topic and tell me when something
 that matters changes", and deliver a digest built only from verified data. Cost must be near zero when
 nothing changed.
 
@@ -13,7 +13,7 @@ Separate from the interactive request path. Uses the same retrieval (02), verifi
 
 ### `watch-parser` (T0, P13)
 - **Input:** natural-language request + user locale/timezone. **Output:** a candidate `JobSpec` (SPEC §8)
-  plus a plain-language preview and a list of **assumptions** the model made (e.g., "weekly", "guidelines
+  plus a plain-language preview and a list of **assumptions** the model made (e.g., "weekly", "standards-body publications
   and PubMed, no web").
 - **Rules:** fill only what the user stated; defaults come from a code table, not from the model;
   never schedule faster than the minimum interval; unknown → ask a chip question.
@@ -24,7 +24,7 @@ Separate from the interactive request path. Uses the same retrieval (02), verifi
 ### `digest-writer` (T1, P15)
 - **Input:** the **verified diff** (new/changed/superseded claims with ids, grades, quotes) — never raw
   sources. **Output:** a digest with ≤5 items: headline (≤20 words), what changed, grade/provenance
-  chips (rendered by code), and clinician-addressed implication ("consider reviewing local protocol
+  chips (rendered by code), and reader-addressed implication ("consider reviewing local protocol
   item X").
 - **Rules:** may only reference claim/source ids present in the diff; code strips any sentence that
   cites an unknown id; no new facts; empty diff → no digest is generated and no model call is made.
@@ -41,7 +41,7 @@ Separate from the interactive request path. Uses the same retrieval (02), verifi
 
 ## Change detection (the cost-saving core)
 1. For each configured source family, fetch the cheapest **change signal**: PubMed query with
-   `edat/mdat` date filter and result count; Europe PMC similar; guideline pages' `ETag`/`Last-Modified`
+   `edat/mdat` date filter and result count; Europe PMC similar; standards-body pages' `ETag`/`Last-Modified`
    or text `contentHash`; local pool document hashes.
 2. Compute `signalHash` = hash(sorted ids + hashes + versions). If equal to the previous run → write a
    `watch_run` with `status='unchanged'`, **make zero model calls**, finish.
@@ -49,7 +49,7 @@ Separate from the interactive request path. Uses the same retrieval (02), verifi
    against the **previous verified state** (stored claim graph) to compute a typed diff:
    `added | changed | superseded | retracted | newly_conflicting`.
 4. Significance filter (code): ignore changes below thresholds (e.g., only low-level observational
-   additions when the user asked for guidelines/SRs) unless the user selected `detailed`.
+   additions when the user asked for standards-body publications/SRs) unless the user selected `detailed`.
 5. If anything significant remains → `digest-writer` → `digests` + `inbox` item (in-app delivery in v1;
    email/push out of scope).
 
@@ -71,7 +71,7 @@ Separate from the interactive request path. Uses the same retrieval (02), verifi
 ## Evaluation
 - **Zero-call guarantee:** with unchanged fixtures, a counter on the Meta client shows 0 calls and cost
   0 (CI test); signal-only cost per unchanged run reported.
-- **Change detection:** fixture feed with planted changes — one new guideline version, one new RCT, one
+- **Change detection:** fixture feed with planted changes — one new standards-body publication version, one new controlled experiment, one
   retraction, one irrelevant cosmetic page change. Expected: first three detected and typed, fourth
   ignored (target 100% / 0 false positives on fixtures).
 - **Digest faithfulness:** 100% of digest items cite ids present in the diff; automated check strips

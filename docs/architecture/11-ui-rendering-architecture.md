@@ -54,7 +54,7 @@ lib/
   certainty ramp as luminance steps of the accent + 4 pips + text label (never colour alone).
 - Typography: Geist Sans / Mono via `next/font`; numbers in mono for alignment.
 - Motion: 150–250 ms; Motion library; `prefers-reduced-motion` disables spatial animation and uses fades.
-- Mascot (if adopted): only in empty/loading states and logo; never in clinical content.
+- Mascot (if adopted): only in empty/loading states and logo; never inside a verified claim card.
 - Copy: use verbs *navigate, compare, audit, verify*; no "recommends/advises" (lint rule on i18n strings).
 
 ## Streaming UX
@@ -97,7 +97,7 @@ lib/
 - **Visual regression:** snapshot of key views with fixture data (tolerance small; review diffs).
 - **Performance:** Lighthouse CI budgets above; CLS ≤0.1 during streaming.
 - **Copy lint:** CI fails on banned phrases in UI strings.
-- **Usability (lightweight):** 3–5 people (ideally clinicians) perform: "find first action", "find the
+- **Usability (lightweight):** 3–5 people (ideally researchers in the relevant field) perform: "find first action", "find the
   disagreement", "see why this is graded low"; report success and time honestly.
 
 ## Build notes

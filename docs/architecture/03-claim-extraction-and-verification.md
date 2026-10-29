@@ -13,11 +13,11 @@ earned. Everything shown anywhere in the UI must have passed here.
 ### `claim-extractor` (T1, P5)
 - **Input:** one `Source` + its relevant `Passage[]` (windows of ≤1,200 tokens with locator) + the
   sub-questions. One call per source, run in parallel.
-- **Output:** `Claim[]` without `verification` (filled by code). Fields: `text` (clinician-addressed,
+- **Output:** `Claim[]` without `verification` (filled by code). Fields: `text` (reader-addressed,
   ≤35 words), `basis`, `actionType`, `conditions[]` (structured), `quote` (verbatim, ≤300 chars),
   `passageId`, `nativeGrade?` (as printed), `safetyCritical` (model proposes; code can raise it).
-- **Rules:** one claim = one recommendation/finding; no merging across passages; no doses unless the
-  quote contains them; copy numbers exactly; if a passage has no recommendation, return `[]`. Never
+- **Rules:** one claim = one finding; no merging across passages; no measurements unless the
+  quote contains them; copy numbers exactly; if a passage has no finding, return `[]`. Never
   paraphrase inside `quote`; the claim `text` may paraphrase.
 - **Tools:** none (passages are in the prompt, tagged). **Limits:** 1 step, 3,000 output tokens, 20 s.
   Large sources are chunked by section and merged in code.
@@ -25,16 +25,16 @@ earned. Everything shown anywhere in the UI must have passed here.
 ### `support-judge` (T2)
 - **Input:** `claim.text`, `claim.conditions`, `quote`, and the **surrounding context** (±800 chars
   around the quote located by code).
-- **Output:** `{ support: 'supports'|'partial'|'no'|'unknown', issues: ('negation'|'wrong_population'|'wrong_threshold'|'wrong_strength'|'out_of_context'|'other')[], note }`.
+- **Output:** `{ support: 'supports'|'partial'|'no'|'unknown', issues: ('negation'|'wrong_scope'|'wrong_threshold'|'wrong_strength'|'out_of_context'|'other')[], note }`.
 - **Rules:** judge only against the supplied text; say `unknown` rather than guess; check specifically
-  for scope drift (population, setting, comparator), negation and strength mismatch ("may be
-  considered" vs "recommended").
+  for scope drift (scope, context, comparator), negation and strength mismatch ("may increase"
+  vs "increases").
 - **Limits:** 1 step, 400 tokens. Batched up to 8 claims per call only if each is independently
   delimited; otherwise one per call.
 
 ### `adversary` (T2)
 - **Input:** the *set* of claims for a sub-question plus the source pool metadata.
-- **Output:** `{ challenges: { claimId, kind: 'contradicted_by_source'|'superseded'|'missing_caveat'|'population_mismatch', evidenceSourceId?, quote?, note }[] }`.
+- **Output:** `{ challenges: { claimId, kind: 'contradicted_by_source'|'superseded'|'missing_caveat'|'scope_mismatch', evidenceSourceId?, quote?, note }[] }`.
 - **Tools:** `local_search`/cached passages only (no new web access in v1) to look for a **verified
   counter-quote** in the existing pool. A challenge without a counter-quote is recorded as
   `unsubstantiated` and does not change the claim state.
@@ -52,15 +52,15 @@ Run in this order; first failure short-circuits and records the reason.
 4. **Not retracted/withdrawn:** re-check against retraction data at verification time.
 5. **Numbers:** every number/unit in `claim.text` and `conditions` must appear in `quote` (after unit
    normalization); otherwise → drop the number or the claim.
-6. **Dose rule:** if the claim contains a dose and the quote does not, replace with "per local protocol".
-7. **Safety-critical raise:** a rule list (anticoagulation, thrombolysis, insulin, opioids, pediatric
-   dosing, contraindication language, "do not") can set `safetyCritical=true` regardless of the model.
+6. **Measurement rule:** if the claim contains a measurement and the quote does not, replace with "per local protocol".
+7. **Safety-critical raise:** a rule list (explosive, toxic, corrosive, biohazard, pathogenic,
+   radioactive, lethal, "do not mix") can set `safetyCritical=true` regardless of the model.
 8. **Support:** `support-judge` result; `no` → drop; `partial` → show with visible caveat; `unknown`
    → keep out of the algorithm, available only in the evidence drawer marked "not confirmed".
 
 **Final states:** `verified` (all pass, support=supports), `partial`, `dropped` (counted in Receipt),
 `abstain` for the question when too few verified claims remain (threshold per sub-question: ≥1 verified
-claim from a guideline/SR, else abstain).
+claim from a standards-body publication/SR, else abstain).
 
 ## Contracts
 `Claim` (SPEC §8) with `verification`; `VerificationReport = { claimId, checks: {name, ok, detail}[], final }`;
@@ -81,12 +81,12 @@ guard: views accept `VerifiedClaim[]` only, never `Claim[]`).
 - **Hard invariants (CI):** 100% of displayed claims have `quoteFound`, `exists`, `!retracted`.
 - **Mutation tests** (core of this module): programmatically corrupt a verified claim and require the
   pipeline to catch it. Mutations: (a) alter the quote by one word; (b) flip negation in `claim.text`;
-  (c) change a number/unit; (d) change population ("adults" → "children"); (e) escalate strength
-  ("may consider" → "recommended"); (f) attach quote to a different source. Target: (a),(c),(f) caught by
+  (c) change a number/unit; (d) change scope ("aqueous solution" → "organic solvent"); (e) escalate strength
+  ("may increase" → "increases"); (f) attach quote to a different source. Target: (a),(c),(f) caught by
   code 100%; (b),(d),(e) caught by judge ≥90% (report per mutation type).
-- **Extraction recall:** hand-annotate all recommendations in 3 guidelines (≈20 each); recall ≥70%,
+- **Extraction recall:** hand-annotate all findings in 3 standards-body publications (≈20 each); recall ≥70%,
   precision ≥90% (before verification), reported with the annotator named.
-- **Judge calibration:** 60 claims labelled by a clinically trained reviewer; Cohen's κ between judge
+- **Judge calibration:** 60 claims labelled by a subject-matter-expert reviewer; Cohen's κ between judge
   and reviewer ≥0.6; report confusion matrix. Re-run on every prompt version change.
 - **Adversary value:** on the 5 planted divergences/superseded cases, ≥3 caught with a verified
   counter-quote; false challenge rate (substantiated but wrong) ≤10% on reviewed sample.
