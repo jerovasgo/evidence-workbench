@@ -5,6 +5,7 @@ export * from './schemas/retrieval';
 export * from './schemas/tool-io';
 
 export * from './tools/pubmed';
+export * from './tools/gene-context';
 export * from './tools/europe-pmc';
 export * from './tools/crossref';
 export * from './tools/fetch-url-text';

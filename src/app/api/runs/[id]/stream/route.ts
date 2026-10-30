@@ -10,6 +10,7 @@ import { labelRelationsBatched, pairClaimsForRelations } from '@/modules/05-gove
 import type { AgentTraceEvent } from '@/shared/agents';
 import type { Claim, RunEvent } from '@/shared/domain';
 import { RESEARCH_DEPTH_CONCURRENCY, RESEARCH_DEPTH_TIME_MS } from '@/lib/research-depth';
+import { lookupGeneContext } from '@/modules/02-retrieval';
 
 // 2026-10-28 latency audit (docs/DECISIONS.md): `runAgent` (shared/agents) already
 // emits an `onTrace` event — {name, ms, costUsd, tokens} — for every single model
@@ -128,6 +129,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
+      let closed = false;
       const send = (event: RunEvent) => controller.enqueue(encoder.encode(sseFrame(event)));
       // Claims accumulated so far across already-finished sources, sent as a
       // cumulative `band_ready` each time a new one arrives — see the latency-audit
@@ -144,7 +146,14 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       }
 
       const pending = runtime.pendingRunContext.take(run.id);
-      if (pending?.opening) send({ type: 'opening_ready', runId: run.id, text: pending.opening });
+      if (pending) {
+        send({ type: 'opening_ready', runId: run.id, text: pending.opening?.trim() || `I’m reviewing the genetic evidence relevant to your question. The initial source context will appear first; conclusions will update as the studies are checked.` });
+      }
+      // Reference lookups run beside the literature pipeline. They may enrich the
+      // overview, but cannot delay retrieval or turn a gene record into a study.
+      void (pending ? lookupGeneContext(pending.freeText).then((genes) => {
+        if (genes.length && !closed) send({ type: 'gene_context_ready', runId: run.id, genes });
+      }).catch(() => undefined) : Promise.resolve());
 
       // No in-memory context: only an actual blocker if nothing was persisted
       // either — otherwise this is exactly the resumable-reconnect case stage
@@ -249,6 +258,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         await runtime.runsRepository.updateRunStatus(run.id, 'failed').catch(() => undefined);
         send({ type: 'done', runId: run.id, status: 'failed' });
       } finally {
+        closed = true;
         controller.close();
       }
     },

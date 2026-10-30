@@ -18,6 +18,7 @@ export interface StageState {
 export interface RunStreamState {
   opening: string | null;
   overviewSources: { title: string; year?: number; url?: string }[];
+  geneContext: { symbol: string; name?: string; geneId?: string; hgncId?: string; links: { label: string; url: string }[] }[];
   sourceCatalog: Record<string, { id: string; status: 'candidate'; title: string; url: string; doi?: string; pmid?: string; year?: number }>;
   stages: Record<StageName, StageState>;
   sourceProgress: string[];
@@ -39,6 +40,7 @@ export function initialState(): RunStreamState {
   return {
     opening: null,
     overviewSources: [],
+    geneContext: [],
     sourceCatalog: {},
     stages: Object.fromEntries(STAGE_ORDER.map((s) => [s, { status: 'pending' }])) as Record<StageName, StageState>,
     sourceProgress: [],
@@ -87,6 +89,8 @@ export function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamStat
       return { ...prev, opening: event.text };
     case 'overview_ready':
       return { ...prev, overviewSources: event.sources };
+    case 'gene_context_ready':
+      return { ...prev, geneContext: event.genes };
     case 'source_catalog_ready':
       return { ...prev, sourceCatalog: Object.fromEntries(event.sources.map((source) => [source.id, source])) };
     case 'provisional_claims_ready':

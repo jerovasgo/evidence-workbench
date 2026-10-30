@@ -48,6 +48,7 @@ export const RunEventSchema = z.discriminatedUnion('type', [
   }),
   z.object({ type: z.literal('band_ready'), runId: z.string(), payload: z.unknown() }),
   z.object({ type: z.literal('overview_ready'), runId: z.string(), sources: z.array(z.object({ title: z.string(), year: z.number().optional(), url: z.string().optional() })) }),
+  z.object({ type: z.literal('gene_context_ready'), runId: z.string(), genes: z.array(z.object({ symbol: z.string(), name: z.string().optional(), geneId: z.string().optional(), hgncId: z.string().optional(), links: z.array(z.object({ label: z.string(), url: z.string() })) })) }),
   z.object({ type: z.literal('source_catalog_ready'), runId: z.string(), sources: z.array(z.object({ id: z.string(), status: z.literal('candidate'), title: z.string(), url: z.string().url(), doi: z.string().optional(), pmid: z.string().optional(), year: z.number().optional() })) }),
   z.object({ type: z.literal('provisional_claims_ready'), runId: z.string(), sourceId: z.string(), claims: z.array(ClaimSchema) }),
   z.object({ type: z.literal('source_reviewed'), runId: z.string(), sourceId: z.string(), acceptedClaimIds: z.array(z.string()), withdrawnCount: z.number().int().nonnegative(), reason: z.string().optional() }),

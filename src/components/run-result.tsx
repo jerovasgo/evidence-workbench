@@ -46,7 +46,7 @@ function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefin
 }
 
 export function RunResult({ runId, mode, intent, query }: { runId: string; mode?: Mode; intent?: Intent | null; query?: string }) {
-  const { opening, stages, sourceProgress, sourceCatalog, provisionalBySource, withdrawals, claims, sourceScores, receipt, relations, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
+  const { opening, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, withdrawals, claims, sourceScores, receipt, relations, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const isStreaming = status === 'streaming';
@@ -62,7 +62,9 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
     ? `The verified evidence located so far reports: ${visibleClaims[0]!.text}${visibleClaims.length > 1 ? ` The view below contains ${visibleClaims.length - 1} additional finding${visibleClaims.length === 2 ? '' : 's'} and their source context.` : ''}`
     : provisionalClaims.length
       ? `A retrieved source reports: ${provisionalClaims[0]!.text} This finding is still being checked against its source.`
-      : opening;
+      : geneContext.length > 0
+        ? `Human gene references identify ${geneContext.map((gene) => `${gene.symbol}${gene.name ? ` as ${gene.name}` : ''}`).join(' and ')}. ${opening ?? 'I’m checking the research literature for findings that answer your question.'}`
+        : opening;
   const reveal = reducedMotion ? false : { opacity: 0, y: 8 };
 
   return (
@@ -72,6 +74,10 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
         <p className="mt-3 max-w-2xl text-[16px] font-light leading-7 text-fg">{substantiveOpening}</p>
       </motion.div> : isStreaming && <div role="status" aria-label="Preparing overview" className="space-y-2 animate-pulse">
         <div className="h-3 w-4/5 rounded bg-border" /><div className="h-3 w-3/5 rounded bg-border" />
+      </div>}
+
+      {geneContext.length > 0 && <div className="flex flex-wrap gap-3 text-xs text-muted" aria-label="Gene reference context">
+        {geneContext.map((gene) => <span key={gene.symbol}>{gene.symbol}{gene.name ? ` · ${gene.name}` : ''} <span className="mx-1">·</span>{gene.links.map((link, index) => <span key={link.label}>{index > 0 ? ' / ' : ''}<a className="underline underline-offset-4 hover:text-fg" href={link.url} target="_blank" rel="noopener noreferrer">{link.label}</a></span>)}</span>)}
       </div>}
 
       {(isStreaming || relationStatus === 'pending') && (
