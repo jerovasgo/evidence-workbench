@@ -13,11 +13,11 @@ describe('DEFAULT_ALLOWED_DOMAINS', () => {
 
   it('every domain is accepted by assertSafeUrl for a plausible https URL', () => {
     for (const domain of DEFAULT_ALLOWED_DOMAIN_NAMES) {
-      expect(() => assertSafeUrl(`https://${domain}/some/guideline-page`, DEFAULT_ALLOWED_DOMAIN_NAMES)).not.toThrow();
+      expect(() => assertSafeUrl(`https://${domain}/some/gene-page`, DEFAULT_ALLOWED_DOMAIN_NAMES)).not.toThrow();
     }
   });
 
   it('accepts a subdomain of an allow-listed apex domain', () => {
-    expect(() => assertSafeUrl('https://www.cdc.gov/mmwr/x', DEFAULT_ALLOWED_DOMAIN_NAMES)).not.toThrow();
+    expect(() => assertSafeUrl('https://www.ncbi.nlm.nih.gov/gene/7157', DEFAULT_ALLOWED_DOMAIN_NAMES)).not.toThrow();
   });
 });
