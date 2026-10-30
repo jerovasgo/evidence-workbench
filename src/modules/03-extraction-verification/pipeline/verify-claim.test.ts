@@ -26,7 +26,7 @@ describe('verifyClaim', () => {
     const result = verifyClaim({ extracted: baseExtracted(), sourceId: 'src_1', retracted: false }, passages);
     expect(result.outcome).toBe('kept');
     if (result.outcome === 'kept') {
-      expect(result.claim.verification).toEqual({ exists: true, quoteFound: true, retracted: false, support: 'unknown' });
+      expect(result.claim.verification).toEqual({ exists: false, quoteFound: true, quoteMatch: 'normalized_exact', retracted: false, support: 'unknown' });
       expect(result.claim.sourceId).toBe('src_1');
       expect(result.claim.grade).toEqual({ certainty: 'ungraded', origin: 'ai_estimated', nativeGrade: undefined });
     }
@@ -38,6 +38,14 @@ describe('verifyClaim', () => {
     const result = verifyClaim({ extracted, sourceId: 'src_1', retracted: false }, [{ id: 'p1', sourceId: 'src_1', locator: 'p1', text: quote }]);
     expect(result.outcome).toBe('kept');
     if (result.outcome === 'kept') expect(result.claim.geneticContext).toEqual({ gene: 'HIF1A', model: 'human cells', perturbation: 'hypoxia', effect: 'increased' });
+  });
+
+  it('does not infer a short gene name from a substring of another entity', () => {
+    const quote = 'Cas9 editing increased in human cells.';
+    const extracted = baseExtracted({ text: quote, quote, geneticContext: { gene: 'Cas9', organism: 'human', model: 'cells', measurement: 'CA' } });
+    const result = verifyClaim({ extracted, sourceId: 'src_1', retracted: false }, [{ id: 'p1', sourceId: 'src_1', locator: 'p1', text: quote }]);
+    expect(result.outcome).toBe('kept');
+    if (result.outcome === 'kept') expect(result.claim.geneticContext).toEqual({ gene: 'Cas9', organism: 'human', model: 'cells' });
   });
 
   it('maps a recognized printed certainty (module 04) onto the kept claim', () => {
@@ -69,6 +77,15 @@ describe('verifyClaim', () => {
       passages,
     );
     expect(result.outcome).toBe('dropped');
+  });
+
+  it('records when a located quotation needed bounded OCR tolerance', () => {
+    const result = verifyClaim(
+      { extracted: baseExtracted({ text: 'Adding 50 mL of polar aprotic solvent.', quote: 'Adding 50 mL of polar aprotic solvenl' }), sourceId: 'src_1', retracted: false },
+      passages,
+    );
+    expect(result.outcome).toBe('kept');
+    if (result.outcome === 'kept') expect(result.claim.verification.quoteMatch).toBe('ocr_fuzzy');
   });
 
   it('drops a claim from a retracted source even if the quote matches', () => {

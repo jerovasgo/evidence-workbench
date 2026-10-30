@@ -3,7 +3,7 @@
 import { cn } from '@/lib/cn';
 import type { StageName, StageState } from '@/lib/use-run-stream';
 
-// 2026-10-28 conversational-flow brief, Etapa C: "Research progress"-style collapsed
+// 2026-10-28 conversational-flow brief, Etapa C: "Agent activity"-style collapsed
 // panel showing a brief description of the active stage, expandable for detail.
 // Collapsed by default via a native <details> (no JS state, keyboard-accessible for
 // free); the stage list and statuses are the same real SSE-driven data as before —
@@ -42,7 +42,7 @@ export function StageProgress({ stages, sourceProgress }: { stages: Record<Stage
   return (
     <details className="glass rounded-[var(--radius-card)] p-4">
       <summary className="cursor-pointer select-none text-sm text-fg">
-        Research progress <span className="text-muted">{'—'} {currentStageSummary(stages)}</span>
+        Agent activity <span className="text-muted">{'—'} {currentStageSummary(stages)}</span>
       </summary>
       <ol className="mt-3 flex flex-col gap-2">
         {STAGE_ORDER.map((stage) => {

@@ -28,3 +28,13 @@ describe('createInMemoryBudgetGuard', () => {
     expect(guard.spentToday()).toBeCloseTo(0.6, 6);
   });
 });
+
+it('protects concordance allocation from concurrent calls and releases holds once', () => {
+ const guard=createInMemoryBudgetGuard({runCostCapUsd:0.4,dailyBudgetUsd:20,concordanceReserveUsd:0.1});
+ const release=guard.reserveCall!('r',0.2,false)!;
+ expect(release).toBeTypeOf('function');
+ expect(guard.reserveCall!('r',0.15,false)).toBeNull();
+ expect(guard.reserveCall!('r',0.1,true)).toBeTypeOf('function');
+ release(); release();
+ expect(guard.reserveCall!('r',0.15,false)).toBeTypeOf('function');
+});

@@ -34,6 +34,25 @@ function baseDeps(metaClient: MetaClient, crossref: CrossrefClient = fakeCrossre
 const FULL_TEXT = 'Adding 50 mL of polar aprotic solvent increased the SN2 reaction rate.';
 
 describe('extractAndVerifySource', () => {
+  it('retains a supported finding from a later passage batch', async () => {
+    const quote = 'Section 5 reports a second finding.';
+    const respond = vi.fn()
+      .mockResolvedValueOnce(fakeRespondResult({ claims: [] }))
+      .mockResolvedValueOnce(fakeRespondResult({ claims: [{ text: quote, basis: 'primary', actionType: 'finding', conditions: [], quote, passageId: 'src_1:4', safetyCritical: false }] }))
+      .mockResolvedValueOnce(fakeRespondResult({ support: 'supports', issues: [], note: 'Supported.' }));
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const paragraph = Array.from({ length: 910 }, () => 'evidence').join(' ');
+    const fullText = Array.from({ length: 5 }, (_, index) => `${index === 4 ? quote : `Section ${index + 1}.`} ${paragraph}`).join('\n\n');
+    const result = await extractAndVerifySource(
+      { runId: 'run_1', sourceId: 'src_1', sourceTitle: 'Long article', fullText, subQuestions: ['What does the article report?'], doi: '10.1/long' },
+      baseDeps(metaClient, fakeCrossref({ lookup: vi.fn().mockResolvedValue({ doi: '10.1/long', retracted: false, updateNotices: [] }) })),
+    );
+    expect(result.status).toBe('ok');
+    if (result.status !== 'ok') throw new Error('unreachable');
+    expect(result.claims).toHaveLength(1);
+    expect(result.claims[0]!.quote).toBe(quote);
+    expect(respond).toHaveBeenCalledTimes(3);
+  });
   it('returns status no_text when the source has no fetchable full text', async () => {
     const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
     const result = await extractAndVerifySource(
@@ -69,7 +88,7 @@ describe('extractAndVerifySource', () => {
     expect(result.status).toBe('ok');
     if (result.status === 'ok') {
       expect(result.claims).toHaveLength(0);
-      expect(result.dropped).toEqual([{ reason: 'source support not confirmed' }]);
+      expect(result.dropped).toEqual([{ reason: 'retraction status unknown: No DOI available for Crossref status check' }]);
     }
   });
 
@@ -86,6 +105,43 @@ describe('extractAndVerifySource', () => {
       expect(result.claims).toEqual([]);
       expect(result.dropped[0]?.reason).toContain('retraction status unknown');
     }
+  });
+
+  it('attributes a withdrawal to the displayed claim rather than an earlier discarded extraction', async () => {
+    const valid = { text: FULL_TEXT, basis: 'primary', actionType: 'finding', conditions: [], quote: FULL_TEXT, passageId: 'src_1:0', safetyCritical: false };
+    const invalid = { ...valid, text: 'After 90 minutes, the SN2 reaction rate changed.' };
+    const onProvisionalClaims = vi.fn();
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult({ claims: [invalid, valid] }));
+    const result = await extractAndVerifySource(
+      { runId: 'run_1', sourceId: 'src_1', sourceTitle: 'x', fullText: FULL_TEXT, subQuestions: [], doi: '10.1/missing' },
+      { ...baseDeps({ respond, listModels: vi.fn() }), onProvisionalClaims },
+    );
+    expect(onProvisionalClaims).toHaveBeenCalledTimes(1);
+    if (result.status === 'ok') {
+      expect(result.withdrawn).toHaveLength(1);
+      expect(result.withdrawn[0]?.id).toBe(onProvisionalClaims.mock.calls[0]?.[0][0].id);
+      expect(result.withdrawn[0]?.reason).toContain('retraction status unknown');
+    }
+  });
+
+  it('publishes a located claim provisionally before support review completes', async () => {
+    const claim = { text: FULL_TEXT, basis: 'primary', actionType: 'finding', conditions: [], quote: FULL_TEXT, passageId: 'src_1:0', safetyCritical: false };
+    let finishJudge: ((value: RespondResult) => void) | undefined;
+    const judge = new Promise<RespondResult>((resolve) => { finishJudge = resolve; });
+    const respond = vi.fn().mockResolvedValueOnce(fakeRespondResult({ claims: [claim] })).mockReturnValueOnce(judge);
+    const onProvisionalClaims = vi.fn();
+    const crossref = fakeCrossref({ lookup: vi.fn().mockResolvedValue({ doi: '10.1/exists', retracted: false, updateNotices: [] }) });
+    const pending = extractAndVerifySource(
+      { runId: 'run_1', sourceId: 'src_1', sourceTitle: 'x', fullText: FULL_TEXT, subQuestions: [], doi: '10.1/exists' },
+      { ...baseDeps({ respond, listModels: vi.fn() }, crossref), onProvisionalClaims },
+    );
+    await vi.waitFor(() => expect(onProvisionalClaims).toHaveBeenCalledTimes(1));
+    const provisional = onProvisionalClaims.mock.calls[0]?.[0][0];
+    expect(provisional.verification).toMatchObject({ exists: false, quoteFound: true, support: 'unknown' });
+    finishJudge!(fakeRespondResult({ support: 'supports', issues: [], note: 'Supported' }));
+    const result = await pending;
+    expect(result.status).toBe('ok');
+    if (result.status === 'ok') expect(result.claims[0]?.id).toBe(provisional.id);
   });
 
   it('drops claims and keeps none when the source is retracted (Crossref)', async () => {

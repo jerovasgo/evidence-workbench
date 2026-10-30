@@ -109,6 +109,8 @@ async function runEuropePmcQuery(query: SearchQuery, deps: ExecutePlanDeps): Pro
       year: item.pubYear,
       doi: item.doi,
       pmid: item.pmid,
+      firstAuthor: item.authorString?.split(',')[0]?.trim(),
+      pubTypes: item.pubTypes.length > 0 ? item.pubTypes : undefined,
       url: `https://europepmc.org/article/${item.source}/${item.id}`,
       isOpenAccess: item.isOpenAccess,
     }),

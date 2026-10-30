@@ -28,14 +28,14 @@ describe('planSearch', () => {
   it('returns a valid SearchPlan on a well-formed model response', async () => {
     const plan = {
       queries: [
-        { family: 'pubmed' as const, text: 'acute coronary syndrome[MeSH]', purpose: 'first-line treatment' },
-        { family: 'web' as const, text: 'ACS guideline controversy', purpose: 'adversarial query' },
+        { family: 'pubmed' as const, text: 'CRISPR Cas9 genome editing', purpose: 'genome editing evidence' },
+        { family: 'europe_pmc' as const, text: 'Jinek 2012 CRISPR Cas9', purpose: 'named study' },
       ],
     };
     const respond = vi.fn().mockResolvedValue(fakeRespondResult(plan));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
 
-    const result = await planSearch('run_1', { condition: 'suspected ACS' }, baseDeps(metaClient));
+    const result = await planSearch('run_1', { condition: 'CRISPR-Cas9 genome editing' }, baseDeps(metaClient));
 
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value).toEqual(plan);

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { SearchBar } from '@/components/search-bar';
 import { DEFAULT_MODE, type Mode } from '@/lib/modes';
+import { DEFAULT_RESEARCH_DEPTH, type ResearchDepth } from '@/lib/research-depth';
 
 const SUGGESTIONS = [
   'Does a polar aprotic solvent increase the rate of an SN2 reaction?',
@@ -10,13 +11,14 @@ const SUGGESTIONS = [
   'What does recent evidence say about horizontal gene transfer in antibiotic resistance?',
 ];
 
-export function EmptyState({ onSend }: { onSend: (text: string, mode: Mode) => void }) {
+export function EmptyState({ onSend }: { onSend: (text: string, mode: Mode, depth: ResearchDepth) => void }) {
   const [value, setValue] = useState('');
   const [mode, setMode] = useState<Mode>(DEFAULT_MODE);
+  const [depth, setDepth] = useState<ResearchDepth>(DEFAULT_RESEARCH_DEPTH);
 
   function submit(text: string) {
     if (!text.trim()) return;
-    onSend(text, mode);
+    onSend(text, mode, depth);
   }
 
   return (
@@ -24,7 +26,7 @@ export function EmptyState({ onSend }: { onSend: (text: string, mode: Mode) => v
       <h1 className="text-2xl font-medium text-fg">What would you like to understand?</h1>
 
       <div className="mt-8 w-full">
-        <SearchBar value={value} onChange={setValue} mode={mode} onModeChange={setMode} onSubmit={() => submit(value)} autoFocus />
+        <SearchBar value={value} onChange={setValue} mode={mode} onModeChange={setMode} depth={depth} onDepthChange={setDepth} onSubmit={() => submit(value)} autoFocus />
       </div>
 
       <div className="mt-5 flex flex-wrap justify-center gap-2">

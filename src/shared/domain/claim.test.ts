@@ -11,7 +11,7 @@ const baseClaim = {
   passageId: 'pas_1',
   quote: 'Aspirin 325 mg should be given promptly.',
   grade: { certainty: 'high' as const, origin: 'source' as const },
-  verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' as const },
+  verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' as const, retractionCheck: 'crossref_no_signal' as const },
   safetyCritical: true,
 };
 
@@ -35,7 +35,7 @@ describe('ClaimSchema', () => {
 });
 
 describe('VerifiedClaimSchema', () => {
-  it('accepts a claim with quoteFound = true', () => {
+  it('accepts a claim after all verification gates', () => {
     expect(() => VerifiedClaimSchema.parse(baseClaim)).not.toThrow();
   });
 
@@ -53,5 +53,9 @@ describe('VerifiedClaimSchema', () => {
       verification: { ...baseClaim.verification, support: 'unknown' as const },
     };
     expect(() => VerifiedClaimSchema.parse(unconfirmed)).toThrow();
+  });
+
+  it('rejects a claim without a recorded retraction check', () => {
+    expect(() => VerifiedClaimSchema.parse({ ...baseClaim, verification: { ...baseClaim.verification, retractionCheck: undefined } })).toThrow();
   });
 });

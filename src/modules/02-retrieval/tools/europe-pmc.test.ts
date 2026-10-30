@@ -76,7 +76,7 @@ describe('createEuropePmcClient.fetchFullText', () => {
         }),
       );
     const client = createEuropePmcClient({ fetchImpl });
-    const text = await client.fetchFullText('MED', '36456988');
+    const text = await client.fetchFullText('PMC', 'PMC123');
     expect(text).toBe('Spironolactone reduces mortality.');
   });
 
@@ -85,4 +85,13 @@ describe('createEuropePmcClient.fetchFullText', () => {
     const client = createEuropePmcClient({ fetchImpl });
     expect(await client.fetchFullText('MED', '00000000')).toBeNull();
   });
+});
+
+it('resolves a MED identifier to PMCID before requesting full text', async () => {
+  const fetchImpl = vi.fn()
+    .mockResolvedValueOnce(jsonResponse({ resultList: { result: [{ pmcid: 'PMC123' }] } }))
+    .mockResolvedValueOnce(new Response('<article><p>Genetic evidence.</p></article>'));
+  const client = createEuropePmcClient({ fetchImpl });
+  expect(await client.fetchFullText('MED', '123')).toBe('Genetic evidence.');
+  expect(fetchImpl.mock.calls[1]?.[0]).toContain('/PMC123/fullTextXML');
 });

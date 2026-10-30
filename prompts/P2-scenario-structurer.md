@@ -39,6 +39,7 @@ Return: {
  }
 }
 Rules:
+- For comparisons, produce shared scientific sub-questions that every study can answer. Do not create separate author-specific questions. Preserve named studies in scope.
 - Do not infer values that are not present or clearly implied; omit the field instead
   of guessing.
 - Reject any identifiers of a specific, real, identifiable person (a code

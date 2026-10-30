@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { RelationSchema } from './relation';
+import { ClaimSchema } from './claim';
 
 export const ReceiptSchema = z.object({
   claimsTotal: z.number().int().nonnegative(),
@@ -38,6 +39,7 @@ export type Run = z.infer<typeof RunSchema>;
  */
 export const RunEventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('stage_started'), runId: z.string(), stage: z.string() }),
+  z.object({ type: z.literal('opening_ready'), runId: z.string(), text: z.string() }),
   z.object({
     type: z.literal('stage_progress'),
     runId: z.string(),
@@ -45,6 +47,10 @@ export const RunEventSchema = z.discriminatedUnion('type', [
     detail: z.string().optional(),
   }),
   z.object({ type: z.literal('band_ready'), runId: z.string(), payload: z.unknown() }),
+  z.object({ type: z.literal('overview_ready'), runId: z.string(), sources: z.array(z.object({ title: z.string(), year: z.number().optional(), url: z.string().optional() })) }),
+  z.object({ type: z.literal('source_catalog_ready'), runId: z.string(), sources: z.array(z.object({ id: z.string(), status: z.literal('candidate'), title: z.string(), url: z.string().url(), doi: z.string().optional(), pmid: z.string().optional(), year: z.number().optional() })) }),
+  z.object({ type: z.literal('provisional_claims_ready'), runId: z.string(), sourceId: z.string(), claims: z.array(ClaimSchema) }),
+  z.object({ type: z.literal('source_reviewed'), runId: z.string(), sourceId: z.string(), acceptedClaimIds: z.array(z.string()), withdrawnCount: z.number().int().nonnegative(), reason: z.string().optional() }),
   z.object({ type: z.literal('node_verified'), runId: z.string(), nodeId: z.string() }),
   z.object({ type: z.literal('view_ready'), runId: z.string(), view: z.string() }),
   z.object({ type: z.literal('relations_ready'), runId: z.string(), questions: z.array(z.string()), relations: z.array(RelationSchema), status: z.enum(['ok', 'partial', 'failed']) }),

@@ -59,6 +59,9 @@ export function findQuoteInPassage(passageText: string, quote: string): QuoteMat
     return { found: true, fuzzy: false };
   }
 
+  // Bound synchronous OCR work so timers and SSE cannot be starved by long articles.
+  const estimatedWork = normalizedPassage.length * normalizedQuote.length ** 2 * 5;
+  if (estimatedWork > 2_000_000) return { found: false, fuzzy: false };
   const distance = bestFuzzyDistance(normalizedPassage, normalizedQuote);
   if (distance !== null && distance <= MAX_FUZZY_DISTANCE) {
     return { found: true, fuzzy: true, distance };

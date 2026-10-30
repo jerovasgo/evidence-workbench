@@ -26,10 +26,12 @@ const ISSUE_LABEL: Record<string, string> = {
 
 export function EvidenceDrawer({
   claim,
+  source,
   sourceScore,
   onClose,
 }: {
   claim: Claim | null;
+  source?: { id: string; title: string; url: string; doi?: string; pmid?: string; year?: number };
   /** Module 04 Part B — the claim's source score breakdown, when the run computed one. */
   sourceScore?: ScoreBreakdown | null;
   onClose: () => void;
@@ -52,7 +54,7 @@ export function EvidenceDrawer({
 
               <div className="flex flex-wrap gap-2">
                 <Chip tone={SUPPORT_CHIP[claim.verification.support].tone}>{SUPPORT_CHIP[claim.verification.support].label}</Chip>
-                {claim.verification.quoteFound && <Chip>Quote verified verbatim</Chip>}
+                {claim.verification.quoteFound && <Chip tone={claim.verification.quoteMatch === 'ocr_fuzzy' ? 'warning' : 'default'}>{claim.verification.quoteMatch === 'ocr_fuzzy' ? 'Quote matched with minor OCR tolerance' : 'Quote located in source'}</Chip>}
                 {claim.verification.retracted && <Chip tone="conflict">Source retracted</Chip>}
               </div>
 
@@ -79,7 +81,9 @@ export function EvidenceDrawer({
 
               <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
                 <dt className="text-muted">Source</dt>
-                <dd className="truncate text-fg">{claim.sourceId}</dd>
+                <dd className="text-fg">{source ? <a className="underline underline-offset-4" href={source.url} target="_blank" rel="noopener noreferrer">{source.title}{source.year ? ` (${source.year})` : ''}</a> : claim.sourceId}</dd>
+                {source?.doi && <><dt className="text-muted">DOI</dt><dd className="text-fg">{source.doi}</dd></>}
+                {source?.pmid && <><dt className="text-muted">PMID</dt><dd className="text-fg">{source.pmid}</dd></>}
                 <dt className="text-muted">Locator</dt>
                 <dd className="text-fg">{claim.passageId}</dd>
                 <dt className="text-muted">Certainty</dt>

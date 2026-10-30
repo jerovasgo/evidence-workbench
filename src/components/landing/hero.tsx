@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { SearchBar } from '@/components/search-bar';
 import { DEFAULT_MODE, type Mode } from '@/lib/modes';
+import { DEFAULT_RESEARCH_DEPTH, type ResearchDepth } from '@/lib/research-depth';
 
 const SUGGESTIONS = [
   'What evidence links HIF-1 alpha to the response to hypoxia?',
@@ -19,6 +20,7 @@ export function Hero() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<Mode>(DEFAULT_MODE);
+  const [depth, setDepth] = useState<ResearchDepth>(DEFAULT_RESEARCH_DEPTH);
   const [activeSuggestion, setActiveSuggestion] = useState(0);
   const [paused, setPaused] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -31,22 +33,23 @@ export function Hero() {
 
   function submit(text: string) {
     if (!text.trim()) return;
-    const params = new URLSearchParams({ q: text, mode });
+    const params = new URLSearchParams({ q: text, mode, depth });
     router.push(`/dashboard?${params.toString()}`);
   }
 
   return (
     <section className="landing-hero relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-6 pt-28 pb-20">
-      <div className="hero-orbit hero-orbit-one" aria-hidden="true" /><div className="hero-orbit hero-orbit-two" aria-hidden="true" /><div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center text-center">
-        <h1 className="text-4xl font-semibold tracking-tight text-fg sm:text-5xl md:text-6xl">
-          Follow the evidence.<br /><span className="neon-text">Understand the biology.</span>
+      <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center text-center">
+        <p className="editorial-kicker mb-8">FEDOS / GENETIC EVIDENCE</p>
+        <h1 className="text-4xl font-light tracking-[-0.055em] text-fg sm:text-5xl md:text-6xl">
+          Follow the evidence.<br /><span className="text-[#b9b9b9]">Understand the biology.</span>
         </h1>
         <p className="mt-5 max-w-lg text-balance text-base text-muted sm:text-lg">
           Investigate genetic research with an agentic evidence workbench built to trace claims to their sources, reveal context, and surface uncertainty.
         </p>
 
         <div className="hero-search mt-10 w-full">
-          <SearchBar value={query} onChange={setQuery} mode={mode} onModeChange={setMode} onSubmit={() => submit(query)} placeholder="Explore a genetic mechanism or research claim..." />
+          <SearchBar value={query} onChange={setQuery} mode={mode} onModeChange={setMode} depth={depth} onDepthChange={setDepth} onSubmit={() => submit(query)} placeholder="Explore a genetic mechanism or research claim..." />
         </div>
 
         <div

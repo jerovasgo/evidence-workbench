@@ -59,3 +59,46 @@ Log every deviation from `docs/SPEC.md` or the architecture files: date, decisio
 | 2026-10-29 | Concordance v1 extends source comparison: P5@0.5 assigns a bounded sub-question index; cross-source pairs must share that index, and P7@0.3 evaluates quoted findings and genetic context. Agreement and contradiction are suppressed unless gene, organism, model, perturbation and measurement are all present and match exactly. Relations stream after the existing done event so initial evidence latency is unaffected. | This is a conservative, model-assisted screening view, not a validated scientific conclusion. Question assignment and relation labels are model proposals, exact context matching can miss equivalent terms, and persisted completed-run replay of relations remains unimplemented. Validation against expert-reviewed genetic studies and live API behavior is pending. |
 
 | 2026-10-29 | Concordance context policy revised: relations with missing or differently worded context are retained as tentative, with a code-generated review-needed flag, side-by-side original values, and missing dimensions. Pairing no longer excludes differently named conditions. | User requested a wider interpretive framework. Textual differences are not declared biological equivalences or contradictions; review is required. The AI verdict remains a proposal, and question assignment is still model-generated. Supersedes the exact-context gate in the preceding entry. |
+
+## 2026-10-29: bounded Jinek/Cong live evaluation
+
+Pinned PMID 22745249 (DOI 10.1126/science.1225829) and PMID 23287718
+(DOI 10.1126/science.1231143). Input: Europe PMC abstracts only, not full text.
+Shared question: evidence for RNA-guided Cas9 cleavage/genome editing and context.
+Both sources extracted/verified concurrently. The diagnostic extraction guard reserved
+USD 0.10 for relations within the existing run cap; no cap was raised.
+
+Final observed run: 41.182 seconds, four verified claims, two eligible pairs,
+one proposed `adapts` relationship, no relation-call failures, USD 0.063365 total.
+The relationship connects single-guide Cas9 cleavage to endogenous cleavage in human
+and mouse cells. It is explicitly review-needed, with differing wording and missing
+context. This supports a contextual-extension interpretation, not proof of equivalence
+or contradiction. One pair omitted by the model remains unassessed. Not expert validation.
+
+The ten-second end-to-end requirement is NOT met. This controlled diagnostic bypassed
+broad search/classification and is not a dashboard end-to-end benchmark.
+The prior 170-second timer overruns are consistent with synchronous fuzzy quote search
+blocking the event loop; the expensive fallback is now bounded at 2M estimated DP cells.
+Crossref requests now abort after eight seconds. Exact quote lookup remains available
+for long text. Large fuzzy-only matches now abstain rather than occupying the event loop.
+The live test's reservation is scoped to this diagnostic; production concurrency-safe
+reservation and a ten-second response architecture remain outstanding.
+
+## 2026-10-29: runtime concordance reservation and latency experiment
+Runtime reserves min(USD 0.10, 25% of run cap) for relation-labeller; runAgent
+holds estimated call budgets synchronously to account for concurrent calls and
+releases holds on completion. Still process-local; estimated costs and timed-out
+upstream requests do not constitute a hard billing guarantee.
+Pinned abstract-only live comparison of Jinek PMID 22745249 and Cong PMID 23287718:
+minimal extraction/relation reasoning took 15.197s, USD 0.030772, but lost context
+and paired a background statement. Reverted extraction to medium reasoning and
+excluded background statements from concordance. Final retained configuration:
+25.712s, four claims, four candidate pairs, two tentative adapts relations,
+USD 0.052916, no relation failures. Both relationships connect Cas9 cleavage to
+endogenous cleavage in human/mouse cells, explicitly marked review-needed.
+No scientific contradictions found in assessed pairs; omitted pairs remain unknown.
+This does not meet the ten-second complete-response requirement. Production broad
+search latency is not represented by the pinned experiment. No quality equivalence
+claim is made for minimal-reasoning relation labelling from this small sample.
+
+| 2026-10-29 | Progressive UI keeps the real SSE activity panel visible while post-result concordance runs. | The previous view hid stage progress after `done`, although relation labeling continued. The UI now follows the real pending relation state. Live pinned benchmark remains 25.7s for complete results; 10s requires deeper architectural changes. |

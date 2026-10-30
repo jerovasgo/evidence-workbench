@@ -1,6 +1,6 @@
 # P5 — Claim extractor
 
-Version: `P5@0.5`
+Version: `P5@0.6`
 Agent: `claim-extractor` (module 03, tier T1, 1 step, ~3,000 output tokens, 25 s timeout)
 Shares the common preamble `P0`.
 
@@ -19,9 +19,9 @@ keyword list); "clinician-addressed" -> "reader-addressed".
 *(passage, sub-question)* pair. Module 03
 (`docs/architecture/03-claim-extraction-and-verification.md`) is authoritative and
 batches differently — "one `Source` + its relevant `Passage[]` ... + the
-sub-questions. One call per source, run in parallel." — so this version sends every
-windowed passage and every sub-question for one source in a single call, per module
-03, not the older per-pair draft.
+sub-questions." Short sources use one call; long sources are split into bounded
+passage batches by code, then merged by quotation and passage identifier. This
+keeps all passages eligible for extraction without a single oversized prompt.
 
 ## Task
 
@@ -48,6 +48,10 @@ Return: {
  }]
 }
 Rules:
+- Return up to 6 distinct, question-relevant claims per source when the supplied
+  passages support them. Cover separate experimental results, measurements,
+  methods and important limitations; do not collapse materially different
+  outcomes into one claim or create claims to reach a quota.
 - One claim = one finding/result; never merge content across passages.
 - Assign subQuestionIndex only when the claim directly answers that exact sub-question.
 - For genetics, geneticContext values must be exact contiguous excerpts of the quote; use null for missing values. Preserve experimental context explicitly stated in the cited passage:

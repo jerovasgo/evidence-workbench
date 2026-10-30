@@ -2,7 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 import type { RunRecord, RunsRepository } from '../data/runs-repository';
 import type { MetaClient, RespondResult } from '@/shared/meta';
 import { createInMemoryBudgetGuard } from '@/shared/security';
-import { createRun, getRunForViewer, type CreateRunDeps } from './create-run';
+import { createRun, fallbackRouterOutput, getRunForViewer, type CreateRunDeps } from './create-run';
+
+describe('router fallback', () => {
+  it('keeps the suggested HIF-1 question on the evidence path', () => {
+    expect(fallbackRouterOutput('What evidence links HIF-1 alpha to the response to hypoxia?').intent).toBe('evidence_map');
+  });
+});
 
 function fakeRespondResult(parsed: unknown): RespondResult {
   return {
@@ -123,18 +129,29 @@ describe('createRun', () => {
     expect(result.run.userId).toBe(userId);
   });
 
-  it('creates a failed run and returns routing_failed when the router agent abstains', async () => {
+  it('continues a scientific query when the router returns invalid output', async () => {
     const respond = vi.fn().mockResolvedValue(fakeRespondResult({ intent: 'not_a_real_intent' }));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
     const runsRepository = fakeRunsRepository();
 
     const result = await createRun({ freeText: 'ambiguous text', userId: null }, baseDeps(metaClient, runsRepository));
 
-    expect(result.status).toBe('routing_failed');
-    if (result.status !== 'routing_failed') throw new Error('unreachable');
-    expect(result.run.status).toBe('failed');
-    expect(result.run.intent).toBe('unknown');
-    expect(result.reason).toBe('invalid');
+    expect(result.status).toBe('routed');
+    if (result.status !== 'routed') throw new Error('unreachable');
+    expect(result.run.status).toBe('routing');
+    expect(result.run.intent).toBe('fact_lookup');
+    expect(result.routerOutput.confidence).toBe('low');
+  });
+
+  it('continues the suggested hypoxia query when the router API is unavailable', async () => {
+    const metaClient: MetaClient = { respond: vi.fn().mockRejectedValue(new Error('temporary API failure')), listModels: vi.fn() };
+    const result = await createRun(
+      { freeText: 'What evidence links HIF-1 alpha to the response to hypoxia?', userId: null },
+      baseDeps(metaClient, fakeRunsRepository()),
+    );
+    expect(result.status).toBe('routed');
+    if (result.status !== 'routed') throw new Error('unreachable');
+    expect(result.routerOutput.intent).toBe('evidence_map');
   });
 });
 

@@ -230,7 +230,7 @@ describe('POST /api/runs', () => {
     expect(runtime.pendingRunContext.put).not.toHaveBeenCalled();
   });
 
-  it('returns 502 when the router agent fails to produce valid output', async () => {
+  it('starts retrieval with a conservative route when the router output is invalid', async () => {
     const respond = vi.fn().mockResolvedValue(fakeRespondResult({ intent: 'not_a_real_intent' }));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
     const POST = await loadPostWithRuntime(mockRuntime(metaClient));
@@ -238,9 +238,12 @@ describe('POST /api/runs', () => {
     const res = await POST(
       new Request('http://localhost/api/runs', {
         method: 'POST',
-        body: JSON.stringify({ freeText: 'ambiguous text', userId: null }),
+        body: JSON.stringify({ freeText: 'What evidence links HIF-1 alpha to hypoxia?', userId: null }),
       }),
     );
-    expect(res.status).toBe(502);
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.intent).toBe('evidence_map');
+    expect(body.streamUrl).toBeDefined();
   });
 });

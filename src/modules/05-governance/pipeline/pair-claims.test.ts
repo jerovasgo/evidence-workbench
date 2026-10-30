@@ -14,7 +14,7 @@ function claim(overrides: Partial<Claim>): Claim {
     passageId: 'p1',
     quote: 'Aspirin.',
     grade: { certainty: 'ungraded', origin: 'ai_estimated' },
-    verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' },
+    verification: { exists: true, quoteFound: true, retracted: false, support: 'supports', retractionCheck: 'crossref_no_signal' },
     safetyCritical: false,
     ...overrides,
   };
@@ -48,6 +48,12 @@ describe('pairClaimsForRelations', () => {
     const a = claim({ id: 'a', sourceId: 's1', actionType: 'finding' });
     const b = claim({ id: 'b', sourceId: 's2', actionType: 'method' });
 
+    expect(pairClaimsForRelations([a, b])).toEqual([]);
+  });
+
+  it('never compares a claim without a completed retraction check', () => {
+    const a = claim({ id: 'a', sourceId: 's1' });
+    const b = claim({ id: 'b', sourceId: 's2', verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' } });
     expect(pairClaimsForRelations([a, b])).toEqual([]);
   });
 

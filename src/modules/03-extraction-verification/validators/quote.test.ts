@@ -87,3 +87,9 @@ describe('applyDoseRule', () => {
     expect(applyDoseRule('Give aspirin promptly', quote)).toBe('Give aspirin promptly');
   });
 });
+
+it('rejects absent quotations in a long article without unbounded OCR work', () => {
+ const start = performance.now();
+ expect(findQuoteInPassage('Genetic research. '.repeat(10000), 'An absent claim '.repeat(15)).found).toBe(false);
+ expect(performance.now()-start).toBeLessThan(100);
+});

@@ -82,7 +82,16 @@ export function createEuropePmcClient(options: CreateEuropePmcClientOptions = {}
   }
 
   async function fetchFullText(source: string, id: string): Promise<string | null> {
-    const res = await fetchImpl(`${EUROPE_PMC_BASE}/${source}/${id}/fullTextXML`);
+    let pmcid = source === 'PMC' ? id : undefined;
+    if (!pmcid) {
+      const params = new URLSearchParams({ query: `EXT_ID:${id} AND SRC:${source}`, format: 'json' });
+      const lookup = await fetchImpl(`${EUROPE_PMC_BASE}/search?${params}`);
+      if (!lookup.ok) return null;
+      const record = await lookup.json() as { resultList?: { result?: { pmcid?: string }[] } };
+      pmcid = record.resultList?.result?.[0]?.pmcid;
+    }
+    if (!pmcid || !/^PMC\d+$/.test(pmcid)) return null;
+    const res = await fetchImpl(`${EUROPE_PMC_BASE}/${pmcid}/fullTextXML`);
     if (res.status === 404) return null;
     if (!res.ok) {
       throw new Error(`Europe PMC fullTextXML failed: HTTP ${res.status}`);

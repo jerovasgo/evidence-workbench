@@ -29,11 +29,16 @@ export function TurnResult({ turn, onRetry }: { turn: Turn; onRetry: (turnId: st
   if (!turn.runId) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-fg">{initialProcessingMessage(turn.mode)}</p>
+        <p className="text-xs uppercase tracking-wider text-muted">Preparing overview</p>
+        <div role="status" aria-label="Preparing research overview" className="space-y-2 animate-pulse">
+          <div className="h-3 w-4/5 rounded bg-border" />
+          <div className="h-3 w-3/5 rounded bg-border" />
+        </div>
+        <p className="sr-only">{initialProcessingMessage(turn.mode)}</p>
         <EvidenceSkeleton />
       </div>
     );
   }
 
-  return <RunResult runId={turn.runId} mode={turn.mode} intent={turn.intent} />;
+  return <RunResult runId={turn.runId} mode={turn.mode} intent={turn.intent} query={turn.freeText} />;
 }

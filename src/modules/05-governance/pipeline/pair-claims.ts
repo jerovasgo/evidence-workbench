@@ -1,4 +1,4 @@
-import type { Claim } from '@/shared/domain';
+import { isVerifiedClaim, type Claim } from '@/shared/domain';
 
 // Module 05 `relation-labeller` (P7): "pairing by code first: same actionType +
 // overlapping conditions + semantic key from sub-question assignment"
@@ -27,9 +27,9 @@ export function pairClaimsForRelations(claims: Claim[]): ClaimPair[] {
     for (let j = i + 1; j < claims.length; j++) {
       const a = claims[i]!;
       const b = claims[j]!;
-      if (a.verification.support !== 'supports' || b.verification.support !== 'supports') continue;
-      if (!a.verification.exists || !b.verification.exists || !a.verification.quoteFound || !b.verification.quoteFound || a.verification.retracted || b.verification.retracted) continue;
+      if (!isVerifiedClaim(a) || !isVerifiedClaim(b)) continue;
       if (a.subQuestionIndex === undefined || a.subQuestionIndex !== b.subQuestionIndex) continue;
+      if (a.basis !== 'primary' || b.basis !== 'primary') continue;
       if (a.sourceId === b.sourceId) continue;
       if (a.actionType !== b.actionType) continue;
 

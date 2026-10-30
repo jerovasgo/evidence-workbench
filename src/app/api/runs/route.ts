@@ -24,6 +24,7 @@ import { getOrCreateSessionId } from '@/lib/session-cookie';
 const RequestWithConversationSchema = CreateRunRequestSchema.extend({
   conversationId: z.string().uuid().optional(),
   mode: z.enum(['auto', 'algorithm', 'evidence_map']).optional(),
+  depth: z.enum(['quick', 'balanced', 'deep']).optional(),
 });
 
 export async function POST(request: Request): Promise<Response> {
@@ -67,8 +68,10 @@ export async function POST(request: Request): Promise<Response> {
       if (needsStream) {
         runtime.pendingRunContext.put(outcome.run.id, {
           freeText: parsed.data.freeText,
+          depth: parsed.data.depth ?? 'balanced',
           routerCondition: outcome.routerOutput.condition,
           routerSetting: outcome.routerOutput.setting,
+          opening: outcome.routerOutput.opening,
         });
       }
 

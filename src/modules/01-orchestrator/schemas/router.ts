@@ -20,6 +20,7 @@ export const RouterOutputSchema = z.object({
   secondary: IntentSchema.optional(),
   condition: z.string().optional(),
   setting: z.string().optional(),
+  opening: z.string().min(1).max(500).optional(),
   confidence: z.enum(['high', 'medium', 'low']),
   reject: z.object({ reason: z.string() }).optional(),
 });

@@ -58,6 +58,7 @@ export type GeneticContext = z.infer<typeof GeneticContextSchema>;
 export const ClaimVerificationSchema = z.object({
   exists: z.boolean(),
   quoteFound: z.boolean(),
+  quoteMatch: z.enum(['normalized_exact', 'ocr_fuzzy']).optional(),
   retracted: z.boolean(),
   support: z.enum(['supports', 'partial', 'no', 'unknown']),
   retractionCheck: z.literal('crossref_no_signal').optional(),
@@ -84,18 +85,13 @@ export const ClaimSchema = z.object({
 });
 export type Claim = z.infer<typeof ClaimSchema>;
 
-/**
- * SPEC §8 / docs/architecture/03-claim-extraction-and-verification.md "Final states":
- * `verified` requires quoteFound AND support = 'supports' — not just a quote match.
- * Module 03's own `support-judge` agent (T2) isn't built yet, so nothing it produces
- * today can satisfy `support: 'supports'`; everything that passes the deterministic
- * checks instead carries `support: 'unknown'`, which per the architecture doc belongs
- * "available only in the evidence drawer marked 'not confirmed'", never in a main
- * view — this refine is what makes that distinction enforceable at the type level
- * once a view module tries to accept `VerifiedClaim[]` only.
- */
-export const VerifiedClaimSchema = ClaimSchema.refine(
-  (claim) => claim.verification.quoteFound && claim.verification.support === 'supports',
-  { message: "A VerifiedClaim must have verification.quoteFound = true and verification.support = 'supports'" },
-);
+/** The single display gate for verified claims and downstream relations. */
+export function isVerifiedClaim(claim: Claim): boolean {
+  const v = claim.verification;
+  return v.exists && v.quoteFound && !v.retracted && v.support === 'supports' && v.retractionCheck === 'crossref_no_signal';
+}
+
+export const VerifiedClaimSchema = ClaimSchema.refine(isVerifiedClaim, {
+  message: 'A VerifiedClaim requires source existence, a located quote, confirmed support and a completed no-signal retraction check',
+});
 export type VerifiedClaim = z.infer<typeof VerifiedClaimSchema>;

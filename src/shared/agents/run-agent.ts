@@ -98,9 +98,13 @@ export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<Agen
   const reasoningEffort = tierToReasoningEffort(params.tier);
   const outputFormat = toStructuredOutputFormat(params.name, params.outputSchema);
 
-  const budgetCheck = ctx.budgetGuard.check(ctx.runId, limits.maxCostUsd);
-  if (!budgetCheck.allowed) {
-    return finish({ ok: false, reason: 'budget', detail: budgetCheck.reason });
+  let releaseBudget: (() => void) | null | undefined;
+  if (ctx.budgetGuard.reserveCall) {
+    releaseBudget = ctx.budgetGuard.reserveCall(ctx.runId, limits.maxCostUsd, params.name === 'relation-labeller');
+    if (!releaseBudget) return finish({ ok: false, reason: 'budget', detail: 'Insufficient unreserved budget' });
+  } else {
+    const budgetCheck = ctx.budgetGuard.check(ctx.runId, limits.maxCostUsd);
+    if (!budgetCheck.allowed) return finish({ ok: false, reason: 'budget', detail: budgetCheck.reason });
   }
 
   const baseMessages: { role: InputRole; content: string }[] = [
@@ -178,6 +182,7 @@ export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<Agen
   function finish(result: FinishInput): AgentResult<TOut> {
     const ms = Date.now() - started;
     const costUsd = result.costUsd ?? 0;
+    releaseBudget?.();
     if (costUsd > 0) ctx.budgetGuard.record(ctx.runId, costUsd);
     const tokens = result.ok ? result.tokens : 0;
     ctx.onTrace?.({ type: 'agent_result', name: params.name, ok: result.ok, ms, costUsd, tokens });

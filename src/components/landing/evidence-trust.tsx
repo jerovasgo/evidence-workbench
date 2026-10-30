@@ -33,7 +33,7 @@ export function EvidenceTrust() {
       <div className="mt-16 grid grid-cols-1 gap-10 sm:grid-cols-3">
         {POINTS.map((point) => (
           <div key={point.title} className="flex flex-col gap-3">
-            <point.icon className="h-5 w-5 text-[#8debdc]" aria-hidden="true" />
+            <point.icon className="h-5 w-5 text-[#b8b8b8]" aria-hidden="true" />
             <h3 className="text-sm font-medium text-fg">{point.title}</h3>
             <p className="text-sm text-muted">{point.description}</p>
           </div>

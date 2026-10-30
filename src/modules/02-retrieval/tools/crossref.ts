@@ -53,7 +53,7 @@ export function createCrossrefClient(options: CreateCrossrefClientOptions = {}):
     const url = new URL(`${CROSSREF_BASE}/${encodeURIComponent(normalizedDoi)}`);
     if (options.mailto) url.searchParams.set('mailto', options.mailto);
 
-    const res = await fetchImpl(url.toString());
+    const res = await fetchImpl(url.toString(), { signal: AbortSignal.timeout(8000) });
     if (res.status === 404) return null;
     if (!res.ok) {
       throw new Error(`Crossref lookup failed: HTTP ${res.status}`);

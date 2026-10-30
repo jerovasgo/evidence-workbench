@@ -9,6 +9,7 @@ import {
 import { labelRelationsBatched, pairClaimsForRelations } from '@/modules/05-governance';
 import type { AgentTraceEvent } from '@/shared/agents';
 import type { Claim, RunEvent } from '@/shared/domain';
+import { RESEARCH_DEPTH_CONCURRENCY, RESEARCH_DEPTH_TIME_MS } from '@/lib/research-depth';
 
 // 2026-10-28 latency audit (docs/DECISIONS.md): `runAgent` (shared/agents) already
 // emits an `onTrace` event — {name, ms, costUsd, tokens} — for every single model
@@ -132,6 +133,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       // cumulative `band_ready` each time a new one arrives — see the latency-audit
       // comment above. `sourceScores` only rides the final, authoritative send.
       const streamedClaims: Claim[] = [];
+      const provisionalBySource = new Map<string, number>();
 
       // A reconnect after the run already finished: nothing to stream, just report
       // the terminal state once (module 01: "results retrievable by run id").
@@ -142,6 +144,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       }
 
       const pending = runtime.pendingRunContext.take(run.id);
+      if (pending?.opening) send({ type: 'opening_ready', runId: run.id, text: pending.opening });
 
       // No in-memory context: only an actual blocker if nothing was persisted
       // either — otherwise this is exactly the resumable-reconnect case stage
@@ -177,6 +180,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
             p10PromptTemplate: runtime.p10PromptTemplate,
             pubmed: runtime.pubmed,
             europePmc: runtime.europePmc,
+            extractionTimeBudgetMs: RESEARCH_DEPTH_TIME_MS[pending?.depth ?? 'balanced'],
+            maxExtractConcurrency: RESEARCH_DEPTH_CONCURRENCY[pending?.depth ?? 'balanced'],
             onTrace: (event) => logAgentTrace(run.id, event),
             onStageEvent: (event) => {
               if (event.type === 'stage_started') {
@@ -187,6 +192,14 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
                 console.log(
                   JSON.stringify({ type: 'stage_latency', runId: run.id, stage: event.stage, status: event.status, ms: event.metrics.ms, resumed: event.resumed, elapsedMs: Date.now() - streamStarted }),
                 );
+              } else if (event.type === 'sources_retrieved') {
+                send({ type: 'overview_ready', runId: run.id, sources: event.sources.slice(0, 5).map(({ title, year, url }) => ({ title, year, url })) });
+                send({ type: 'source_catalog_ready', runId: run.id, sources: event.sources.map(({ tempId, title, url, doi, pmid, year }) => ({ id: tempId, status: 'candidate', title, url, doi, pmid, year })) });
+                console.log(JSON.stringify({ type: 'overview_latency', runId: run.id, elapsedMs: Date.now() - streamStarted }));
+              } else if (event.type === 'provisional_claims') {
+                provisionalBySource.set(event.sourceId, event.claims.length);
+                send({ type: 'provisional_claims_ready', runId: run.id, sourceId: event.sourceId, claims: event.claims });
+                if (provisionalBySource.size === 1) console.log(JSON.stringify({ type: 'first_provisional_latency', runId: run.id, elapsedMs: Date.now() - streamStarted }));
               } else {
                 const claimsNote = event.outcome.status === 'ok' ? `, ${event.outcome.claims.length} claim(s)` : '';
                 send({ type: 'stage_progress', runId: run.id, stage: 'extract', detail: `${event.sourceId}: ${event.outcome.status}${claimsNote}` });
@@ -199,6 +212,15 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
                     console.log(JSON.stringify({ type: 'first_claims_latency', runId: run.id, elapsedMs: Date.now() - streamStarted }));
                   }
                   send({ type: 'band_ready', runId: run.id, payload: { claims: [...streamedClaims] } });
+                }
+                const provisionalCount = provisionalBySource.get(event.sourceId) ?? 0;
+                if (provisionalCount > 0) {
+                  const acceptedClaimIds = event.outcome.status === 'ok' ? event.outcome.claims.map((claim) => claim.id) : [];
+                  const withdrawnCount = Math.max(0, provisionalCount - acceptedClaimIds.length);
+                  const reason = withdrawnCount > 0
+                    ? event.outcome.status === 'ok' ? [...new Set(event.outcome.withdrawn.map((entry) => entry.reason))].join('; ') : 'source verification was interrupted'
+                    : undefined;
+                  send({ type: 'source_reviewed', runId: run.id, sourceId: event.sourceId, acceptedClaimIds, withdrawnCount, reason });
                 }
               }
             },

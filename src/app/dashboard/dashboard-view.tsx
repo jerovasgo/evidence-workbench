@@ -6,8 +6,9 @@ import { Composer } from '@/components/dashboard/composer';
 import { EmptyState } from '@/components/dashboard/empty-state';
 import { useConversations } from '@/lib/use-conversations';
 import type { Mode } from '@/lib/modes';
+import type { ResearchDepth } from '@/lib/research-depth';
 
-export function DashboardView({ initialQuery, initialMode }: { initialQuery?: string; initialMode?: Mode }) {
+export function DashboardView({ initialQuery, initialMode, initialDepth }: { initialQuery?: string; initialMode?: Mode; initialDepth?: ResearchDepth }) {
   const {
     conversations,
     activeConversationId,
@@ -20,7 +21,7 @@ export function DashboardView({ initialQuery, initialMode }: { initialQuery?: st
     newResearch,
     renameConversation,
     deleteConversation,
-  } = useConversations(initialQuery, initialMode);
+  } = useConversations(initialQuery, initialMode, initialDepth);
 
   const hasActiveThread = turns.length > 0;
 
@@ -46,10 +47,10 @@ export function DashboardView({ initialQuery, initialMode }: { initialQuery?: st
                 {error}
               </p>
             )}
-            <Composer onSend={(text, mode) => void sendMessage(text, mode)} sending={sending} />
+            <Composer onSend={(text, mode, depth) => void sendMessage(text, mode, depth)} sending={sending} />
           </>
         ) : (
-          <EmptyState onSend={(text, mode) => void sendMessage(text, mode)} />
+          <EmptyState onSend={(text, mode, depth) => void sendMessage(text, mode, depth)} />
         )}
       </div>
     </div>

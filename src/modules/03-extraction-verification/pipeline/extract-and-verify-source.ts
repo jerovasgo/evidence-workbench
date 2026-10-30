@@ -9,6 +9,7 @@ import { windowText } from '../passages/window-text';
 import { checkRetraction } from '../validators/retraction';
 import { extractSurroundingContext } from './support-context';
 import { applySupportJudgment, verifyClaim } from './verify-claim';
+import { normalizeForMatch } from '../validators/quote';
 
 // Module 03, "one call per source, run in parallel" (claim-extractor, P5) followed by
 // deterministic verification, followed by the support-judge (P10) — the whole
@@ -19,6 +20,8 @@ import { applySupportJudgment, verifyClaim } from './verify-claim';
 // with bounded concurrency rather than one per source, since a source's claim count
 // varies and a single claim's judge call must never be the slow path.
 const MAX_JUDGE_CONCURRENCY = 4;
+const MAX_EXTRACT_CONCURRENCY = 2;
+const MAX_PASSAGES_PER_EXTRACTION = 4;
 
 /** Runs `fn` over `items` with at most `limit` in flight at once. */
 async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
@@ -55,13 +58,15 @@ export interface ExtractAndVerifySourceDeps {
   p0Preamble: string;
   p5PromptTemplate: string;
   p10PromptTemplate: string;
+  /** Located, deterministic-check-passing claims; source and support checks remain pending. */
+  onProvisionalClaims?: (claims: Claim[]) => void;
   onTrace?: (event: AgentTraceEvent) => void;
 }
 
 export type ExtractAndVerifySourceResult =
   | { sourceId: string; status: 'no_text' }
   | { sourceId: string; status: 'extraction_failed'; reason: string }
-  | { sourceId: string; status: 'ok'; claims: Claim[]; dropped: { reason: string }[]; costUsd: number };
+  | { sourceId: string; status: 'ok'; claims: Claim[]; dropped: { reason: string }[]; withdrawn: { id: string; reason: string }[]; costUsd: number };
 
 export async function extractAndVerifySource(
   input: ExtractAndVerifySourceInput,
@@ -77,41 +82,52 @@ export async function extractAndVerifySource(
   // other's result — so they run concurrently instead of one `await` after the
   // other. Free latency: this source's total time drops from (extract + retraction)
   // to max(extract, retraction).
-  const [extractResult, retraction] = await Promise.all([
-    extractClaims(
-      input.runId,
-      {
-        sourceTitle: input.sourceTitle,
-        passages: passages.map((p) => ({ passageId: p.id, locator: p.locator, text: p.text })),
-        subQuestions: input.subQuestions,
-      },
-      { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p5PromptTemplate: deps.p5PromptTemplate, onTrace: deps.onTrace },
-    ),
-    // Step 4 ("not retracted") is source-level: computed once, applied to every
-    // claim from this source, rather than re-checked per claim.
-    checkRetraction(
-      {
-        doi: input.doi,
-        pubmedSummary: input.pubTypes ? { pmid: input.sourceId, title: input.sourceTitle, pubTypes: input.pubTypes } : undefined,
-        fetchedText: input.fullText,
-      },
-      { crossref: deps.crossref },
-    ),
-  ]);
-
-  if (!extractResult.ok) {
-    return { sourceId: input.sourceId, status: 'extraction_failed', reason: extractResult.detail };
+  const retractionPromise = checkRetraction(
+    {
+      doi: input.doi,
+      pubmedSummary: input.pubTypes ? { pmid: input.sourceId, title: input.sourceTitle, pubTypes: input.pubTypes } : undefined,
+      fetchedText: input.fullText,
+    },
+    { crossref: deps.crossref },
+  );
+  const batches = Array.from({ length: Math.ceil(passages.length / MAX_PASSAGES_PER_EXTRACTION) }, (_, index) =>
+    passages.slice(index * MAX_PASSAGES_PER_EXTRACTION, (index + 1) * MAX_PASSAGES_PER_EXTRACTION),
+  );
+  const extractionResults = await mapWithConcurrency(batches, MAX_EXTRACT_CONCURRENCY, (batch) => extractClaims(
+    input.runId,
+    { sourceTitle: input.sourceTitle, passages: batch.map((p) => ({ passageId: p.id, locator: p.locator, text: p.text })), subQuestions: input.subQuestions },
+    { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p5PromptTemplate: deps.p5PromptTemplate, onTrace: deps.onTrace },
+  ));
+  const succeeded = extractionResults.filter((result) => result.ok);
+  if (succeeded.length === 0) {
+    const failed = extractionResults.find((result) => !result.ok);
+    return { sourceId: input.sourceId, status: 'extraction_failed', reason: failed && !failed.ok ? failed.detail : 'No extraction batch completed' };
   }
+  const extractionCostUsd = succeeded.reduce((sum, result) => sum + result.usage.costUsd, 0);
+  const seen = new Set<string>();
+  const extractedClaims = succeeded.flatMap((result) => result.value.claims).filter((claim) => {
+    const key = `${claim.passageId}:${normalizeForMatch(claim.quote)}:${normalizeForMatch(claim.text)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
   const verifiedClaims: Claim[] = [];
   const dropped: { reason: string }[] = [];
-  for (const extracted of extractResult.value.claims) {
-    const verified = verifyClaim({ extracted, sourceId: input.sourceId, retracted: retraction.status === 'retracted' }, passages);
+  for (const extracted of extractedClaims) {
+    const verified = verifyClaim({ extracted, sourceId: input.sourceId, retracted: false }, passages);
     if (verified.outcome === 'kept') {
       if (verified.claim.subQuestionIndex !== undefined && verified.claim.subQuestionIndex >= input.subQuestions.length) verified.claim.subQuestionIndex = undefined;
       verifiedClaims.push(verified.claim);
     }
     else dropped.push({ reason: verified.reason });
+  }
+  if (verifiedClaims.length > 0) deps.onProvisionalClaims?.(verifiedClaims);
+
+  const retraction = await retractionPromise;
+  if (retraction.status !== 'checked_no_signal') {
+    const reason = retraction.status === 'retracted' ? 'source is retracted or withdrawn' : `retraction status unknown: ${retraction.reason ?? 'check unavailable'}`;
+    return { sourceId: input.sourceId, status: 'ok', claims: [], dropped: [...dropped, ...verifiedClaims.map(() => ({ reason }))], withdrawn: verifiedClaims.map((claim) => ({ id: claim.id, reason })), costUsd: extractionCostUsd };
   }
 
   // Step 8 (support-judge, P10) — the last verification step. One call per claim,
@@ -147,13 +163,22 @@ export async function extractAndVerifySource(
   });
 
   // Only fully supported claims with a completed retraction check enter downstream views.
-  const claims = judged.filter((c): c is Claim => {
-    if (!c) { dropped.push({ reason: 'claim not supported by source' }); return false; }
-    if (c.verification.support !== 'supports') { dropped.push({ reason: 'source support not confirmed' }); return false; }
-    if (retraction.status === 'unknown') { dropped.push({ reason: `retraction status unknown: ${retraction.reason ?? 'check unavailable'}` }); return false; }
-    c.verification.retractionCheck = 'crossref_no_signal';
-    return true;
+  const claims: Claim[] = [];
+  const withdrawn: { id: string; reason: string }[] = [];
+  judged.forEach((claim, index) => {
+    const reason = !claim ? 'the cited quote did not support the claim' : claim.verification.support !== 'supports' ? 'source support could not be confirmed' : null;
+    if (reason || !claim) {
+      const withdrawalReason = reason ?? 'the cited quote did not support the claim';
+      dropped.push({ reason: withdrawalReason });
+      withdrawn.push({ id: verifiedClaims[index]!.id, reason: withdrawalReason });
+      return;
+    }
+    // A successful Crossref lookup both resolves the DOI and completes the
+    // no-signal check. Earlier deterministic checks cannot assert existence.
+    claim.verification.exists = true;
+    claim.verification.retractionCheck = 'crossref_no_signal';
+    claims.push(claim);
   });
 
-  return { sourceId: input.sourceId, status: 'ok', claims, dropped, costUsd: extractResult.usage.costUsd + judgeCostUsd };
+  return { sourceId: input.sourceId, status: 'ok', claims, dropped, withdrawn, costUsd: extractionCostUsd + judgeCostUsd };
 }

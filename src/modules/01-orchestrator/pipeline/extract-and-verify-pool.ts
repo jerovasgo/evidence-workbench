@@ -15,29 +15,22 @@ import { extractAndVerifySource } from '@/modules/03-extraction-verification';
 // the time-to-first-token piece: `onSourceDone` fires as EACH source finishes, not
 // once at the end, so a caller (the SSE route) can stream the first source's
 // verified claims (~9-10s per a live smoke test) while the rest are still in
-// flight, instead of waiting for the whole pool. Capped to `maxSources` (default
-// 10) and prioritized by evidence kind (meta_analysis/standards_body/local_protocol
-// > systematic review > controlled experiment > everything else) rather than
-// processing every deduped candidate —
+// flight, instead of waiting for the whole pool. Interactive runs use a soft
+// exploration deadline: workers stop starting new sources when it expires, while
+// already-running verification completes. Candidates are prioritized by evidence
+// kind (meta_analysis/standards_body/local_protocol > systematic review >
+// controlled experiment > everything else) —
 // a real ranking (module 02's `scoring/score.ts`) isn't wired in yet (SECURITY.md
 // known gap), but "prefer stronger evidence first" is a reasonable, principled
-// stand-in using what classification already produced, and keeps latency/cost
-// bounded regardless of how large the retrieved pool is.
+// stand-in using what classification already produced. The run budget guard
+// independently limits cost.
 
-const KIND_PRIORITY: Record<string, number> = {
-  meta_analysis: 4,
-  standards_body: 3,
-  local_protocol: 3,
-  systematic_review: 2,
-  controlled_experiment: 1,
-};
-const DEFAULT_MAX_SOURCES = 10;
 const DEFAULT_MAX_CONCURRENCY = 6;
 
 export type PoolSourceOutcome =
   | { status: 'no_full_text' }
   | { status: 'extraction_failed'; reason: string }
-  | { status: 'ok'; claims: Claim[]; dropped: { reason: string }[]; costUsd: number };
+  | { status: 'ok'; claims: Claim[]; dropped: { reason: string }[]; withdrawn: { id: string; reason: string }[]; costUsd: number };
 
 export interface ExtractAndVerifyPoolInput {
   runId: string;
@@ -46,6 +39,8 @@ export interface ExtractAndVerifyPoolInput {
   classifications: SourceClassification[];
   subQuestions: string[];
   maxSources?: number;
+  /** Soft time window: stop starting new sources when elapsed; in-flight verification completes. */
+  timeBudgetMs?: number;
   maxConcurrency?: number;
 }
 
@@ -60,6 +55,7 @@ export interface ExtractAndVerifyPoolDeps {
   p5PromptTemplate: string;
   p10PromptTemplate: string;
   onSourceDone?: (sourceId: string, outcome: PoolSourceOutcome) => void;
+  onProvisionalClaims?: (sourceId: string, claims: Claim[]) => void;
   onTrace?: (event: AgentTraceEvent) => void;
 }
 
@@ -67,16 +63,19 @@ export interface ExtractAndVerifyPoolResult {
   claims: Claim[];
   perSource: { sourceId: string; outcome: PoolSourceOutcome }[];
   costUsd: number;
+  sourcesNotStarted: number;
 }
 
 export async function extractAndVerifyPool(
   input: ExtractAndVerifyPoolInput,
   deps: ExtractAndVerifyPoolDeps,
 ): Promise<ExtractAndVerifyPoolResult> {
-  const kindBySourceId = new Map(input.classifications.map((c) => [c.sourceId, c.kind]));
-  const priorityOf = (c: CandidateSource) => KIND_PRIORITY[kindBySourceId.get(c.tempId) ?? ''] ?? 0;
-  const selected = [...input.candidates].sort((a, b) => priorityOf(b) - priorityOf(a)).slice(0, input.maxSources ?? DEFAULT_MAX_SOURCES);
+  // Preserve retrieval order. Study type is reported later; it must not decide
+  // which relevant sources enter the time window first.
+  const selected = [...input.candidates];
+  if (input.maxSources !== undefined) selected.length = Math.min(selected.length, input.maxSources);
   const maxConcurrency = input.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
+  const deadline = input.timeBudgetMs === undefined ? Infinity : Date.now() + input.timeBudgetMs;
 
   const claims: Claim[] = [];
   const perSource: { sourceId: string; outcome: PoolSourceOutcome }[] = [];
@@ -107,13 +106,14 @@ export async function extractAndVerifyPool(
           p5PromptTemplate: deps.p5PromptTemplate,
           p10PromptTemplate: deps.p10PromptTemplate,
           onTrace: deps.onTrace,
+          onProvisionalClaims: (claims) => deps.onProvisionalClaims?.(candidate.tempId, claims),
         },
       );
 
       if (result.status === 'no_text') outcome = { status: 'no_full_text' };
       else if (result.status === 'extraction_failed') outcome = { status: 'extraction_failed', reason: result.reason };
       else {
-        outcome = { status: 'ok', claims: result.claims, dropped: result.dropped, costUsd: result.costUsd };
+        outcome = { status: 'ok', claims: result.claims, dropped: result.dropped, withdrawn: result.withdrawn, costUsd: result.costUsd };
         claims.push(...result.claims);
         totalCostUsd += result.costUsd;
       }
@@ -126,6 +126,7 @@ export async function extractAndVerifyPool(
   let next = 0;
   async function worker(): Promise<void> {
     for (;;) {
+      if (Date.now() >= deadline) return;
       const i = next++;
       if (i >= selected.length) return;
       await processOne(selected[i]!);
@@ -133,5 +134,5 @@ export async function extractAndVerifyPool(
   }
   await Promise.all(Array.from({ length: Math.min(maxConcurrency, selected.length) }, worker));
 
-  return { claims, perSource, costUsd: totalCostUsd };
+  return { claims, perSource, costUsd: totalCostUsd, sourcesNotStarted: Math.max(0, selected.length - Math.min(next, selected.length)) };
 }

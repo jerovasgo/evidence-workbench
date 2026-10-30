@@ -5,6 +5,7 @@ import { ArrowUp } from 'lucide-react';
 import { ModeSelector } from '@/components/mode-selector';
 import { cn } from '@/lib/cn';
 import type { Mode } from '@/lib/modes';
+import { RESEARCH_DEPTH_OPTIONS, type ResearchDepth } from '@/lib/research-depth';
 
 // Shared between the landing hero and the dashboard composer — "the barra must feel
 // like the most important component in the whole interface." Enter submits,
@@ -15,6 +16,8 @@ export interface SearchBarProps {
   onChange: (value: string) => void;
   mode: Mode;
   onModeChange: (mode: Mode) => void;
+  depth: ResearchDepth;
+  onDepthChange: (depth: ResearchDepth) => void;
   onSubmit: () => void;
   placeholder?: string;
   loading?: boolean;
@@ -28,6 +31,8 @@ export function SearchBar({
   onChange,
   mode,
   onModeChange,
+  depth,
+  onDepthChange,
   onSubmit,
   placeholder = 'Ask anything. Explore the connections.',
   loading = false,
@@ -63,8 +68,11 @@ export function SearchBar({
           size === 'hero' ? 'text-base' : 'text-sm',
         )}
       />
-      <div className="mt-2 flex items-center justify-between">
-        <ModeSelector mode={mode} onChange={onModeChange} />
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <ModeSelector mode={mode} onChange={onModeChange} />
+          <label className="text-xs text-muted">Depth <select aria-label="Research depth" title={RESEARCH_DEPTH_OPTIONS.find((option) => option.value === depth)?.description} value={depth} onChange={(e) => onDepthChange(e.target.value as ResearchDepth)} className="ml-1 rounded-md border border-border bg-black/50 px-2 py-1 text-fg">{RESEARCH_DEPTH_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+        </div>
         <button
           type="button"
           onClick={onSubmit}

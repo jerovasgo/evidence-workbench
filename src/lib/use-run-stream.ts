@@ -16,9 +16,14 @@ export interface StageState {
 }
 
 export interface RunStreamState {
+  opening: string | null;
+  overviewSources: { title: string; year?: number; url?: string }[];
+  sourceCatalog: Record<string, { id: string; status: 'candidate'; title: string; url: string; doi?: string; pmid?: string; year?: number }>;
   stages: Record<StageName, StageState>;
   sourceProgress: string[];
   claims: Claim[] | null;
+  provisionalBySource: Record<string, Claim[]>;
+  withdrawals: { sourceId: string; count: number; reason?: string }[];
   sourceScores: Record<string, ScoreBreakdown> | null;
   receipt: Receipt | null;
   relations: Relation[];
@@ -30,11 +35,16 @@ export interface RunStreamState {
 
 const STAGE_ORDER: StageName[] = ['structure', 'plan', 'retrieve', 'classify', 'extract'];
 
-function initialState(): RunStreamState {
+export function initialState(): RunStreamState {
   return {
+    opening: null,
+    overviewSources: [],
+    sourceCatalog: {},
     stages: Object.fromEntries(STAGE_ORDER.map((s) => [s, { status: 'pending' }])) as Record<StageName, StageState>,
     sourceProgress: [],
     claims: null,
+    provisionalBySource: {},
+    withdrawals: [],
     sourceScores: null,
     receipt: null,
     relations: [], questions: [], relationStatus: 'pending',
@@ -71,8 +81,21 @@ export function useRunStream(streamUrl: string | null): RunStreamState {
   return state;
 }
 
-function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamState {
+export function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamState {
   switch (event.type) {
+    case 'opening_ready':
+      return { ...prev, opening: event.text };
+    case 'overview_ready':
+      return { ...prev, overviewSources: event.sources };
+    case 'source_catalog_ready':
+      return { ...prev, sourceCatalog: Object.fromEntries(event.sources.map((source) => [source.id, source])) };
+    case 'provisional_claims_ready':
+      return { ...prev, provisionalBySource: { ...prev.provisionalBySource, [event.sourceId]: event.claims } };
+    case 'source_reviewed': {
+      const provisionalBySource = { ...prev.provisionalBySource };
+      delete provisionalBySource[event.sourceId];
+      return { ...prev, provisionalBySource, withdrawals: event.withdrawnCount > 0 ? [...prev.withdrawals, { sourceId: event.sourceId, count: event.withdrawnCount, reason: event.reason }] : prev.withdrawals };
+    }
     case 'stage_started':
       return { ...prev, stages: { ...prev.stages, [event.stage]: { status: 'running' } } };
     case 'stage_progress': {
@@ -98,9 +121,9 @@ function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamState {
     case 'receipt_ready':
       return { ...prev, receipt: event.receipt };
     case 'error':
-      return { ...prev, errorMessage: event.message };
+      return { ...prev, errorMessage: event.message, provisionalBySource: {}, withdrawals: [...prev.withdrawals, ...Object.entries(prev.provisionalBySource).map(([sourceId, claims]) => ({ sourceId, count: claims.length, reason: 'Verification was interrupted.' }))] };
     case 'done':
-      return { ...prev, status: event.status };
+      return { ...prev, status: event.status, provisionalBySource: {} };
     default:
       return prev;
   }

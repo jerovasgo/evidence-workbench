@@ -10,8 +10,8 @@ import {
   DEFAULT_ALLOWED_DOMAIN_NAMES,
   SearchPlanSchema,
   SourceClassificationSchema,
-  applyPubmedTypeOverride,
-  classifySourcesBatched,
+  buildSeedSearchPlan,
+  classifyCandidateMetadata,
   deduplicateCandidates,
   executeSearchPlan,
   planSearch,
@@ -93,13 +93,14 @@ async function persistStage<T>(stageOutputs: StageOutputsRepository | undefined,
   }
 }
 
-const MAX_SOURCES_PER_CLASSIFY_CALL = 40;
 type StageName = 'structure' | 'plan' | 'retrieve' | 'classify' | 'extract';
 
 export type RunRetrievalStageEvent =
   | { type: 'stage_started'; stage: StageName }
   | { type: 'stage_result'; stage: StageName; status: StageResult<unknown>['status']; metrics: StageResult<unknown>['metrics']; resumed: boolean }
-  | { type: 'source_extracted'; sourceId: string; outcome: PoolSourceOutcome };
+  | { type: 'sources_retrieved'; sources: CandidateSource[] }
+  | { type: 'source_extracted'; sourceId: string; outcome: PoolSourceOutcome }
+  | { type: 'provisional_claims'; sourceId: string; claims: Claim[] };
 
 export interface RunRetrievalInput {
   runId: string;
@@ -126,6 +127,7 @@ export interface RunRetrievalDeps {
   maxConcurrency?: number;
   perQueryTimeoutMs?: number;
   maxExtractSources?: number;
+  extractionTimeBudgetMs?: number;
   maxExtractConcurrency?: number;
   /** Enables resumability: reuse a usable prior stage output instead of recomputing, and persist each newly computed one. Omit to run every stage fresh (e.g. tests). */
   stageOutputs?: StageOutputsRepository;
@@ -143,16 +145,36 @@ export interface RunRetrievalResult {
   sourceScores: Record<string, ScoreBreakdown>;
 }
 
-function buildMetadataAndText(candidate: CandidateSource): string {
-  const parts = [candidate.title];
-  if (candidate.issuer) parts.push(`Issuer: ${candidate.issuer}`);
-  if (candidate.year) parts.push(`Year: ${candidate.year}`);
-  parts.push(`Family: ${candidate.family}`);
-  return parts.join('. ');
-}
-
 export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRetrievalDeps): Promise<RunRetrievalResult> {
   const latest = deps.stageOutputs ? await deps.stageOutputs.getLatestPerStage(input.runId).catch(() => undefined) : undefined;
+
+  // The initial literature search is deterministic and begins before the model
+  // finishes structuring sub-questions. Resumed runs reuse the persisted plan.
+  let plan = resumeStage('plan', SearchPlanSchema, latest);
+  const planResumed = plan !== null;
+  if (!plan) {
+    deps.onStageEvent?.({ type: 'stage_started', stage: 'plan' });
+    const started = Date.now();
+    plan = toStageResult(SearchPlanSchema, {
+      stage: 'plan', status: 'ok',
+      value: buildSeedSearchPlan(input.freeText || input.routerCondition || 'scientific evidence'),
+      metrics: { ms: Date.now() - started, costUsd: 0 },
+    });
+    await persistStage(deps.stageOutputs, input.runId, plan);
+  }
+  deps.onStageEvent?.({ type: 'stage_result', stage: 'plan', status: plan.status, metrics: plan.metrics, resumed: planResumed });
+
+  const candidateArraySchema = z.array(CandidateSourceSchema);
+  let retrieval = resumeStage('retrieve', candidateArraySchema, latest);
+  const retrievalResumed = retrieval !== null;
+  const retrieveStarted = Date.now();
+  if (!retrieval) deps.onStageEvent?.({ type: 'stage_started', stage: 'retrieve' });
+  const searchPromise = !retrieval && plan.value ? executeSearchPlan(plan.value, {
+    pubmed: deps.pubmed,
+    europePmc: deps.europePmc,
+    maxConcurrency: deps.maxConcurrency,
+    perQueryTimeoutMs: deps.perQueryTimeoutMs,
+  }) : null;
 
   // --- structure (P2) ---
   let structure = resumeStage('structure', ScenarioStructureSchema, latest);
@@ -190,52 +212,9 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
   }
   deps.onStageEvent?.({ type: 'stage_result', stage: 'structure', status: structure.status, metrics: structure.metrics, resumed: structureResumed });
 
-  // --- plan (P3) --- degrades to the router's condition hint + free text when
-  // structure failed, rather than aborting the whole pipeline (module 01: continue
-  // with usable input).
-  // Never pass an empty string through to planSearch's own `.min(1)` input schema —
-  // on a resumed run with no fresh free text, every fallback here can legitimately
-  // be empty/missing, and that schema throws synchronously rather than failing
-  // gracefully (it's meant to catch a caller bug, not handle untrusted input).
-  const planCondition = input.routerCondition || structure.value?.scope || input.freeText || 'unspecified topic';
-  const planSetting = structure.value?.context !== 'unknown' ? structure.value?.context : input.routerSetting;
-
-  let plan = resumeStage('plan', SearchPlanSchema, latest);
-  const planResumed = plan !== null;
-  if (!plan) {
-    deps.onStageEvent?.({ type: 'stage_started', stage: 'plan' });
-    const planStarted = Date.now();
-    const planAgentResult = await planSearch(
-      input.runId,
-      { condition: planCondition, subQuestions: structure.value?.subQuestions, setting: planSetting },
-      { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p3PromptTemplate: deps.p3PromptTemplate, onTrace: deps.onTrace },
-    );
-    const planMs = Date.now() - planStarted;
-
-    plan = planAgentResult.ok
-      ? toStageResult(SearchPlanSchema, {
-          stage: 'plan',
-          status: 'ok',
-          value: planAgentResult.value,
-          metrics: { ms: planMs, costUsd: planAgentResult.usage.costUsd },
-        })
-      : toStageResult(SearchPlanSchema, {
-          stage: 'plan',
-          status: 'failed',
-          reasons: [planAgentResult.detail],
-          metrics: { ms: planMs, costUsd: 0 },
-        });
-    await persistStage(deps.stageOutputs, input.runId, plan);
-  }
-  deps.onStageEvent?.({ type: 'stage_result', stage: 'plan', status: plan.status, metrics: plan.metrics, resumed: planResumed });
-
-  // --- retrieve + dedupe (module 02) --- only runs if a plan exists.
-  const candidateArraySchema = z.array(CandidateSourceSchema);
-  let retrieval = resumeStage('retrieve', candidateArraySchema, latest);
-  const retrievalResumed = retrieval !== null;
+  // --- retrieve + dedupe --- search started before P2; its results are joined here.
   if (!retrieval) {
-    deps.onStageEvent?.({ type: 'stage_started', stage: 'retrieve' });
-    if (!plan.value) {
+    if (!searchPromise) {
       retrieval = toStageResult(candidateArraySchema, {
         stage: 'retrieve',
         status: 'failed',
@@ -243,19 +222,28 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
         metrics: { ms: 0, costUsd: 0 },
       });
     } else {
-      const retrieveStarted = Date.now();
-      const executed = await executeSearchPlan(plan.value, {
-        pubmed: deps.pubmed,
-        europePmc: deps.europePmc,
-        maxConcurrency: deps.maxConcurrency,
-        perQueryTimeoutMs: deps.perQueryTimeoutMs,
-        webSearch: {
-          runId: input.runId,
-          metaClient: deps.metaClient,
-          budgetGuard: deps.budgetGuard,
-          allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES,
-        },
-      });
+      let executed = await searchPromise;
+      let expanded = false;
+      if (executed.candidates.length === 0) {
+        // Only an empty first pass pays for an agent-planned expansion. Its query
+        // output is still executed through the same bounded, allow-listed tools.
+        const expansion = await planSearch(
+          input.runId,
+          { condition: input.freeText || input.routerCondition || 'scientific evidence', subQuestions: structure.value?.subQuestions, setting: structure.value?.context },
+          { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p3PromptTemplate: deps.p3PromptTemplate, onTrace: deps.onTrace },
+        );
+        if (expansion.ok) {
+          expanded = true;
+          const next = await executeSearchPlan(expansion.value, {
+            pubmed: deps.pubmed,
+            europePmc: deps.europePmc,
+            maxConcurrency: deps.maxConcurrency,
+            perQueryTimeoutMs: deps.perQueryTimeoutMs,
+            webSearch: { runId: input.runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES },
+          });
+          executed = { candidates: next.candidates, skipped: [...executed.skipped, ...next.skipped], failed: [...executed.failed, ...next.failed] };
+        }
+      }
       const retrieveMs = Date.now() - retrieveStarted;
       const deduped = deduplicateCandidates(executed.candidates);
       const hasIssues = executed.skipped.length > 0 || executed.failed.length > 0;
@@ -273,15 +261,16 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
         metrics: {
           ms: retrieveMs,
           costUsd: 0,
-          counts: { raw: executed.candidates.length, deduped: deduped.length, skipped: executed.skipped.length, failed: executed.failed.length },
+          counts: { raw: executed.candidates.length, deduped: deduped.length, skipped: executed.skipped.length, failed: executed.failed.length, expanded: Number(expanded) },
         },
       });
     }
     await persistStage(deps.stageOutputs, input.runId, retrieval);
   }
   deps.onStageEvent?.({ type: 'stage_result', stage: 'retrieve', status: retrieval.status, metrics: retrieval.metrics, resumed: retrievalResumed });
+  if (retrieval.value?.length) deps.onStageEvent?.({ type: 'sources_retrieved', sources: retrieval.value });
 
-  // --- classify (P4 + applyPubmedTypeOverride) --- only runs if there are candidates.
+  // --- classify from explicit metadata only --- unknown design stays `other`.
   const classificationArraySchema = z.array(SourceClassificationSchema);
   let classification = resumeStage('classify', classificationArraySchema, latest);
   const classificationResumed = classification !== null;
@@ -295,49 +284,12 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
         metrics: { ms: 0, costUsd: 0 },
       });
     } else {
-      const toClassify = retrieval.value.slice(0, MAX_SOURCES_PER_CLASSIFY_CALL);
-      const truncated = retrieval.value.length > MAX_SOURCES_PER_CLASSIFY_CALL;
-
-      // 2026-10-28 latency audit: was one serial ~40-source call (18.6-29.5s live-
-      // measured, consistently the slowest stage) — now several smaller batches run
-      // with bounded concurrency (classify-sources-batched.ts, module 02), cutting
-      // wall-clock time to roughly one small batch's duration instead of one giant
-      // one's, at the same cost and same per-source output.
       const classifyStarted = Date.now();
-      const batched = await classifySourcesBatched(
-        input.runId,
-        toClassify.map((c) => ({ sourceId: c.tempId, title: c.title, metadataAndText: buildMetadataAndText(c) })),
-        { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p4PromptTemplate: deps.p4PromptTemplate, onTrace: deps.onTrace },
-      );
-      const classifyMs = Date.now() - classifyStarted;
-
-      const byTempId = new Map(toClassify.map((c) => [c.tempId, c]));
-      const overridden = batched.classifications.map((classification) => {
-        const candidate = byTempId.get(classification.sourceId);
-        return candidate?.pubTypes ? applyPubmedTypeOverride(classification, candidate.pubTypes) : classification;
+      classification = toStageResult(classificationArraySchema, {
+        stage: 'classify', status: 'ok',
+        value: retrieval.value.map(classifyCandidateMetadata),
+        metrics: { ms: Date.now() - classifyStarted, costUsd: 0, counts: { classified: retrieval.value.length } },
       });
-
-      const reasons = [
-        ...(truncated ? [`${retrieval.value.length - MAX_SOURCES_PER_CLASSIFY_CALL} candidate(s) left unclassified (40/call cap)`] : []),
-        ...batched.failures.map((f) => `batch failed: ${f.reason}`),
-      ];
-
-      if (overridden.length === 0) {
-        classification = toStageResult(classificationArraySchema, {
-          stage: 'classify',
-          status: 'failed',
-          reasons: reasons.length > 0 ? reasons : ['No classifications returned'],
-          metrics: { ms: classifyMs, costUsd: batched.costUsd },
-        });
-      } else {
-        classification = toStageResult(classificationArraySchema, {
-          stage: 'classify',
-          status: reasons.length > 0 ? 'partial' : 'ok',
-          value: overridden,
-          reasons: reasons.length > 0 ? reasons : undefined,
-          metrics: { ms: classifyMs, costUsd: batched.costUsd },
-        });
-      }
     }
     await persistStage(deps.stageOutputs, input.runId, classification);
   }
@@ -375,6 +327,7 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
           classifications: classification.value ?? [],
           subQuestions: structure.value?.subQuestions ?? [],
           maxSources: deps.maxExtractSources,
+          timeBudgetMs: deps.extractionTimeBudgetMs,
           maxConcurrency: deps.maxExtractConcurrency,
         },
         {
@@ -388,6 +341,7 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
           p10PromptTemplate: deps.p10PromptTemplate,
           onTrace: deps.onTrace,
           onSourceDone: (sourceId, outcome) => deps.onStageEvent?.({ type: 'source_extracted', sourceId, outcome }),
+          onProvisionalClaims: (sourceId, claims) => deps.onStageEvent?.({ type: 'provisional_claims', sourceId, claims }),
         },
       );
       const extractMs = Date.now() - extractStarted;
@@ -397,22 +351,24 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
       const okOutcomes = pool.perSource.flatMap((s) => (s.outcome.status === 'ok' ? [s.outcome] : []));
       const droppedClaims = okOutcomes.flatMap((o) => o.dropped);
       const retractedDropped = droppedClaims.filter((d) => d.reason === 'source is retracted or withdrawn').length;
-      const hasIssues = noFullText > 0 || extractionFailed > 0;
+      const hasIssues = noFullText > 0 || extractionFailed > 0 || pool.sourcesNotStarted > 0;
 
       extraction = toStageResult(extractArraySchema, {
         stage: 'extract',
         status: pool.claims.length === 0 ? (pool.perSource.length > 0 ? 'partial' : 'abstain') : hasIssues ? 'partial' : 'ok',
         value: pool.claims,
         reasons: hasIssues
-          ? pool.perSource
+          ? [...pool.perSource
               .filter((s) => s.outcome.status !== 'ok')
-              .map((s) => `${s.sourceId}: ${s.outcome.status === 'extraction_failed' ? s.outcome.reason : 'no full text available'}`)
+              .map((s) => `${s.sourceId}: ${s.outcome.status === 'extraction_failed' ? s.outcome.reason : 'no full text available'}`),
+              ...(pool.sourcesNotStarted > 0 ? [`${pool.sourcesNotStarted} source(s) not started before the exploration window ended`] : [])]
           : undefined,
         metrics: {
           ms: extractMs,
           costUsd: pool.costUsd,
           counts: {
             sourcesAttempted: pool.perSource.length,
+            sourcesNotStarted: pool.sourcesNotStarted,
             claimsKept: pool.claims.length,
             claimsDropped: droppedClaims.length,
             retracted: retractedDropped,

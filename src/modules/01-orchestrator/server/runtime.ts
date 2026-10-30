@@ -36,7 +36,10 @@ export interface ServerRuntime {
   pendingRunContext: PendingRunContextStore;
 }
 
-let singleton: ServerRuntime | null = null;
+// Next may bundle POST and SSE handlers independently. A process-global runtime
+// keeps their short-lived context store shared across those route modules.
+const runtimeKey = Symbol.for('evidence-workbench.server-runtime');
+const runtimeGlobals = globalThis as typeof globalThis & { [runtimeKey]?: ServerRuntime };
 
 function readRequiredEnv(name: string): string {
   const value = process.env[name];
@@ -73,7 +76,7 @@ export function buildServerRuntime(): ServerRuntime {
   // exception to CLAUDE.md rule 3 (docs/DECISIONS.md) is what finally needs it.
   const encryptionKeyring = createSingleKeyKeyring(loadEncryptionKey(appEncryptionKey));
   const conversationsRepository = createSupabaseConversationsRepository(supabase, encryptionKeyring);
-  const budgetGuard = createInMemoryBudgetGuard({ runCostCapUsd, dailyBudgetUsd });
+  const budgetGuard = createInMemoryBudgetGuard({ runCostCapUsd, dailyBudgetUsd, concordanceReserveUsd: Math.min(0.10, runCostCapUsd / 4) });
 
   // NCBI_API_KEY is optional: without it PubMed is limited to 3 req/s (module 02's
   // pubmed.ts); a live smoke test of the full retrieval pipeline showed occasional
@@ -119,11 +122,11 @@ export function buildServerRuntime(): ServerRuntime {
 }
 
 export function getServerRuntime(): ServerRuntime {
-  singleton ??= buildServerRuntime();
-  return singleton;
+  runtimeGlobals[runtimeKey] ??= buildServerRuntime();
+  return runtimeGlobals[runtimeKey];
 }
 
 /** Test-only: forces the next getServerRuntime() call to rebuild from current env. */
 export function resetServerRuntimeForTests(): void {
-  singleton = null;
+  delete runtimeGlobals[runtimeKey];
 }

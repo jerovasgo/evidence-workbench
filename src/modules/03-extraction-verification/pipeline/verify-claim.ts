@@ -28,6 +28,14 @@ export interface VerifyClaimInput {
 
 export type VerifyClaimResult = { outcome: 'kept'; claim: Claim } | { outcome: 'dropped'; reason: string };
 
+/** Match an extractive context value as a complete phrase, never inside another gene or word. */
+function contextAppearsInQuote(quote: string, value: string): boolean {
+  const normalizedValue = normalizeForMatch(value);
+  if (!normalizedValue) return false;
+  const escaped = normalizedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, 'u').test(normalizeForMatch(quote));
+}
+
 export function verifyClaim(input: VerifyClaimInput, passages: Passage[]): VerifyClaimResult {
   const { extracted } = input;
 
@@ -59,7 +67,7 @@ export function verifyClaim(input: VerifyClaimInput, passages: Passage[]): Verif
   // Context is extractive: never promote a model-proposed value absent from the quote.
   const geneticContext = extracted.geneticContext && Object.fromEntries(
     Object.entries(extracted.geneticContext).filter(([, value]) =>
-      typeof value === 'string' && normalizeForMatch(extracted.quote).includes(normalizeForMatch(value)),
+      typeof value === 'string' && contextAppearsInQuote(extracted.quote, value),
     ),
   );
 
@@ -81,7 +89,7 @@ export function verifyClaim(input: VerifyClaimInput, passages: Passage[]): Verif
     // native grade, or an unrecognized scheme, falls back to an honest `ungraded`
     // (gradeClaim.ts). The AI-estimated half (grade-estimator, P6) isn't built yet.
     grade: gradeClaim(extracted.nativeGrade),
-    verification: { exists: true, quoteFound: true, retracted: false, support: 'unknown' },
+    verification: { exists: false, quoteFound: true, quoteMatch: quoteMatch.fuzzy ? 'ocr_fuzzy' : 'normalized_exact', retracted: false, support: 'unknown' },
     safetyCritical,
   };
 

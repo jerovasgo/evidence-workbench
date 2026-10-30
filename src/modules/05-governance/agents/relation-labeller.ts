@@ -71,14 +71,14 @@ export async function labelRelations(
   const result = await runAgent({
     name: 'relation-labeller',
     promptVersion: 'P7@0.4',
-    tier: 'T1',
+    tier: 'T0',
     systemPreamble: deps.p0Preamble,
     prompt,
     outputSchema: LabelRelationsOutputSchema,
     // Batched up to 10 pairs/call (architecture doc's own limit) — budget scales
     // with batch size the same way source-classifier.ts does for its own batches.
     limits: {
-      maxOutputTokens: Math.max(1000, pairs.length * 200),
+      maxOutputTokens: Math.max(3000, pairs.length * 400),
       timeoutMs: 20000,
       maxCostUsd: 0.05,
     },

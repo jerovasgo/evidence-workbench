@@ -114,7 +114,7 @@ describe('runAgent', () => {
       ctx: { runId: 'run_1', metaClient, budgetGuard },
     });
 
-    expect(result).toEqual({ ok: false, reason: 'budget', detail: 'run_cap_exceeded' });
+    expect(result).toEqual({ ok: false, reason: 'budget', detail: 'Insufficient unreserved budget' });
     expect(respond).not.toHaveBeenCalled();
   });
 

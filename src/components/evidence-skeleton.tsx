@@ -1,24 +1,13 @@
-// 2026-10-28 conversational-flow brief, Etapa C: "el skeleton debe corresponder al
-// modo seleccionado." Evidence is the only real output today (modules 06/07/08
-// aren't built — docs/DECISIONS.md "single mode per query" policy), so this is the
-// one skeleton shape that exists; it anticipates the claim-card list, not a
-// placeholder for views that don't generate anything. `animate-pulse` is caught by
-// globals.css's `prefers-reduced-motion` override (zero-duration under reduced
-// motion), same as every other animation in the app.
-
+/** Animated placeholder for the progressive source-to-finding visualization. */
 export function EvidenceSkeleton() {
-  return (
-    <ul className="flex flex-col gap-3" role="status" aria-label="Gathering and verifying sources">
-      {[0, 1, 2].map((i) => (
-        <li key={i} aria-hidden="true" className="glass animate-pulse rounded-[var(--radius-card)] px-4 py-3">
-          <div className="flex gap-2">
-            <div className="h-5 w-16 rounded-[var(--radius-chip)] bg-border" />
-            <div className="h-5 w-20 rounded-[var(--radius-chip)] bg-border" />
-          </div>
-          <div className="mt-3 h-3 w-full rounded bg-border" />
-          <div className="mt-2 h-3 w-2/3 rounded bg-border" />
-        </li>
-      ))}
-    </ul>
-  );
+  return <div role="status" aria-label="Building evidence visualization" className="rounded-[var(--radius-card)] border border-border bg-black/30 p-4">
+    <div className="h-3 w-36 animate-pulse rounded bg-border" />
+    <div className="mt-4 overflow-hidden rounded-lg border border-border/60 bg-[#090909] p-4">
+      <svg viewBox="0 0 700 190" className="w-full" aria-hidden="true">
+        <path className="evidence-loading-path" d="M 180 43 C 270 43, 300 46, 370 46 M 180 95 C 270 95, 300 95, 370 95 M 180 147 C 270 147, 300 144, 370 144" fill="none" stroke="#8d8d8d" strokeWidth="2" />
+        {[40, 92, 144].map((y) => <g key={y} className="evidence-loading-node"><rect x="22" y={y - 18} width="158" height="38" rx="9" fill="#171717" stroke="#888" strokeOpacity=".35" /><rect x="370" y={y - 18} width="270" height="38" rx="9" fill="#171717" stroke="#888" strokeOpacity=".35" /></g>)}
+      </svg>
+    </div>
+    <p className="mt-3 text-xs text-muted">Building the evidence view as sources arrive…</p>
+  </div>;
 }

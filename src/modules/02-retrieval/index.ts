@@ -24,10 +24,12 @@ export * from './scoring/score';
 
 export * from './schemas/classification';
 export * from './classification/pubmed-type-override';
+export * from './classification/classify-metadata';
 export * from './agents/search-planner';
 export * from './agents/source-classifier';
 export * from './agents/classify-sources-batched';
 export * from './retrieval/execute-plan';
+export * from './retrieval/seed-search-plan';
 export * from './retrieval/fetch-full-text';
 export * from './retrieval/default-allowed-domains';
 export * from './agents/web-source-finder';

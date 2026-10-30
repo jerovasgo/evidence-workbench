@@ -1,6 +1,6 @@
 # P1 — Intent router
 
-Version: `P1@0.2`
+Version: `P1@0.3`
 Agent: `router` (module 01, tier T0, 1 step, 300 output tokens, 4 s timeout)
 Shares the common preamble `P0`.
 
@@ -24,17 +24,24 @@ bump its version").
 ## Task
 
 ```text
-Task: Classify the request. Do not answer it.
+Task: Classify the request and write a short opening for the researcher.
 <request>{{free_text}}</request>
 Return: {
  'intent': 'algorithm'|'evidence_map'|'mechanism'|'fact_lookup'|'comparison'|'watch'|'out_of_scope',
  'secondary': same options or omit entirely if there is none,
  'condition': string|omit,          // the scientific topic/finding, if stated
  'setting': string|omit,            // e.g. 'in_vitro', 'theoretical', if stated
+ 'opening': string,                 // 1-2 short sentences: a direct preliminary answer or honest uncertainty, followed by the evidence question
  'confidence': 'high'|'medium'|'low',
  'reject': { 'reason': string }|omit  // only when intent = 'out_of_scope'
 }
 Rules:
+- Lead with a concise answer to the user's actual question when basic, stable
+  background knowledge permits one. Qualify it as preliminary. If the answer
+  depends on particular studies or experimental conditions, say that the
+  direction of the evidence is not yet established and name what must be checked.
+  Do not invent a study result, consensus, effect size or verification outcome.
+  Keep the opening under 55 words. Do not describe internal routing actions.
 - A request naming a specific, identifiable real person, carrying personal
   identifiers, or asking for individual advice about a named private individual
   is 'out_of_scope' with a 'reject.reason' explaining why — note that a code

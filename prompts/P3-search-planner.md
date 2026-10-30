@@ -37,9 +37,13 @@ Return: {
  'mustFind': [string]|omit        // named standards/landmark studies you expect the pool to contain
 }
 Rules:
+- When the question names studies, prioritize a separate targeted Europe PMC query for each named author and publication year, before broad searches. Preserve author and year constraints. Do not replace landmark studies with recent literature.
 - At most 12 queries total, each with a distinct 'purpose'.
-- Include at least one adversarial query (controversy, "disputed", conflicting
-  findings) and one currency query (recent updates, retractions) among the 12.
+- Search for the available evidence without assuming agreement or disagreement.
+  Do not require a controversy or opposing-result query merely to fill a quota.
+  Expand toward discrepant findings only when the user's question, retrieved
+  studies, or known terminology gives a concrete reason to do so. Include a
+  currency/retraction check when relevant, without displacing targeted studies.
 - Use field-standard terminology and known synonyms for the topic where you know
   them.
 - Prefer standards-issuing bodies (e.g. IUPAC, NIST, ISO) relevant to the topic by

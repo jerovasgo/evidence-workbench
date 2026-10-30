@@ -3,14 +3,16 @@
 import { useState } from 'react';
 import { SearchBar } from '@/components/search-bar';
 import { DEFAULT_MODE, type Mode } from '@/lib/modes';
+import { DEFAULT_RESEARCH_DEPTH, type ResearchDepth } from '@/lib/research-depth';
 
-export function Composer({ onSend, sending }: { onSend: (text: string, mode: Mode) => void; sending: boolean }) {
+export function Composer({ onSend, sending }: { onSend: (text: string, mode: Mode, depth: ResearchDepth) => void; sending: boolean }) {
   const [value, setValue] = useState('');
   const [mode, setMode] = useState<Mode>(DEFAULT_MODE);
+  const [depth, setDepth] = useState<ResearchDepth>(DEFAULT_RESEARCH_DEPTH);
 
   function submit() {
     if (!value.trim() || sending) return;
-    onSend(value, mode);
+    onSend(value, mode, depth);
     setValue('');
   }
 
@@ -21,6 +23,8 @@ export function Composer({ onSend, sending }: { onSend: (text: string, mode: Mod
         onChange={setValue}
         mode={mode}
         onModeChange={setMode}
+        depth={depth}
+        onDepthChange={setDepth}
         onSubmit={submit}
         loading={sending}
         placeholder="Ask a follow-up…"

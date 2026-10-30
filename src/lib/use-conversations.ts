@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Mode } from '@/lib/modes';
+import { DEFAULT_RESEARCH_DEPTH, type ResearchDepth } from '@/lib/research-depth';
 import type { Intent } from '@/modules/01-orchestrator';
 
 export interface ConversationSummary {
@@ -16,6 +17,7 @@ export interface Turn {
   id: string;
   freeText: string;
   mode: Mode;
+  depth?: ResearchDepth;
   runId: string | null;
   /**
    * The router's (P1) real intent for this turn — only known right when it was sent
@@ -41,7 +43,7 @@ export interface UseConversationsResult {
   turns: Turn[];
   sending: boolean;
   error: string | null;
-  sendMessage: (freeText: string, mode: Mode) => Promise<void>;
+  sendMessage: (freeText: string, mode: Mode, depth?: ResearchDepth) => Promise<void>;
   retryTurn: (turnId: string) => void;
   selectConversation: (id: string) => Promise<void>;
   newResearch: () => void;
@@ -50,7 +52,7 @@ export interface UseConversationsResult {
 }
 
 /** Orchestrates the dashboard's conversation state: list, active thread, sending new turns. */
-export function useConversations(initialQuery?: string, initialMode?: Mode): UseConversationsResult {
+export function useConversations(initialQuery?: string, initialMode?: Mode, initialDepth?: ResearchDepth): UseConversationsResult {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -73,7 +75,7 @@ export function useConversations(initialQuery?: string, initialMode?: Mode): Use
 
   /** POSTs one turn (fresh or retried) and reconciles the optimistic `turnId` entry with the result — never removes it, win or lose. */
   const submitTurn = useCallback(
-    async (turnId: string, freeText: string, mode: Mode) => {
+    async (turnId: string, freeText: string, mode: Mode, depth: ResearchDepth) => {
       setSending(true);
       setError(null);
 
@@ -81,7 +83,7 @@ export function useConversations(initialQuery?: string, initialMode?: Mode): Use
         const res = await fetch('/api/runs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ freeText, userId: null, mode, conversationId: activeConversationIdRef.current ?? undefined }),
+          body: JSON.stringify({ freeText, userId: null, mode, depth, conversationId: activeConversationIdRef.current ?? undefined }),
         });
         const body = await res.json();
 
@@ -93,7 +95,7 @@ export function useConversations(initialQuery?: string, initialMode?: Mode): Use
         }
 
         setTurns((prev) =>
-          prev.map((t) => (t.id === turnId ? { id: body.runId, freeText, mode, runId: body.runId, intent: body.intent ?? null } : t)),
+          prev.map((t) => (t.id === turnId ? { id: body.runId, freeText, mode, depth, runId: body.runId, intent: body.intent ?? null } : t)),
         );
         if (body.conversationId !== activeConversationIdRef.current) {
           setActiveConversationId(body.conversationId);
@@ -109,13 +111,13 @@ export function useConversations(initialQuery?: string, initialMode?: Mode): Use
   );
 
   const sendMessage = useCallback(
-    async (freeText: string, mode: Mode) => {
+    async (freeText: string, mode: Mode, depth: ResearchDepth = DEFAULT_RESEARCH_DEPTH) => {
       const trimmed = freeText.trim();
       if (!trimmed) return;
       const turnId = `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       // Appears in the thread immediately — before the POST even starts, not after it resolves.
-      setTurns((prev) => [...prev, { id: turnId, freeText: trimmed, mode, runId: null, intent: null, status: 'sending' }]);
-      await submitTurn(turnId, trimmed, mode);
+      setTurns((prev) => [...prev, { id: turnId, freeText: trimmed, mode, depth, runId: null, intent: null, status: 'sending' }]);
+      await submitTurn(turnId, trimmed, mode, depth);
     },
     [submitTurn],
   );
@@ -125,7 +127,7 @@ export function useConversations(initialQuery?: string, initialMode?: Mode): Use
       setTurns((prev) => {
         const turn = prev.find((t) => t.id === turnId);
         if (!turn || turn.status !== 'error') return prev;
-        void submitTurn(turnId, turn.freeText, turn.mode);
+        void submitTurn(turnId, turn.freeText, turn.mode, turn.depth ?? DEFAULT_RESEARCH_DEPTH);
         return prev.map((t) => (t.id === turnId ? { ...t, status: 'sending', errorMessage: undefined } : t));
       });
     },
@@ -135,7 +137,7 @@ export function useConversations(initialQuery?: string, initialMode?: Mode): Use
   useEffect(() => {
     if (initialQuery && !autoSubmitted.current) {
       autoSubmitted.current = true;
-      void sendMessage(initialQuery, initialMode ?? 'auto');
+      void sendMessage(initialQuery, initialMode ?? 'auto', initialDepth);
     }
     // Intentionally fires once on mount only — initialQuery/initialMode are a
     // one-shot handoff from the landing page, not a value to keep re-syncing from.

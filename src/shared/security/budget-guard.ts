@@ -6,6 +6,7 @@
 export interface BudgetGuardConfig {
   runCostCapUsd: number;
   dailyBudgetUsd: number;
+  concordanceReserveUsd?: number;
 }
 
 export type BudgetDenialReason = 'run_cap_exceeded' | 'daily_budget_exceeded';
@@ -19,6 +20,7 @@ export interface BudgetGuard {
   record(runId: string, actualCostUsd: number): void;
   spentForRun(runId: string): number;
   spentToday(): number;
+  reserveCall?(runId: string, amount: number, concordance: boolean): (() => void) | null;
 }
 
 /**
@@ -29,17 +31,26 @@ export interface BudgetGuard {
 export function createInMemoryBudgetGuard(config: BudgetGuardConfig): BudgetGuard {
   const spendByRun = new Map<string, number>();
   let spentToday = 0;
+  const held = new Map<string, number>();
+  let heldToday = 0;
 
-  return {
+  const guard: BudgetGuard = {
     check(runId, estimatedCostUsd) {
       const spentOnRun = spendByRun.get(runId) ?? 0;
-      if (spentOnRun + estimatedCostUsd > config.runCostCapUsd) {
+      if (spentOnRun + (held.get(runId) ?? 0) + estimatedCostUsd + (config.concordanceReserveUsd ?? 0) > config.runCostCapUsd) {
         return { allowed: false, reason: 'run_cap_exceeded' };
       }
-      if (spentToday + estimatedCostUsd > config.dailyBudgetUsd) {
+      if (spentToday + heldToday + estimatedCostUsd > config.dailyBudgetUsd) {
         return { allowed: false, reason: 'daily_budget_exceeded' };
       }
       return { allowed: true };
+    },
+    reserveCall(runId, amount, concordance) {
+      const reserve = concordance ? 0 : (config.concordanceReserveUsd ?? 0);
+      if ((spendByRun.get(runId) ?? 0) + (held.get(runId) ?? 0) + amount + reserve > config.runCostCapUsd || spentToday + heldToday + amount > config.dailyBudgetUsd) return null;
+      held.set(runId, (held.get(runId) ?? 0) + amount); heldToday += amount;
+      let released = false;
+      return () => { if (released) return; released = true; held.set(runId, (held.get(runId) ?? 0) - amount); heldToday -= amount; };
     },
     record(runId, actualCostUsd) {
       spendByRun.set(runId, (spendByRun.get(runId) ?? 0) + actualCostUsd);
@@ -52,4 +63,5 @@ export function createInMemoryBudgetGuard(config: BudgetGuardConfig): BudgetGuar
       return spentToday;
     },
   };
+  return guard;
 }

@@ -124,7 +124,7 @@ export function VisualizeTabs() {
             <Tabs.Trigger
               key={view.value}
               value={view.value}
-              className="rounded-[var(--radius-pill)] px-4 py-1.5 text-sm text-muted transition-colors data-[state=active]:bg-[#b4f4e8] data-[state=active]:text-[#071814]"
+              className="rounded-[var(--radius-pill)] px-4 py-1.5 text-sm text-muted transition-colors data-[state=active]:bg-white data-[state=active]:text-black"
             >
               {view.label}
             </Tabs.Trigger>
@@ -135,7 +135,7 @@ export function VisualizeTabs() {
           const Sketch = SKETCHES[view.value];
           return (
             <Tabs.Content key={view.value} value={view.value} className="w-full">
-              <div className="visual-stage flex h-72 w-full items-center justify-center rounded-[var(--radius-card)] p-6 text-[#9ceee0] sm:h-96">
+              <div className="visual-stage flex h-72 w-full items-center justify-center rounded-[var(--radius-card)] p-6 text-[#d0d0d0] sm:h-96">
                 <Sketch />
               </div>
               <p className="mt-4 text-center text-sm text-muted">

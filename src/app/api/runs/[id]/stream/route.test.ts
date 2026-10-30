@@ -122,7 +122,7 @@ describe('GET /api/runs/[id]/stream', () => {
     const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
     const events = await readAllEvents(res);
 
-    expect(events[0]).toEqual({ type: 'stage_started', runId: 'run_1', stage: 'structure' });
+    expect(events[0]).toEqual({ type: 'stage_started', runId: 'run_1', stage: 'plan' });
     expect(events.some((e) => e.type === 'band_ready')).toBe(true);
     expect(events.some((e) => e.type === 'receipt_ready')).toBe(true);
     expect(events.some((event) => event.type === 'done')).toBe(true);
@@ -177,7 +177,7 @@ describe('GET /api/runs/[id]/stream', () => {
       passageId: 'p1',
       quote: 'Aspirin.',
       grade: { certainty: 'ungraded' as const, origin: 'ai_estimated' as const },
-      verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' as const },
+      verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' as const, retractionCheck: 'crossref_no_signal' as const },
       safetyCritical: false,
     };
     const claimB = { ...claimA, id: 'claim_b', sourceId: 's2', quote: 'Low-dose aspirin.' };
@@ -228,7 +228,7 @@ describe('GET /api/runs/[id]/stream', () => {
       passageId: 'p1',
       quote: 'Aspirin.',
       grade: { certainty: 'ungraded' as const, origin: 'ai_estimated' as const },
-      verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' as const },
+      verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' as const, retractionCheck: 'crossref_no_signal' as const },
       safetyCritical: false,
     };
     const claimB = { ...claimA, id: 'claim_b', sourceId: 's2', quote: 'Low-dose aspirin.' };

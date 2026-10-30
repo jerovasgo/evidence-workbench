@@ -43,6 +43,23 @@ export type CreateRunOutcome =
   | { status: 'routed'; run: RunRecord; routerOutput: RouterOutput }
   | { status: 'routing_failed'; run: RunRecord; reason: string };
 
+/** Keep research usable when the optional model router times out or returns invalid JSON. */
+export function fallbackRouterOutput(query: string): RouterOutput {
+  const text = query.toLowerCase();
+  const intent: Intent = /\b(compare|comparison|contrast|versus|vs\.?|comparar|comparación|contrastar)\b/u.test(text)
+    ? 'comparison'
+    : /\b(algorithm|algoritmo|decision tree|flowchart)\b/u.test(text)
+      ? 'algorithm'
+      : /\b(map|network|relationship|relationships|links?|mapa|red|relación|relaciones|vínculo)\b/u.test(text)
+        ? 'evidence_map'
+        : 'fact_lookup';
+  return {
+    intent,
+    confidence: 'low',
+    opening: 'I am checking the relevant literature and experimental context before drawing a conclusion. Findings will appear with their source quotations as they are verified.',
+  };
+}
+
 export async function createRun(request: CreateRunRequest, deps: CreateRunDeps): Promise<CreateRunOutcome> {
   const parsed = CreateRunRequestSchema.parse(request);
 
@@ -63,7 +80,7 @@ export async function createRun(request: CreateRunRequest, deps: CreateRunDeps):
 
   const routerResult = await runAgent({
     name: 'router',
-    promptVersion: 'P1@0.1',
+    promptVersion: 'P1@0.3',
     tier: 'T0',
     systemPreamble: deps.p0Preamble,
     prompt: deps.p1PromptTemplate.replace('{{free_text}}', parsed.freeText),
@@ -79,33 +96,26 @@ export async function createRun(request: CreateRunRequest, deps: CreateRunDeps):
 
   const isPrecomputed = parsed.userId === null;
 
-  if (!routerResult.ok) {
-    const run = await deps.runsRepository.createRun({
-      id: runId,
-      userId: parsed.userId,
-      isPrecomputed,
-      intent: 'unknown',
-      status: 'failed',
-    });
-    return { status: 'routing_failed', run, reason: routerResult.reason };
-  }
+  if (!routerResult.ok) console.warn(JSON.stringify({ type: 'router_fallback', runId, reason: routerResult.reason }));
+  const routerOutput = routerResult.ok ? routerResult.value : fallbackRouterOutput(parsed.freeText);
 
-  const status = routerResult.value.intent === 'out_of_scope' ? 'abstained' : 'routing';
+  const status = routerOutput.intent === 'out_of_scope' ? 'abstained' : 'routing';
   const run = await deps.runsRepository.createRun({
     id: runId,
     userId: parsed.userId,
     isPrecomputed,
-    intent: routerResult.value.intent,
+    intent: routerOutput.intent,
     status,
   });
 
-  return { status: 'routed', run, routerOutput: routerResult.value };
+  return { status: 'routed', run, routerOutput };
 }
 
 // Module 01 pipeline table: intents whose stages include plan/retrieve/curate
-// (docs/architecture/01-orchestrator-and-routing.md). `mechanism` and `watch` run
-// different pipelines (modules 08/09, not built yet); `out_of_scope` never gets here.
-const INTENTS_NEEDING_RETRIEVAL = new Set<Intent>(['algorithm', 'evidence_map', 'comparison', 'fact_lookup']);
+// (docs/architecture/01-orchestrator-and-routing.md). Mechanism questions still
+// need the evidence retrieval path while their specialized view is unfinished.
+// `watch` and `out_of_scope` remain separate intents.
+const INTENTS_NEEDING_RETRIEVAL = new Set<Intent>(['algorithm', 'evidence_map', 'mechanism', 'comparison', 'fact_lookup']);
 
 /** Exported so both this module's batch composition and the SSE route agree on which intents need it. */
 export function intentNeedsRetrieval(intent: Intent): boolean {

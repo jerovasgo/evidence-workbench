@@ -10,8 +10,10 @@
 
 export interface PendingRunContext {
   freeText: string;
+  depth?: import('@/lib/research-depth').ResearchDepth;
   routerCondition?: string;
   routerSetting?: string;
+  opening?: string;
 }
 
 export interface PendingRunContextStore {

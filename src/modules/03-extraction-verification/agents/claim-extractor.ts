@@ -8,8 +8,8 @@ import {
   type ExtractClaimsOutput,
 } from '../schemas/extraction';
 
-// Module 03 `claim-extractor` agent (P5): one call per source (passages + sub-
-// questions batched together), run in parallel across sources by the caller.
+// Module 03 `claim-extractor` agent (P5): one bounded call per passage batch;
+// short sources need one call and long sources are merged by the caller.
 // Deterministic verification (`verify-claim.ts`) runs afterward, in the caller — it
 // is code, not part of this model call.
 
@@ -35,12 +35,12 @@ export async function extractClaims(
 
   return runAgent({
     name: 'claim-extractor',
-    promptVersion: 'P5@0.5',
+    promptVersion: 'P5@0.6',
     tier: 'T1',
     systemPreamble: deps.p0Preamble,
     prompt,
     outputSchema: ExtractClaimsOutputSchema,
-    limits: { maxOutputTokens: 3000, timeoutMs: 25000, maxCostUsd: 0.08 },
+    limits: { maxOutputTokens: 6000, timeoutMs: 60000, maxCostUsd: 0.08 },
     ctx: { runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, onTrace: deps.onTrace },
   });
 }

@@ -98,7 +98,21 @@ describe('extractAndVerifyPool', () => {
     expect(onSourceDone).toHaveBeenCalledTimes(2);
   });
 
-  it('prioritizes guideline-kind candidates and truncates to maxSources', async () => {
+  it('stops starting sources after the time window while retaining completed work', async () => {
+    const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
+    const europePmc = fakeEuropePmc(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 15));
+      return null;
+    });
+    const result = await extractAndVerifyPool(
+      { runId: 'run_1', candidates: [candidate('europe_pmc:PMC:1'), candidate('europe_pmc:PMC:2')], classifications: [], subQuestions: [], maxConcurrency: 1, timeBudgetMs: 5 },
+      baseDeps(metaClient, europePmc),
+    );
+    expect(result.perSource).toHaveLength(1);
+    expect(result.perSource[0]?.sourceId).toBe('europe_pmc:PMC:1');
+  });
+
+  it('preserves retrieval order despite study kind and honors a caller cap', async () => {
     const seen: string[] = [];
     const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
     const europePmc = fakeEuropePmc(async (_source, id) => {
@@ -122,6 +136,6 @@ describe('extractAndVerifyPool', () => {
       baseDeps(metaClient, europePmc),
     );
 
-    expect(seen).toEqual(['guideline', 'rct']); // the unclassified 'other' is truncated out
+    expect(seen).toEqual(['rct', 'guideline']); // study kind does not select which source gets read first
   });
 });

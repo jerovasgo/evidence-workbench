@@ -68,12 +68,8 @@ const CLASSIFY_OUTPUT = {
 };
 
 describe('runRetrievalPipeline', () => {
-  it('runs structure -> plan -> retrieve -> classify end to end and applies the PubMed type override', async () => {
-    const respond = vi
-      .fn()
-      .mockResolvedValueOnce(fakeRespondResult(STRUCTURE_OUTPUT))
-      .mockResolvedValueOnce(fakeRespondResult(PLAN_OUTPUT))
-      .mockResolvedValueOnce(fakeRespondResult(CLASSIFY_OUTPUT));
+  it('runs the deterministic plan and classifies explicit PubMed metadata', async () => {
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult(STRUCTURE_OUTPUT));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
     const pubmed = fakePubmed({
       search: vi.fn().mockResolvedValue({ pmids: ['111'] }),
@@ -92,16 +88,31 @@ describe('runRetrievalPipeline', () => {
     expect(result.retrieval.status).toBe('ok');
     expect(result.retrieval.value).toHaveLength(1);
     expect(result.classification.status).toBe('ok');
-    // The model classified sourceId pubmed:111 as 'controlled_experiment', but its
-    // PubMed type is "Practice Guideline" — the deterministic override must win.
+    // A decisive publication type is enough; no classifier model call is needed.
     expect(result.classification.value?.[0]).toMatchObject({ sourceId: 'pubmed:111', kind: 'standards_body' });
+    expect(respond).toHaveBeenCalledTimes(1);
     // Module 04 Part B: source scores are computed from the (overridden) classification.
     expect(result.sourceScores['pubmed:111']?.level).toBeCloseTo(0.9, 5); // standards_body level weight
   });
 
-  it('falls back to the router condition for planning when structure fails', async () => {
-    // Structure's output is invalid on both the first attempt and the repair retry
-    // (runAgent's harness), so it takes 2 calls before abstaining; plan's call is the 3rd.
+  it('starts seeded retrieval before the structure agent finishes', async () => {
+    let finishStructure: ((value: RespondResult) => void) | undefined;
+    const delayedStructure = new Promise<RespondResult>((resolve) => { finishStructure = resolve; });
+    const respond = vi.fn().mockReturnValue(delayedStructure);
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const pubmed = fakePubmed();
+    const pending = runRetrievalPipeline(
+      { runId: 'run_1', freeText: 'How does solvent affect an SN2 reaction?', routerCondition: 'SN2 reaction rate' },
+      baseDeps(metaClient, { pubmed }),
+    );
+    await vi.waitFor(() => expect(pubmed.search).toHaveBeenCalled());
+    finishStructure!(fakeRespondResult(STRUCTURE_OUTPUT));
+    const result = await pending;
+    expect(result.structure.status).toBe('ok');
+    expect(result.plan.value?.queries.some((query) => query.text.includes('solvent'))).toBe(true);
+  });
+
+  it('keeps the deterministic search plan when structure fails', async () => {
     const respond = vi
       .fn()
       .mockResolvedValueOnce(fakeRespondResult({ context: 'bogus' }))
@@ -110,41 +121,28 @@ describe('runRetrievalPipeline', () => {
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
 
     const result = await runRetrievalPipeline(
-      { runId: 'run_1', freeText: 'x', routerCondition: 'SN2 reaction rate' },
+      { runId: 'run_1', freeText: 'How does solvent affect an SN2 reaction?', routerCondition: 'SN2 reaction rate' },
       baseDeps(metaClient),
     );
 
     expect(result.structure.status).toBe('failed');
-    const planPrompt = (respond.mock.calls[2]?.[0] as { input: { content: string }[] }).input[1]?.content;
-    expect(planPrompt).toContain('SN2 reaction rate');
     expect(result.plan.status).toBe('ok');
+    expect(result.plan.value?.queries.some((query) => query.text.includes('solvent'))).toBe(true);
   });
 
-  it('abstains classification and fails retrieval when the plan stage fails', async () => {
-    const tooManyQueries = {
-      queries: Array.from({ length: 13 }, (_, i) => ({ family: 'pubmed' as const, text: `q${i}`, purpose: `p${i}` })),
-    };
-    const respond = vi
-      .fn()
-      .mockResolvedValueOnce(fakeRespondResult(STRUCTURE_OUTPUT))
-      .mockResolvedValueOnce(fakeRespondResult(tooManyQueries))
-      .mockResolvedValueOnce(fakeRespondResult(tooManyQueries));
+  it('abstains classification when both indexes return no candidates', async () => {
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult(STRUCTURE_OUTPUT));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
 
     const result = await runRetrievalPipeline({ runId: 'run_1', freeText: 'x' }, baseDeps(metaClient));
 
-    expect(result.plan.status).toBe('failed');
-    expect(result.retrieval.status).toBe('failed');
+    expect(result.plan.status).toBe('ok');
+    expect(result.retrieval.value).toEqual([]);
     expect(result.classification.status).toBe('abstain');
   });
 
-  it('keeps retrieved candidates even when classification fails', async () => {
-    const respond = vi
-      .fn()
-      .mockResolvedValueOnce(fakeRespondResult(STRUCTURE_OUTPUT))
-      .mockResolvedValueOnce(fakeRespondResult(PLAN_OUTPUT))
-      .mockResolvedValueOnce(fakeRespondResult({ classifications: 'not-an-array' }))
-      .mockResolvedValueOnce(fakeRespondResult({ classifications: 'still-not-an-array' }));
+  it('keeps retrieved candidates with unknown study design instead of guessing it', async () => {
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult(STRUCTURE_OUTPUT));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
     const pubmed = fakePubmed({
       search: vi.fn().mockResolvedValue({ pmids: ['111'] }),
@@ -155,12 +153,13 @@ describe('runRetrievalPipeline', () => {
 
     expect(result.retrieval.status).toBe('ok');
     expect(result.retrieval.value).toHaveLength(1);
-    expect(result.classification.status).toBe('failed');
+    expect(result.classification.status).toBe('ok');
+    expect(result.classification.value?.[0]).toMatchObject({ kind: 'other', confidence: 'low' });
   });
 
   describe('resumability (stageOutputs)', () => {
     it('resumes a stage with a usable prior output instead of recomputing it', async () => {
-      const respond = vi.fn().mockResolvedValueOnce(fakeRespondResult(PLAN_OUTPUT)); // plan is the only real call now
+      const respond = vi.fn().mockResolvedValue(fakeRespondResult({ queries: [] }));
       const metaClient: MetaClient = { respond, listModels: vi.fn() };
       const stageOutputs = fakeStageOutputsRepository({
         structure: { stage: 'structure', status: 'ok', value: STRUCTURE_OUTPUT, metrics: { ms: 1, costUsd: 0.001 }, createdAt: '2026-10-28T00:00:00Z' },
@@ -170,9 +169,7 @@ describe('runRetrievalPipeline', () => {
 
       expect(result.structure).toEqual({ stage: 'structure', status: 'ok', value: STRUCTURE_OUTPUT, metrics: { ms: 1, costUsd: 0.001 } });
       expect(result.plan.status).toBe('ok');
-      // Only 1 call (plan) -- structure was resumed, not recomputed, and classify
-      // abstains with no retrieved candidates (this test's pubmed fake is empty).
-      expect(respond).toHaveBeenCalledTimes(1);
+      expect(respond).toHaveBeenCalledTimes(1); // empty seed result triggers expansion
       // Structure wasn't re-persisted since it was resumed, not recomputed.
       expect(stageOutputs.inserted.some((r) => r.stage === 'structure')).toBe(false);
       expect(stageOutputs.inserted.some((r) => r.stage === 'plan')).toBe(true);
@@ -201,7 +198,7 @@ describe('runRetrievalPipeline', () => {
 
       await runRetrievalPipeline({ runId: 'run_1', freeText: 'x' }, baseDeps(metaClient, { stageOutputs }));
 
-      expect(stageOutputs.inserted.map((r) => r.stage)).toEqual(['structure', 'plan', 'retrieve', 'classify', 'extract']);
+      expect(stageOutputs.inserted.map((r) => r.stage)).toEqual(['plan', 'structure', 'retrieve', 'classify', 'extract']);
     });
 
     it('still completes the run when persistence itself fails', async () => {
