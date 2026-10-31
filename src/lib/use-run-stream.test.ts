@@ -38,3 +38,9 @@ describe('provisional SSE claim lifecycle', () => {
     expect(state.withdrawals).toEqual([]);
   });
 });
+
+it('keeps the first substantive overview immutable during streaming', () => {
+  let state = applyEvent(initialState(), { type: 'opening_ready', runId: 'r1', text: 'Initial supported findings' });
+  state = applyEvent(state, { type: 'opening_ready', runId: 'r1', text: 'Later rewrite' });
+  expect(state.opening).toBe('Initial supported findings');
+});

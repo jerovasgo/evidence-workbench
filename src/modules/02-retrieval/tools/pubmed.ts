@@ -70,11 +70,11 @@ export function createPubmedClient(options: CreatePubmedClientOptions = {}): Pub
   }
 
   async function search(query: string, { retmax = 20 }: { retmax?: number } = {}): Promise<PubmedSearchResult> {
-    const cacheKey = `search:${query}:${retmax}`;
+    const cacheKey = `search:relevance:${query}:${retmax}`;
     const cached = cache.get(cacheKey) as PubmedSearchResult | undefined;
     if (cached) return cached;
 
-    const params = buildParams({ db: 'pubmed', term: query, retmax: String(retmax) });
+    const params = buildParams({ db: 'pubmed', term: query, retmax: String(retmax), sort: 'relevance' });
     const json = await rateLimiter.schedule(async () => {
       const res = await fetchImpl(`${EUTILS_BASE}/esearch.fcgi?${params.toString()}`);
       if (!res.ok) throw new Error(`PubMed esearch failed: HTTP ${res.status}`);

@@ -1,6 +1,6 @@
 # P5 — Claim extractor
 
-Version: `P5@0.7`
+Version: `P5@0.8`
 Agent: `claim-extractor` (module 03, tier T1, 1 step, ~3,000 output tokens, 25 s timeout)
 Shares the common preamble `P0`.
 
@@ -52,6 +52,13 @@ Rules:
   passages support them. Cover separate experimental results, measurements,
   methods and important limitations; do not collapse materially different
   outcomes into one claim or create claims to reach a quota.
+- Every extracted claim must address the biological topic in the sub-questions,
+  not just a generic technique shared by unrelated experiments. For example, an
+  RNA extraction kit or sequencing platform alone does not answer a comparison
+  of gene expression under hypoxia. Prioritize measured expression changes and
+  their experimental conditions over generic sample-processing details. If a
+  method sub-question is supplied, retain a method only when the passage ties
+  it to the investigated perturbation or biological model.
 - One claim = one finding/result; never merge content across passages.
 - Assign subQuestionIndex only when the claim directly answers that exact sub-question.
 - Exclude generic background and bare descriptions of what the authors set up

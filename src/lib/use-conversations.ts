@@ -1,5 +1,6 @@
 'use client';
 
+import { comparisonClarification } from './research-intent';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Mode } from '@/lib/modes';
 import { DEFAULT_RESEARCH_DEPTH, type ResearchDepth } from '@/lib/research-depth';
@@ -33,7 +34,8 @@ export interface Turn {
    * then. `error` means the POST itself failed; the question is kept, never dropped,
    * so `retryTurn` can resend it. Absent once a real run is underway/finished.
    */
-  status?: 'sending' | 'error';
+  status?: 'sending' | 'error' | 'clarifying';
+  clarification?: string;
   errorMessage?: string;
 }
 
@@ -87,6 +89,11 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
         });
         const body = await res.json();
 
+        if (body.status === 'clarification_required') {
+          setTurns((prev) => prev.map((t) => t.id === turnId ? { ...t, status: 'clarifying', clarification: body.clarification } : t));
+          return;
+        }
+
         if (!res.ok) {
           setTurns((prev) =>
             prev.map((t) => (t.id === turnId ? { ...t, status: 'error', errorMessage: body.error ?? 'Something went wrong. Please rephrase and try again.' } : t)),
@@ -112,14 +119,21 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
 
   const sendMessage = useCallback(
     async (freeText: string, mode: Mode, depth: ResearchDepth = DEFAULT_RESEARCH_DEPTH) => {
-      const trimmed = freeText.trim();
+      if (!freeText.trim()) return;
+      const previous = turns.at(-1);
+      const trimmed = previous?.status === 'clarifying' ? `${previous.freeText}: ${freeText.trim()}` : freeText.trim();
       if (!trimmed) return;
       const turnId = `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const clarification = comparisonClarification(trimmed);
+      if (clarification) {
+        setTurns((prev) => [...prev, { id: turnId, freeText: trimmed, mode, depth, runId: null, intent: null, status: 'clarifying', clarification }]);
+        return;
+      }
       // Appears in the thread immediately — before the POST even starts, not after it resolves.
       setTurns((prev) => [...prev, { id: turnId, freeText: trimmed, mode, depth, runId: null, intent: null, status: 'sending' }]);
       await submitTurn(turnId, trimmed, mode, depth);
     },
-    [submitTurn],
+    [submitTurn, turns],
   );
 
   const retryTurn = useCallback(

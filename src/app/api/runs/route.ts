@@ -1,3 +1,4 @@
+import { comparisonClarification } from '@/lib/research-intent';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createRun, CreateRunRequestSchema, getServerRuntime, intentNeedsRetrieval } from '@/modules/01-orchestrator';
@@ -39,6 +40,9 @@ export async function POST(request: Request): Promise<Response> {
   if (!parsed.success) {
     return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
   }
+
+  const clarification = comparisonClarification(parsed.data.freeText);
+  if (clarification) return NextResponse.json({ status: 'clarification_required', clarification });
 
   const runtime = getServerRuntime();
   const outcome = await createRun(parsed.data, runtime);

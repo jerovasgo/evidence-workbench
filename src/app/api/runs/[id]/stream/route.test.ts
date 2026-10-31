@@ -141,7 +141,7 @@ describe('GET /api/runs/[id]/stream', () => {
     const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
     const events = await readAllEvents(res);
 
-    expect(events[0]).toMatchObject({ type: 'opening_ready', runId: 'run_1' });
+    expect(events[0]).toMatchObject({ type: 'stage_started', runId: 'run_1' });
     expect(events.some((e) => e.type === 'stage_started' && e.stage === 'plan')).toBe(true);
     expect(events.some((e) => e.type === 'band_ready')).toBe(true);
     expect(events.some((e) => e.type === 'receipt_ready')).toBe(true);

@@ -11,6 +11,7 @@ import type { Turn } from '@/lib/use-conversations';
 // using the same processing message so it doesn't flicker on the runId handoff).
 
 export function TurnResult({ turn, onRetry }: { turn: Turn; onRetry: (turnId: string) => void }) {
+  if (turn.status === 'clarifying') return <p className="text-sm leading-7">{turn.clarification}</p>;
   if (turn.status === 'error') {
     return (
       <div role="alert" className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-conflict/40 bg-black/40 p-4 text-sm text-conflict">

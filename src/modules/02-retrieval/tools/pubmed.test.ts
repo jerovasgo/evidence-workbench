@@ -41,6 +41,7 @@ describe('createPubmedClient.search', () => {
     expect(result.pmids).toEqual(['12345678', '23456789']);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect((fetchImpl.mock.calls[0]?.[0] as string)).toContain('esearch.fcgi');
+    expect(new URL(fetchImpl.mock.calls[0]?.[0] as string).searchParams.get('sort')).toBe('relevance');
   });
 
   it('caches identical searches and does not call fetch again', async () => {

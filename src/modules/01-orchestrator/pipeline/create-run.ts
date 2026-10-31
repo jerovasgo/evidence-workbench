@@ -1,3 +1,4 @@
+import { isComparisonRequest } from '@/lib/research-intent';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { runAgent, type AgentTraceEvent } from '@/shared/agents';
@@ -99,6 +100,7 @@ export async function createRun(request: CreateRunRequest, deps: CreateRunDeps):
   if (!routerResult.ok) console.warn(JSON.stringify({ type: 'router_fallback', runId, reason: routerResult.reason }));
   const routerOutput = routerResult.ok ? routerResult.value : fallbackRouterOutput(parsed.freeText);
 
+  if (isComparisonRequest(parsed.freeText) && routerOutput.intent !== 'out_of_scope') routerOutput.intent = 'comparison';
   const status = routerOutput.intent === 'out_of_scope' ? 'abstained' : 'routing';
   const run = await deps.runsRepository.createRun({
     id: runId,

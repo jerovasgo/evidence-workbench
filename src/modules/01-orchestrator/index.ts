@@ -14,3 +14,5 @@ export * from './pipeline/extract-and-verify-pool';
 export * from './pipeline/build-receipt';
 export * from './server/runtime';
 export * from './server/pending-run-context';
+
+export { synthesizeEvidenceOverview } from './agents/evidence-overview';

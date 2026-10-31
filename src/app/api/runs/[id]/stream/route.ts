@@ -1,3 +1,5 @@
+import { synthesizeEvidenceOverview } from '@/modules/01-orchestrator';
+import { isComparisonRequest } from '@/lib/research-intent';
 import {
   buildReceipt,
   getRunForViewer,
@@ -142,6 +144,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       // the terminal state once (module 01: "results retrievable by run id").
       if (run.status === 'done' || run.status === 'partial' || run.status === 'abstained' || run.status === 'failed') {
         const saved = await runtime.stageOutputsRepository.getLatestPerStage(run.id).catch(() => new Map());
+        const savedOverview = saved.get('overview')?.value;
+        if (typeof savedOverview === 'string') send({ type: 'opening_ready', runId: run.id, text: savedOverview });
         const candidates = CandidateSourceSchema.array().safeParse(saved.get('retrieve')?.value);
         if (candidates.success) send({ type: 'source_catalog_ready', runId: run.id, sources: candidates.data.map(({ tempId, title, url, doi, pmid, year }) => ({ id: tempId, status: 'candidate', title, url, doi, pmid, year })) });
         const claims = ClaimSchema.array().safeParse(saved.get('extract')?.value);
@@ -162,9 +166,6 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       }
 
       const pending = runtime.pendingRunContext.take(run.id);
-      if (pending) {
-        send({ type: 'opening_ready', runId: run.id, text: pending.opening?.trim() || `I’m reviewing the genetic evidence relevant to your question. The initial source context will appear first; conclusions will update as the studies are checked.` });
-      }
       // Reference lookups run beside the literature pipeline. They may enrich the
       // overview, but cannot delay retrieval or turn a gene record into a study.
       void (pending ? lookupGeneContext(pending.freeText).then((genes) => {
@@ -189,6 +190,16 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         }
       }
 
+      let overviewPromise: Promise<void> | undefined;
+      const startOverview = (claims: Claim[], final = false) => {
+        if (overviewPromise || !claims.length) return;
+        if (!final && isComparisonRequest(pending?.freeText ?? '') && new Set(claims.map((claim) => claim.sourceId)).size < 2) return;
+        overviewPromise = synthesizeEvidenceOverview(run.id, pending?.freeText ?? '', claims, runtime).then(async (text) => {
+          const overview = text ?? `${claims[0]!.text} ${new Set(claims.map((claim) => claim.sourceId)).size < 2 ? 'Only one study currently has verified findings; a cross-study conclusion is not supported yet.' : 'Experimental context must be considered before comparing these findings.'}`;
+          send({ type: 'opening_ready', runId: run.id, text: overview });
+          try { await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'overview', status: 'ok', value: overview, metrics: { ms: 0, costUsd: 0 } }); } catch { /* Live text remains available. */ }
+        }).catch(() => undefined);
+      };
       try {
         const result = await runRetrievalPipeline(
           { runId: run.id, freeText: pending?.freeText ?? '', routerCondition: pending?.routerCondition, routerSetting: pending?.routerSetting },
@@ -236,6 +247,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
                 // waiting for every other source to finish too (see the comment above).
                 if (event.outcome.status === 'ok' && event.outcome.claims.length > 0) {
                   streamedClaims.push(...event.outcome.claims);
+                  startOverview([...streamedClaims]);
                   if (streamedClaims.length === event.outcome.claims.length) {
                     console.log(JSON.stringify({ type: 'first_claims_latency', runId: run.id, elapsedMs: Date.now() - streamStarted }));
                   }
@@ -259,6 +271,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         const receipt = buildReceipt(result);
         send({ type: 'receipt_ready', runId: run.id, receipt });
 
+        startOverview(result.extraction.value ?? [], true);
+        await overviewPromise;
         const finalStatus = computeFinalStatus(result);
         await runtime.runsRepository.updateRunStatus(run.id, finalStatus);
         send({ type: 'done', runId: run.id, status: finalStatus });

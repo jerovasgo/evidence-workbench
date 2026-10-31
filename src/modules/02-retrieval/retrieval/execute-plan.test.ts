@@ -229,3 +229,14 @@ describe('executeSearchPlan', () => {
     });
   });
 });
+
+it('interleaves index ranks so one connector cannot starve the other', async () => {
+  const result = await executeSearchPlan({ queries: [
+    { family: 'pubmed', text: 'hypoxia', purpose: 'research' },
+    { family: 'europe_pmc', text: 'hypoxia', purpose: 'research' },
+  ] }, {
+    pubmed: fakePubmed({ search: vi.fn().mockResolvedValue({ pmids: ['1', '2'] }), fetchSummaries: vi.fn().mockResolvedValue([{ pmid: '1', title: 'First', pubTypes: [] }, { pmid: '2', title: 'Second', pubTypes: [] }]) }),
+    europePmc: fakeEuropePmc({ search: vi.fn().mockResolvedValue([{ id: 'PMC3', source: 'PMC', title: 'Open', isOpenAccess: true, pubTypes: [] }]) }),
+  });
+  expect(result.candidates.map((item) => item.tempId)).toEqual(['pubmed:1', 'europe_pmc:PMC:PMC3', 'pubmed:2']);
+});

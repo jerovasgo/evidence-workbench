@@ -88,7 +88,7 @@ export function useRunStream(streamUrl: string | null): RunStreamState {
 export function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamState {
   switch (event.type) {
     case 'opening_ready':
-      return { ...prev, opening: event.text };
+      return { ...prev, opening: prev.opening ?? event.text };
     case 'overview_ready':
       return { ...prev, overviewSources: event.sources };
     case 'gene_context_ready':

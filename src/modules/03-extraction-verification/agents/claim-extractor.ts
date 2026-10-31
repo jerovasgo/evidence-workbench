@@ -35,7 +35,7 @@ export async function extractClaims(
 
   return runAgent({
     name: 'claim-extractor',
-    promptVersion: 'P5@0.7',
+    promptVersion: 'P5@0.8',
     tier: 'T1',
     systemPreamble: deps.p0Preamble,
     prompt,

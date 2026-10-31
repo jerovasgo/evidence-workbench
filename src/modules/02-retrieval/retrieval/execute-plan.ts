@@ -213,9 +213,15 @@ export async function executeSearchPlan(plan: SearchPlan, deps: ExecutePlanDeps)
   for (let i = 0; i < plan.queries.length; i++) {
     const query = plan.queries[i]!;
     const outcome = outcomes[i]!;
-    if (outcome.kind === 'ok') result.candidates.push(...outcome.candidates);
+    if (outcome.kind === 'ok') { /* Merge ranked result lists below, fairly across connectors. */ }
     else if (outcome.kind === 'skipped') result.skipped.push({ query, reason: outcome.reason });
     else result.failed.push({ query, error: outcome.error });
+  }
+  // Round-robin retains each index's relevance order without allowing the first
+  // connector to consume the entire extraction time window.
+  const lists = outcomes.filter((outcome): outcome is Extract<QueryOutcome, { kind: 'ok' }> => outcome.kind === 'ok');
+  for (let rank = 0; rank < Math.max(0, ...lists.map((list) => list.candidates.length)); rank++) {
+    for (const list of lists) if (list.candidates[rank]) result.candidates.push(list.candidates[rank]!);
   }
   return result;
 }

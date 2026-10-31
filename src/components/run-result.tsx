@@ -1,11 +1,13 @@
 'use client';
 
+import { isComparisonRequest } from '@/lib/research-intent';
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import type { Claim } from '@/shared/domain';
 import { buildEvidenceMatrix } from '@/modules/07-map-matrix';
 import { EvidenceDrawer } from '@/components/evidence-drawer';
 import { EvidenceSkeleton } from '@/components/evidence-skeleton';
+import { EvidenceMatrix } from '@/components/evidence-matrix';
 import { EvidenceLandscape } from '@/components/evidence-landscape';
 import { StageProgress } from '@/components/stage-progress';
 import { Chip } from '@/components/ui/chip';
@@ -46,7 +48,7 @@ function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefin
 }
 
 export function RunResult({ runId, mode, intent, query }: { runId: string; mode?: Mode; intent?: Intent | null; query?: string }) {
-  const { opening, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, receipt, relations, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
+  const { opening, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const isStreaming = status === 'streaming';
@@ -56,22 +58,16 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
   const qualifiedClaims = Object.values(qualifiedBySource).flat();
   const summary = buildResultSummary(status, receipt, visibleClaims);
   const reducedMotion = useReducedMotion();
-  const requestedComparison = intent === 'comparison' || (intent == null && /\b(compare|comparison|contrast|concordance|comparar|comparación|contrastar|concordancia)\b/i.test(query ?? ''));
+  const requestedComparison = intent === 'comparison' || isComparisonRequest(query ?? '');
   const showComparison = requestedComparison || relations.some((relation) => relation.kind === 'contradicts' || relation.divergence?.kind === 'scientific_contradiction');
   const displayClaims = [...provisionalClaims, ...qualifiedClaims, ...(visibleClaims ?? [])];
-  const substantiveOpening = visibleClaims?.length
-    ? `The verified evidence located so far reports: ${visibleClaims[0]!.text}${visibleClaims.length > 1 ? ` The view below contains ${visibleClaims.length - 1} additional finding${visibleClaims.length === 2 ? '' : 's'} and their source context.` : ''}`
-    : provisionalClaims.length
-      ? `A retrieved source reports: ${provisionalClaims[0]!.text} This finding is still being checked against its source.`
-      : geneContext.length > 0
-        ? `Human gene references identify ${geneContext.map((gene) => `${gene.symbol}${gene.name ? ` as ${gene.name}` : ''}`).join(' and ')}. ${opening ?? 'I’m checking the research literature for findings that answer your question.'}`
-        : opening;
+  const substantiveOpening = opening;
   const reveal = reducedMotion ? false : { opacity: 0, y: 8 };
 
   return (
     <div className="flex flex-col gap-5">
-      {substantiveOpening ? <motion.div key={visibleClaims?.length ? 'grounded' : provisionalClaims.length ? 'provisional' : 'opening'} initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-        <p className="editorial-kicker">OVERVIEW {visibleClaims?.length ? '· SOURCE GROUNDED' : '· PRELIMINARY'}</p>
+      {substantiveOpening ? <motion.div key="overview" initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+        <p className="editorial-kicker">OVERVIEW · INITIAL SOURCE-SUPPORTED FINDINGS</p>
         <p className="mt-3 max-w-2xl text-[16px] font-light leading-7 text-fg">{substantiveOpening}</p>
       </motion.div> : isStreaming && <div role="status" aria-label="Preparing overview" className="space-y-2 animate-pulse">
         <div className="h-3 w-4/5 rounded bg-border" /><div className="h-3 w-3/5 rounded bg-border" />
@@ -93,11 +89,14 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
 
       {note && <p className="text-xs text-muted">{note}</p>}
 
+      <details className="research-surface rounded-2xl p-4"><summary className="cursor-pointer text-sm">What the sources report</summary>
       <motion.div initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         {Object.keys(sourceCatalog).length > 0 || provisionalClaims.length > 0 || (visibleClaims?.length ?? 0) > 0
           ? <EvidenceLandscape sources={sourceCatalog} provisional={provisionalClaims} qualified={qualifiedClaims} verified={visibleClaims ?? []} onOpenEvidence={setSelectedClaim} />
           : isStreaming && <EvidenceSkeleton />}
-      </motion.div>
+      </motion.div></details>
+
+      {showComparison && visibleClaims && new Set(visibleClaims.map((claim) => claim.sourceId)).size >= 2 && <EvidenceMatrix claims={visibleClaims} sourceCatalog={sourceCatalog} questions={questions} relations={relations} relationStatus={relationStatus} onOpenEvidence={setSelectedClaim} />}
 
       <div className="flex flex-col gap-3">
         {visibleClaims !== null && visibleClaims.length === 0 && (
@@ -106,13 +105,6 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
           </p>
         )}
       </div>
-
-      {showComparison && visibleClaims && visibleClaims.length > 1 && <motion.section initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} aria-label="Evidence relationships" className="research-surface rounded-2xl p-5 sm:p-6">
-        <p className="editorial-kicker">CROSS-STUDY READING</p>
-        <h3 className="mt-2 text-lg font-light">{relations.some((relation) => relation.kind === 'contradicts') ? 'Where the findings diverge' : 'How the findings compare'}</h3>
-        {relations.length ? <ul className="mt-4 divide-y divide-border">{relations.slice(0, 5).map((relation, index) => <li key={`${relation.from}-${relation.to}-${index}`} className="py-3 text-sm leading-6"><span className="mr-2 text-xs uppercase tracking-wide text-muted">{relation.kind.replace(/_/g, ' ')}</span>{relation.evidence}</li>)}</ul> : <p className="mt-3 text-sm leading-6 text-muted">These studies are available in the evidence view above. A supported relationship between their findings has not yet been established.</p>}
-        {relationStatus === 'pending' && <p className="mt-3 text-xs text-muted">Assessing relationships across sources…</p>}
-      </motion.section>}
 
       <details className="rounded-[var(--radius-card)] border border-border bg-black/30 p-4 text-xs text-muted">
         <summary className="cursor-pointer text-sm text-fg">Sources, quotations and verification details</summary>
