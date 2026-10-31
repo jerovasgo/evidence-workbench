@@ -19,11 +19,15 @@ function fakeRunsRepository(overrides: Partial<RunsRepository> = {}): RunsReposi
   return { createRun: vi.fn(), getRun: vi.fn(async () => null), updateRunStatus: vi.fn(), ...overrides };
 }
 
+// `intent` here is an arbitrary non-'algorithm' value: none of this file's cases
+// test module 06 (see algorithm-synthesizer's own tests for that), and an
+// `intent: 'algorithm'` run with verified claims now really calls the model
+// (module 06 V1, docs/DECISIONS.md) — these mocked `metaClient`s aren't set up for it.
 const routingRun: RunRecord = {
   id: 'run_1',
   userId: null,
   isPrecomputed: true,
-  intent: 'algorithm',
+  intent: 'fact_lookup',
   status: 'routing',
   createdAt: '2026-10-27T00:00:00.000Z',
 };
@@ -46,6 +50,7 @@ function mockRuntime(
     p4PromptTemplate: 'Classify: {{sources_json}}',
     p5PromptTemplate: 'Extract: {{source_title}} / {{sub_questions}} / {{passages}}',
     p7PromptTemplate: 'Relate: {{pairs_json}}',
+    p9PromptTemplate: 'Synthesize: {{scope}} / {{sub_questions}} / {{claims_json}}',
     p10PromptTemplate: 'Judge: {{claim_text}} / {{conditions_json}} / {{quote}} / {{surrounding_context}}',
     pubmed: { search: vi.fn().mockResolvedValue({ pmids: [] }), fetchSummaries: vi.fn().mockResolvedValue([]) },
     europePmc: { search: vi.fn().mockResolvedValue([]), fetchFullText: vi.fn().mockResolvedValue(null) },
@@ -231,6 +236,54 @@ describe('GET /api/runs/[id]/stream', () => {
     expect(stageOutputsRepository.insert).toHaveBeenCalledWith(
       expect.objectContaining({ runId: 'run_1', stage: 'relate', status: 'ok', value: [{ from: 'claim_a', to: 'claim_b', kind: 'agrees', evidence: 'both recommend aspirin' }] }),
     );
+  });
+
+  it('synthesizes and streams an algorithm_ready event before done for an algorithm-intent run with verified claims', async () => {
+    const graph = {
+      nodes: [
+        { id: 'n1', type: 'action', label: 'Check guide length', claimIds: ['claim_a'], provenance: 'external' },
+        { id: 'n2', type: 'outcome', label: 'Proceed', claimIds: [], provenance: 'external' },
+      ],
+      edges: [{ from: 'n1', to: 'n2', condition: { variable: 'length', op: '>', value: 20, unit: 'nt' } }],
+    };
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult(graph));
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const algorithmRun: RunRecord = { ...routingRun, intent: 'algorithm' };
+    const runsRepository = fakeRunsRepository({ getRun: vi.fn(async () => algorithmRun) });
+
+    const claimA = {
+      id: 'claim_a', text: 'Guides over 20nt reduce off-target editing.', basis: 'primary' as const,
+      actionType: 'finding' as const, conditions: [], sourceId: 's1', passageId: 'p1', quote: 'Guides over 20nt.',
+      grade: { certainty: 'ungraded' as const, origin: 'ai_estimated' as const },
+      verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' as const, retractionCheck: 'crossref_no_signal' as const },
+      safetyCritical: false,
+    };
+    const metrics = { ms: 1, costUsd: 0 };
+    const stageOutputsRepository = {
+      insert: vi.fn(),
+      getLatestPerStage: vi.fn().mockResolvedValue(
+        new Map([
+          ['structure', { stage: 'structure', status: 'ok', value: { context: 'in_vitro', subQuestions: [], scopeParameters: {} }, metrics, createdAt: 'x' }],
+          ['plan', { stage: 'plan', status: 'ok', value: { queries: [] }, metrics, createdAt: 'x' }],
+          ['retrieve', { stage: 'retrieve', status: 'ok', value: [], metrics, createdAt: 'x' }],
+          ['classify', { stage: 'classify', status: 'ok', value: [], metrics, createdAt: 'x' }],
+          ['extract', { stage: 'extract', status: 'ok', value: [claimA], metrics, createdAt: 'x' }],
+        ]),
+      ),
+    };
+
+    const GET = await loadGetWithRuntime(mockRuntime(metaClient, runsRepository, createPendingRunContextStore(), stageOutputsRepository));
+    const { labelRelationsBatched } = await import('@/modules/05-governance');
+    vi.mocked(labelRelationsBatched).mockResolvedValue({ relations: [], failures: [], costUsd: 0 });
+
+    const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
+    const events = await readAllEvents(res);
+
+    expect(events.find((event) => event.type === 'algorithm_ready')).toMatchObject({
+      payload: { status: 'ok', graph, band: { criticalChecks: [], firstAction: 'n1' } },
+    });
+    expect(events.findIndex((event) => event.type === 'algorithm_ready')).toBeLessThan(events.findIndex((event) => event.type === 'done'));
+    expect(stageOutputsRepository.insert).toHaveBeenCalledWith(expect.objectContaining({ runId: 'run_1', stage: 'algorithm', status: 'ok' }));
   });
 
   it('never lets a relation-labelling failure surface as a stream error after done was already sent', async () => {

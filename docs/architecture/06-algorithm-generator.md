@@ -90,3 +90,16 @@ mini-algorithms as test data. Keep P9 versioned; store the version in `Run.promp
 ## Acceptance
 Valid algorithm for ≥3 topics end to end; band shown first; every node opens an evidence drawer
 with verified quotes; abstention visible where evidence is insufficient.
+
+## V1 built (2026-10-31)
+The agent (`src/modules/06-algorithm/agents/algorithm-synthesizer.ts`, P9), invariant-repair
+orchestration (`pipeline/synthesize-algorithm.ts`) and renderer (`src/components/algorithm-view.tsx`)
+exist and are wired into the live SSE pipeline. Five scope cuts from the design above, logged in
+`docs/DECISIONS.md` (2026-10-31): single-call synthesis (no 2-pass streaming); a deterministic
+vertical step list (`pipeline/flatten-algorithm.ts`, DFS order) instead of the ELK 2D canvas — still
+code-computed layout, just not spatial; no "walk the path" mode; exactly one manual invariant-repair
+call, then abstain (never a partially-wrong graph); `provenance` is always `'external'` (no local
+documents exist yet, and relation-labelling's `contradicts` data runs after `done`, too late for this).
+Also: this module's prompt and worked examples are genetics-specific, not generic "any science" — the
+product's actual current domain, per the user's 2026-10-30 correction, even though the rest of this
+file and CLAUDE.md/SPEC.md still use the broader framing from the 2026-10-29 pivot.

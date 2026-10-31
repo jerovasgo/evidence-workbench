@@ -9,6 +9,7 @@ import { EvidenceDrawer } from '@/components/evidence-drawer';
 import { EvidenceSkeleton } from '@/components/evidence-skeleton';
 import { EvidenceMatrix } from '@/components/evidence-matrix';
 import { EvidenceLandscape } from '@/components/evidence-landscape';
+import { AlgorithmView } from '@/components/algorithm-view';
 import { StageProgress } from '@/components/stage-progress';
 import { Chip } from '@/components/ui/chip';
 import { useRunStream } from '@/lib/use-run-stream';
@@ -48,11 +49,15 @@ function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefin
 }
 
 export function RunResult({ runId, mode, intent, query }: { runId: string; mode?: Mode; intent?: Intent | null; query?: string }) {
-  const { opening, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
+  const { opening, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, algorithm, algorithmStatus, algorithmAbstainReason, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const isStreaming = status === 'streaming';
-  const note = unbuiltViewNote(mode, intent);
+  // Module 06 V1 (docs/DECISIONS.md): the algorithm view replaces the generic
+  // "not built yet" note for this one intent — it IS built now. Mechanism keeps
+  // the placeholder note untouched (module 08 still has no renderer).
+  const isAlgorithmRequested = mode === 'algorithm' || ((mode === undefined || mode === 'auto') && intent === 'algorithm');
+  const note = isAlgorithmRequested ? null : unbuiltViewNote(mode, intent);
   const visibleClaims = claims === null ? null : buildEvidenceMatrix(claims).flatMap((source) => source.claims);
   const provisionalClaims = Object.values(provisionalBySource).flat();
   const qualifiedClaims = Object.values(qualifiedBySource).flat();
@@ -88,6 +93,16 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
       )}
 
       {note && <p className="text-xs text-muted">{note}</p>}
+
+      {isAlgorithmRequested && algorithmStatus !== 'pending' && (
+        <AlgorithmView
+          graph={algorithm?.graph ?? null}
+          band={algorithm?.band ?? null}
+          claims={visibleClaims ?? []}
+          onOpenEvidence={setSelectedClaim}
+          abstainReason={algorithmStatus === 'abstained' ? algorithmAbstainReason : null}
+        />
+      )}
 
       <details className="research-surface rounded-2xl p-4"><summary className="cursor-pointer text-sm">What the sources report</summary>
       <motion.div initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>

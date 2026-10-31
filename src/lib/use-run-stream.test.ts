@@ -44,3 +44,24 @@ it('keeps the first substantive overview immutable during streaming', () => {
   state = applyEvent(state, { type: 'opening_ready', runId: 'r1', text: 'Later rewrite' });
   expect(state.opening).toBe('Initial supported findings');
 });
+
+describe('algorithm_ready', () => {
+  const graph = {
+    nodes: [{ id: 'n1', type: 'action' as const, label: 'Check guide length', claimIds: ['c1'], provenance: 'external' as const }],
+    edges: [],
+  };
+
+  it('stores the graph and band on an ok result', () => {
+    const state = applyEvent(initialState(), { type: 'algorithm_ready', runId: 'r1', payload: { status: 'ok', graph, band: { criticalChecks: [], firstAction: 'n1' } } });
+    expect(state.algorithmStatus).toBe('ok');
+    expect(state.algorithm).toEqual({ graph, band: { criticalChecks: [], firstAction: 'n1' } });
+    expect(state.algorithmAbstainReason).toBeNull();
+  });
+
+  it('keeps no graph and records the reason on an abstained result', () => {
+    const state = applyEvent(initialState(), { type: 'algorithm_ready', runId: 'r1', payload: { status: 'abstained', reason: 'Not enough verified claims.' } });
+    expect(state.algorithmStatus).toBe('abstained');
+    expect(state.algorithm).toBeNull();
+    expect(state.algorithmAbstainReason).toBe('Not enough verified claims.');
+  });
+});

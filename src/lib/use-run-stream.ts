@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Claim, Receipt, RunEvent, Relation } from '@/shared/domain';
 import type { ScoreBreakdown } from '@/modules/04-grading-scoring';
+import type { AlgorithmGraph } from '@/modules/06-algorithm';
 
 // Client-side consumer of GET /api/runs/:id/stream (SSE). EventSource already
 // parses the `data: <json>\n\n` framing; this hook just accumulates the typed
@@ -27,6 +28,9 @@ export interface RunStreamState {
   qualifiedBySource: Record<string, Claim[]>;
   withdrawals: { sourceId: string; count: number; reason?: string }[];
   sourceScores: Record<string, ScoreBreakdown> | null;
+  algorithm: { graph: AlgorithmGraph; band: { criticalChecks: string[]; firstAction: string | null } } | null;
+  algorithmStatus: 'pending' | 'ok' | 'abstained' | 'failed';
+  algorithmAbstainReason: string | null;
   receipt: Receipt | null;
   relations: Relation[];
   questions: string[];
@@ -50,6 +54,9 @@ export function initialState(): RunStreamState {
     qualifiedBySource: {},
     withdrawals: [],
     sourceScores: null,
+    algorithm: null,
+    algorithmStatus: 'pending',
+    algorithmAbstainReason: null,
     receipt: null,
     relations: [], questions: [], relationStatus: 'pending',
     status: 'streaming',
@@ -123,6 +130,12 @@ export function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamStat
     case 'band_ready': {
       const payload = event.payload as { claims: Claim[]; sourceScores?: Record<string, ScoreBreakdown> };
       return { ...prev, claims: payload.claims, sourceScores: payload.sourceScores ?? null };
+    }
+    case 'algorithm_ready': {
+      const payload = event.payload as { status: 'ok'; graph: AlgorithmGraph; band: { criticalChecks: string[]; firstAction: string | null } } | { status: 'abstained'; reason: string };
+      return payload.status === 'ok'
+        ? { ...prev, algorithm: { graph: payload.graph, band: payload.band }, algorithmStatus: 'ok', algorithmAbstainReason: null }
+        : { ...prev, algorithm: null, algorithmStatus: 'abstained', algorithmAbstainReason: payload.reason };
     }
     case 'relations_ready':
       return { ...prev, relations: event.relations, questions: event.questions, relationStatus: event.status };

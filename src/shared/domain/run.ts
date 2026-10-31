@@ -49,6 +49,13 @@ export const RunEventSchema = z.discriminatedUnion('type', [
     detail: z.string().optional(),
   }),
   z.object({ type: z.literal('band_ready'), runId: z.string(), payload: z.unknown() }),
+  // Module 06 (docs/architecture/06-algorithm-generator.md). `payload` is untyped
+  // here deliberately, same convention as `band_ready` above: `shared/domain` may
+  // never depend on a module's schema (scripts/check-module-boundaries.mjs), so the
+  // real `{graph, band, status, reason}` shape (module 06's own `AlgorithmGraph`) is
+  // validated/typed only at the two places that actually read it — the SSE route
+  // (which already has the typed value before sending) and `use-run-stream.ts`.
+  z.object({ type: z.literal('algorithm_ready'), runId: z.string(), payload: z.unknown() }),
   z.object({ type: z.literal('overview_ready'), runId: z.string(), sources: z.array(z.object({ title: z.string(), year: z.number().optional(), url: z.string().optional() })) }),
   z.object({ type: z.literal('gene_context_ready'), runId: z.string(), genes: z.array(z.object({ symbol: z.string(), name: z.string().optional(), geneId: z.string().optional(), hgncId: z.string().optional(), links: z.array(z.object({ label: z.string(), url: z.string() })) })) }),
   z.object({ type: z.literal('source_catalog_ready'), runId: z.string(), sources: z.array(z.object({ id: z.string(), status: z.literal('candidate'), title: z.string(), url: z.string().url(), doi: z.string().optional(), pmid: z.string().optional(), year: z.number().optional() })) }),

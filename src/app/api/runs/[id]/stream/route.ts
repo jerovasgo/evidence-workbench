@@ -10,10 +10,12 @@ import {
 } from '@/modules/01-orchestrator';
 import { labelRelationsBatched, pairClaimsForRelations } from '@/modules/05-governance';
 import type { AgentTraceEvent } from '@/shared/agents';
-import { ClaimSchema, ReceiptSchema, RelationSchema, type Claim, type RunEvent } from '@/shared/domain';
+import { ClaimSchema, ReceiptSchema, RelationSchema, isVerifiedClaim, type Claim, type RunEvent } from '@/shared/domain';
 import { CandidateSourceSchema } from '@/modules/02-retrieval';
 import { RESEARCH_DEPTH_CONCURRENCY, RESEARCH_DEPTH_TIME_MS } from '@/lib/research-depth';
 import { lookupGeneContext } from '@/modules/02-retrieval';
+import { synthesizeAlgorithm, AlgorithmGraphSchema, type AlgorithmInputClaim } from '@/modules/06-algorithm';
+import { z } from 'zod';
 
 // 2026-10-28 latency audit (docs/DECISIONS.md): `runAgent` (shared/agents) already
 // emits an `onTrace` event — {name, ms, costUsd, tokens} — for every single model
@@ -111,6 +113,61 @@ async function labelRelationsAfterDone(runId: string, claims: Claim[], runtime: 
   return { relations: result.relations, status: result.failures.length ? 'partial' : 'ok' };
 }
 
+// Module 06 V1 (docs/DECISIONS.md "V1 scope decisions"): runs BEFORE `done`, unlike
+// relation labelling — for `intent === 'algorithm'` the algorithm view IS the
+// primary requested output, not a background enrichment, so it must be ready (or
+// have abstained) before this run's terminal event, same reasoning as why `extract`
+// itself is on the critical path. Sends exactly one `algorithm_ready` event, whose
+// `payload` is the discriminated `SynthesizeAlgorithmResult` shape (re-validated by
+// the client, per the `shared/domain` boundary comment on `RunEventSchema`).
+const AlgorithmReadyPayloadSchema = z.discriminatedUnion('status', [
+  z.object({ status: z.literal('ok'), graph: AlgorithmGraphSchema, band: z.object({ criticalChecks: z.array(z.string()), firstAction: z.string().nullable() }) }),
+  z.object({ status: z.literal('abstained'), reason: z.string() }),
+]);
+
+async function synthesizeAlgorithmForRun(
+  run: { id: string; intent?: string },
+  scope: string,
+  subQuestions: string[],
+  claims: Claim[],
+  runtime: ServerRuntime,
+): Promise<z.infer<typeof AlgorithmReadyPayloadSchema> | null> {
+  if (run.intent !== 'algorithm') return null;
+  const verified = claims.filter(isVerifiedClaim);
+  if (verified.length === 0) {
+    return { status: 'abstained', reason: 'No verified findings are available yet for this question.' };
+  }
+
+  const inputClaims: AlgorithmInputClaim[] = verified.map((claim) => ({
+    id: claim.id,
+    text: claim.text,
+    actionType: claim.actionType,
+    conditions: claim.conditions,
+    geneticContext: claim.geneticContext,
+  }));
+
+  const started = Date.now();
+  const result = await synthesizeAlgorithm(run.id, { scope, subQuestions, claims: inputClaims }, {
+    metaClient: runtime.metaClient,
+    budgetGuard: runtime.budgetGuard,
+    p0Preamble: runtime.p0Preamble,
+    p9PromptTemplate: runtime.p9PromptTemplate,
+    onTrace: (event) => logAgentTrace(run.id, event),
+  });
+  const ms = Date.now() - started;
+
+  await runtime.stageOutputsRepository.insert({
+    runId: run.id,
+    stage: 'algorithm',
+    status: result.status === 'ok' ? 'ok' : 'abstain',
+    value: result,
+    reasons: result.status === 'abstained' ? [result.reason] : undefined,
+    metrics: { ms, costUsd: 0 },
+  });
+  console.log(JSON.stringify({ type: 'stage_latency', runId: run.id, stage: 'algorithm', status: result.status, ms, resumed: false }));
+  return result;
+}
+
 function computeFinalStatus(result: RunRetrievalResult): 'done' | 'partial' | 'failed' {
   if (result.extraction.status === 'ok') return 'done';
   if ((result.extraction.value?.length ?? 0) > 0) return 'partial';
@@ -156,6 +213,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
             send({ type: 'qualified_claims_ready', runId: run.id, sourceId, claims: qualified.data.filter((claim) => claim.sourceId === sourceId) });
           }
         }
+        const savedAlgorithm = AlgorithmReadyPayloadSchema.safeParse(saved.get('algorithm')?.value);
+        if (savedAlgorithm.success) send({ type: 'algorithm_ready', runId: run.id, payload: savedAlgorithm.data });
         const receipt = ReceiptSchema.safeParse(saved.get('receipt')?.value);
         if (receipt.success) send({ type: 'receipt_ready', runId: run.id, receipt: receipt.data });
         send({ type: 'done', runId: run.id, status: run.status });
@@ -270,6 +329,17 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         send({ type: 'band_ready', runId: run.id, payload: { claims: result.extraction.value ?? [], sourceScores: result.sourceScores } });
         const receipt = buildReceipt(result);
         send({ type: 'receipt_ready', runId: run.id, receipt });
+
+        // On the critical path, before `done` — see `synthesizeAlgorithmForRun`'s own
+        // comment. A no-op (returns null) for any intent other than `algorithm`.
+        const algorithmResult = await synthesizeAlgorithmForRun(
+          run,
+          result.structure.value?.scope ?? pending?.freeText ?? '',
+          result.structure.value?.subQuestions ?? [],
+          result.extraction.value ?? [],
+          runtime,
+        );
+        if (algorithmResult) send({ type: 'algorithm_ready', runId: run.id, payload: algorithmResult });
 
         startOverview(result.extraction.value ?? [], true);
         await overviewPromise;
