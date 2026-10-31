@@ -26,12 +26,16 @@ export function buildReceipt(result: RunRetrievalResult): Receipt {
     .filter((y): y is number => y !== undefined);
 
   return {
-    claimsTotal: claims.length + (counts.claimsDropped ?? 0),
+    claimsTotal: claims.length + (counts.claimsPartial ?? 0) + (counts.claimsDropped ?? 0),
     citationsExist: claims.length,
     quotesFound: claims.length,
     retracted: counts.retracted ?? 0,
     supported: claims.filter((c) => c.verification.support === 'supports').length,
-    abstained: 0,
+    partial: counts.claimsPartial ?? 0,
+    dropReasons: Object.fromEntries(Object.entries(counts).filter(([key]) => key.startsWith('drop_')).map(([key, value]) => [key.slice(5), value])),
+    abstained: (result.structure.value?.subQuestions ?? []).filter((_, index) =>
+      !claims.some((claim) => claim.subQuestionIndex === index && claim.verification.support === 'supports'),
+    ).length,
     sourcesByKind,
     oldestSourceYear: years.length > 0 ? Math.min(...years) : undefined,
     generatedAt: new Date().toISOString(),

@@ -39,7 +39,7 @@ function contextAppearsInQuote(quote: string, value: string): boolean {
 export function verifyClaim(input: VerifyClaimInput, passages: Passage[]): VerifyClaimResult {
   const { extracted } = input;
 
-  const passage = passages.find((p) => p.id === extracted.passageId);
+  const passage = passages.find((p) => p.id === extracted.passageId && p.sourceId === input.sourceId);
   if (!passage) {
     return { outcome: 'dropped', reason: `passageId "${extracted.passageId}" is not one of this source's passages (invalid locator)` };
   }
@@ -62,6 +62,11 @@ export function verifyClaim(input: VerifyClaimInput, passages: Passage[]): Verif
   const numbersCheck = checkNumbersPreserved(doseCorrectedText, extracted.quote);
   if (!numbersCheck.ok) {
     return { outcome: 'dropped', reason: `number(s) not present in quote: ${numbersCheck.missing.join(', ')}` };
+  }
+  for (const condition of extracted.conditions) {
+    const value = `${condition.value}${condition.unit ? ` ${condition.unit}` : ''}`;
+    const conditionNumbers = checkNumbersPreserved(value, extracted.quote);
+    if (!conditionNumbers.ok) return { outcome: 'dropped', reason: `condition number(s) not present in quote: ${conditionNumbers.missing.join(', ')}` };
   }
 
   // Context is extractive: never promote a model-proposed value absent from the quote.

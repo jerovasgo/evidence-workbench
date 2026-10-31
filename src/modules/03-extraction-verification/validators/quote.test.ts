@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyDoseRule,
   checkNumbersPreserved,
+  extractNumberTokens,
   findQuoteInPassage,
   normalizeForMatch,
 } from './quote';
@@ -68,6 +69,15 @@ describe('checkNumbersPreserved', () => {
 
   it('passes for claim text with no numbers at all', () => {
     expect(checkNumbersPreserved('Give aspirin promptly.', quote)).toEqual({ ok: true, missing: [] });
+  });
+
+  it('does not treat digits in gene and protein names as measurements', () => {
+    expect(extractNumberTokens('HNF1A and SpCas9n were studied')).toEqual([]);
+    expect(checkNumbersPreserved('SpCas9n altered the target.', 'The SpCas9n nickase altered the target.').ok).toBe(true);
+  });
+
+  it('treats equivalent unit spacing as the same measurement', () => {
+    expect(checkNumbersPreserved('Editing occurred at 1.6 % efficacy.', 'Editing occurred at 1.6% efficacy.').ok).toBe(true);
   });
 });
 

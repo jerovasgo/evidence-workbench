@@ -46,18 +46,19 @@ function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefin
 }
 
 export function RunResult({ runId, mode, intent, query }: { runId: string; mode?: Mode; intent?: Intent | null; query?: string }) {
-  const { opening, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, withdrawals, claims, sourceScores, receipt, relations, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
+  const { opening, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, receipt, relations, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const isStreaming = status === 'streaming';
   const note = unbuiltViewNote(mode, intent);
   const visibleClaims = claims === null ? null : buildEvidenceMatrix(claims).flatMap((source) => source.claims);
   const provisionalClaims = Object.values(provisionalBySource).flat();
+  const qualifiedClaims = Object.values(qualifiedBySource).flat();
   const summary = buildResultSummary(status, receipt, visibleClaims);
   const reducedMotion = useReducedMotion();
   const requestedComparison = intent === 'comparison' || (intent == null && /\b(compare|comparison|contrast|concordance|comparar|comparación|contrastar|concordancia)\b/i.test(query ?? ''));
   const showComparison = requestedComparison || relations.some((relation) => relation.kind === 'contradicts' || relation.divergence?.kind === 'scientific_contradiction');
-  const displayClaims = [...provisionalClaims, ...(visibleClaims ?? [])];
+  const displayClaims = [...provisionalClaims, ...qualifiedClaims, ...(visibleClaims ?? [])];
   const substantiveOpening = visibleClaims?.length
     ? `The verified evidence located so far reports: ${visibleClaims[0]!.text}${visibleClaims.length > 1 ? ` The view below contains ${visibleClaims.length - 1} additional finding${visibleClaims.length === 2 ? '' : 's'} and their source context.` : ''}`
     : provisionalClaims.length
@@ -94,7 +95,7 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
 
       <motion.div initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         {Object.keys(sourceCatalog).length > 0 || provisionalClaims.length > 0 || (visibleClaims?.length ?? 0) > 0
-          ? <EvidenceLandscape sources={sourceCatalog} provisional={provisionalClaims} verified={visibleClaims ?? []} onOpenEvidence={setSelectedClaim} />
+          ? <EvidenceLandscape sources={sourceCatalog} provisional={provisionalClaims} qualified={qualifiedClaims} verified={visibleClaims ?? []} onOpenEvidence={setSelectedClaim} />
           : isStreaming && <EvidenceSkeleton />}
       </motion.div>
 
@@ -125,7 +126,9 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
             <Chip>{receipt.quotesFound} quotes verified</Chip>
             {receipt.retracted > 0 && <Chip tone="conflict">{receipt.retracted} retracted source(s) excluded</Chip>}
             <Chip>{receipt.supported} fully supported by support-judge</Chip>
+            {(receipt.partial ?? 0) > 0 && <Chip>{receipt.partial} partially supported, shown with caveats</Chip>}
           </div>
+          {receipt.dropReasons && Object.keys(receipt.dropReasons).length > 0 && <p className="mt-2">Removed after checks: {Object.entries(receipt.dropReasons).map(([reason, count]) => `${count} ${reason}`).join(' · ')}</p>}
           <p className="mt-2">Generated {new Date(receipt.generatedAt).toLocaleString()}</p>
         </footer>}
       </details>

@@ -99,6 +99,11 @@ export function EvidenceDrawer({
                 )}
               </dl>
 
+              {claim.verificationReport && <details className="rounded-[var(--radius-card)] border border-border bg-black/40 p-4 text-xs">
+                <summary className="cursor-pointer text-fg">Verification report · {claim.verificationReport.final}</summary>
+                <ul className="mt-3 space-y-2 text-muted">{claim.verificationReport.checks.map((check) => <li key={check.name}>{check.ok ? '✓' : '—'} {check.name.replace(/_/g, ' ')}{check.detail ? ` · ${check.detail}` : ''}</li>)}</ul>
+              </details>}
+
               {sourceScore && (
                 <div className="rounded-[var(--radius-card)] border border-border bg-black/40 p-4">
                   <p className="text-xs uppercase tracking-wide text-muted">Source score — why ranked here</p>

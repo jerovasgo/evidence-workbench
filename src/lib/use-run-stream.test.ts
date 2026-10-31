@@ -27,4 +27,14 @@ describe('provisional SSE claim lifecycle', () => {
     expect(state.claims).toEqual([verified]);
     expect(state.withdrawals).toEqual([]);
   });
+
+  it('keeps a partially supported claim with its caveat after provisional review', () => {
+    let state = applyEvent(initialState(), { type: 'provisional_claims_ready', runId: 'r1', sourceId: 's1', claims: [provisional] });
+    const qualified: Claim = { ...provisional, verification: { ...provisional.verification, exists: true, support: 'partial', supportNote: 'Limited to one cell model.', retractionCheck: 'crossref_no_signal' } };
+    state = applyEvent(state, { type: 'qualified_claims_ready', runId: 'r1', sourceId: 's1', claims: [qualified] });
+    state = applyEvent(state, { type: 'source_reviewed', runId: 'r1', sourceId: 's1', acceptedClaimIds: ['c1'], withdrawnCount: 0 });
+    expect(state.provisionalBySource.s1).toBeUndefined();
+    expect(state.qualifiedBySource.s1).toEqual([qualified]);
+    expect(state.withdrawals).toEqual([]);
+  });
 });

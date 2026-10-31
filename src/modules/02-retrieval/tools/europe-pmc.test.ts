@@ -85,6 +85,20 @@ describe('createEuropePmcClient.fetchFullText', () => {
     const client = createEuropePmcClient({ fetchImpl });
     expect(await client.fetchFullText('MED', '00000000')).toBeNull();
   });
+
+  it('falls back to NCBI BioC when Europe PMC fullTextXML is unavailable', async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ resultList: { result: [{ pmcid: 'PMC123' }] } }))
+      .mockResolvedValueOnce(new Response('upstream error', { status: 500 }))
+      .mockResolvedValueOnce(jsonResponse([{ documents: [{ passages: [
+        { infons: { section_type: 'ABSTRACT' }, text: 'A brief summary.' },
+        { infons: { section_type: 'INTRO' }, text: 'The first finding.' },
+        { infons: { section_type: 'REF' }, text: 'A citation.' },
+      ] }] }]));
+    const client = createEuropePmcClient({ fetchImpl });
+    expect(await client.fetchFullText('MED', '123')).toBe('ABSTRACT\n\nA brief summary.\n\nINTRO\n\nThe first finding.');
+    expect(fetchImpl.mock.calls[2]?.[0]).toContain('/bioc_json/PMC123/unicode');
+  });
 });
 
 it('resolves a MED identifier to PMCID before requesting full text', async () => {
@@ -94,4 +108,11 @@ it('resolves a MED identifier to PMCID before requesting full text', async () =>
   const client = createEuropePmcClient({ fetchImpl });
   expect(await client.fetchFullText('MED', '123')).toBe('Genetic evidence.');
   expect(fetchImpl.mock.calls[1]?.[0]).toContain('/PMC123/fullTextXML');
+});
+
+it('fetches a source abstract when full text is unavailable', async () => {
+  const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ resultList: { result: [{ abstractText: '<h4>Results</h4><p>HNF1A expression increased.</p>' }] } }));
+  const client = createEuropePmcClient({ fetchImpl });
+  expect(await client.fetchAbstract?.('MED', '123')).toContain('HNF1A expression increased.');
+  expect(fetchImpl.mock.calls[0]?.[0]).toContain('resultType=core');
 });

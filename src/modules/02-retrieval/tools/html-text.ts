@@ -22,11 +22,19 @@ export function extractReadableText(raw: string, contentType: string): string {
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
     .replace(/<!--[\s\S]*?-->/g, ' ')
+    // Keep JATS/HTML section and paragraph boundaries. Collapsing all whitespace
+    // made an entire article one oversized extraction passage.
+    .replace(/<\/(?:p|title|h[1-6]|sec|abstract|section|li|table-wrap)>/gi, '\n\n')
+    .replace(/<br\s*\/?\s*>/gi, '\n')
     .replace(/<[^>]+>/g, ' ');
 
   for (const [pattern, replacement] of ENTITY_REPLACEMENTS) {
     text = text.replace(pattern, replacement);
   }
 
-  return text.replace(/\s+/g, ' ').trim();
+  return text
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/ *\n */g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

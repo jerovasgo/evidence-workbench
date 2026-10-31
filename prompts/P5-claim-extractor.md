@@ -1,6 +1,6 @@
 # P5 — Claim extractor
 
-Version: `P5@0.6`
+Version: `P5@0.7`
 Agent: `claim-extractor` (module 03, tier T1, 1 step, ~3,000 output tokens, 25 s timeout)
 Shares the common preamble `P0`.
 
@@ -54,6 +54,10 @@ Rules:
   outcomes into one claim or create claims to reach a quota.
 - One claim = one finding/result; never merge content across passages.
 - Assign subQuestionIndex only when the claim directly answers that exact sub-question.
+- Exclude generic background and bare descriptions of what the authors set up
+  when the question asks for demonstrated findings or capabilities. A method is
+  relevant only when the question asks about methods or the method itself is a
+  demonstrated result. Do not fill the claim quota with setup statements.
 - For genetics, geneticContext values must be exact contiguous excerpts of the quote; use null for missing values. Preserve experimental context explicitly stated in the cited passage:
   gene or molecular entity, organism, cell or model, perturbation, measurement and
   direction of effect where available. Record context in the claim text or conditions;

@@ -24,6 +24,7 @@ export interface RunStreamState {
   sourceProgress: string[];
   claims: Claim[] | null;
   provisionalBySource: Record<string, Claim[]>;
+  qualifiedBySource: Record<string, Claim[]>;
   withdrawals: { sourceId: string; count: number; reason?: string }[];
   sourceScores: Record<string, ScoreBreakdown> | null;
   receipt: Receipt | null;
@@ -46,6 +47,7 @@ export function initialState(): RunStreamState {
     sourceProgress: [],
     claims: null,
     provisionalBySource: {},
+    qualifiedBySource: {},
     withdrawals: [],
     sourceScores: null,
     receipt: null,
@@ -95,6 +97,8 @@ export function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamStat
       return { ...prev, sourceCatalog: Object.fromEntries(event.sources.map((source) => [source.id, source])) };
     case 'provisional_claims_ready':
       return { ...prev, provisionalBySource: { ...prev.provisionalBySource, [event.sourceId]: event.claims } };
+    case 'qualified_claims_ready':
+      return { ...prev, qualifiedBySource: { ...prev.qualifiedBySource, [event.sourceId]: event.claims } };
     case 'source_reviewed': {
       const provisionalBySource = { ...prev.provisionalBySource };
       delete provisionalBySource[event.sourceId];

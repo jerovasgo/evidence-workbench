@@ -30,7 +30,7 @@ const DEFAULT_MAX_CONCURRENCY = 6;
 export type PoolSourceOutcome =
   | { status: 'no_full_text' }
   | { status: 'extraction_failed'; reason: string }
-  | { status: 'ok'; claims: Claim[]; dropped: { reason: string }[]; withdrawn: { id: string; reason: string }[]; costUsd: number };
+  | { status: 'ok'; claims: Claim[]; qualified: Claim[]; dropped: { reason: string }[]; withdrawn: { id: string; reason: string }[]; costUsd: number };
 
 export interface ExtractAndVerifyPoolInput {
   runId: string;
@@ -113,7 +113,7 @@ export async function extractAndVerifyPool(
       if (result.status === 'no_text') outcome = { status: 'no_full_text' };
       else if (result.status === 'extraction_failed') outcome = { status: 'extraction_failed', reason: result.reason };
       else {
-        outcome = { status: 'ok', claims: result.claims, dropped: result.dropped, withdrawn: result.withdrawn, costUsd: result.costUsd };
+        outcome = { status: 'ok', claims: result.claims, qualified: result.qualified, dropped: result.dropped, withdrawn: result.withdrawn, costUsd: result.costUsd };
         claims.push(...result.claims);
         totalCostUsd += result.costUsd;
       }

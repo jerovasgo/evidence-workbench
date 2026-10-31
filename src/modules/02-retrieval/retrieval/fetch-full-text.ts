@@ -33,11 +33,11 @@ export async function fetchFullTextForCandidate(
   if (candidate.family === 'europe_pmc') {
     const [, source, id] = candidate.tempId.split(':');
     if (!source || !id) return null;
-    return europePmc.fetchFullText(source, id).catch(() => null);
+    return (await europePmc.fetchFullText(source, id).catch(() => null)) ?? (await europePmc.fetchAbstract?.(source, id).catch(() => null)) ?? null;
   }
 
   if (candidate.family === 'pubmed' && candidate.pmid) {
-    return europePmc.fetchFullText('MED', candidate.pmid).catch(() => null);
+    return (await europePmc.fetchFullText('MED', candidate.pmid).catch(() => null)) ?? (await europePmc.fetchAbstract?.('MED', candidate.pmid).catch(() => null)) ?? null;
   }
 
   if ((candidate.family === 'web' || candidate.family === 'standards_body') && webFetch) {

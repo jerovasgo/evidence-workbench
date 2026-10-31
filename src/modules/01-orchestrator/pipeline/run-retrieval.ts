@@ -349,7 +349,24 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
       const noFullText = pool.perSource.filter((s) => s.outcome.status === 'no_full_text').length;
       const extractionFailed = pool.perSource.filter((s) => s.outcome.status === 'extraction_failed').length;
       const okOutcomes = pool.perSource.flatMap((s) => (s.outcome.status === 'ok' ? [s.outcome] : []));
+      const qualifiedClaims = okOutcomes.flatMap((outcome) => outcome.qualified);
+      if (deps.stageOutputs) {
+        try {
+          await deps.stageOutputs.insert({ runId: input.runId, stage: 'qualified_claims', status: 'ok', value: qualifiedClaims, metrics: { ms: 0, costUsd: 0, counts: { claims: qualifiedClaims.length } } });
+        } catch {
+          // Live claims remain available even if stage persistence fails.
+        }
+      }
       const droppedClaims = okOutcomes.flatMap((o) => o.dropped);
+      const dropReasons = droppedClaims.reduce<Record<string, number>>((counts, drop) => {
+        const category = /quote not found/i.test(drop.reason) ? 'quote'
+          : /number\(s\)/i.test(drop.reason) ? 'number'
+          : /retract|withdrawn/i.test(drop.reason) ? 'retraction'
+          : /support|cited quote/i.test(drop.reason) ? 'support'
+          : /passageId|locator/i.test(drop.reason) ? 'locator' : 'other';
+        counts[`drop_${category}`] = (counts[`drop_${category}`] ?? 0) + 1;
+        return counts;
+      }, {});
       const retractedDropped = droppedClaims.filter((d) => d.reason === 'source is retracted or withdrawn').length;
       const hasIssues = noFullText > 0 || extractionFailed > 0 || pool.sourcesNotStarted > 0;
 
@@ -371,6 +388,8 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
             sourcesNotStarted: pool.sourcesNotStarted,
             claimsKept: pool.claims.length,
             claimsDropped: droppedClaims.length,
+            ...dropReasons,
+            claimsPartial: qualifiedClaims.length,
             retracted: retractedDropped,
             noFullText,
             extractionFailed,

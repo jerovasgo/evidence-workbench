@@ -68,6 +68,13 @@ export const ClaimVerificationSchema = z.object({
 });
 export type ClaimVerification = z.infer<typeof ClaimVerificationSchema>;
 
+export const VerificationReportSchema = z.object({
+  claimId: z.string(),
+  checks: z.array(z.object({ name: z.string(), ok: z.boolean(), detail: z.string().optional() })),
+  final: z.enum(['verified', 'partial', 'unknown', 'dropped']),
+});
+export type VerificationReport = z.infer<typeof VerificationReportSchema>;
+
 export const ClaimSchema = z.object({
   id: z.string(),
   text: z.string(),
@@ -81,6 +88,7 @@ export const ClaimSchema = z.object({
   quote: z.string(),
   grade: GradeSchema,
   verification: ClaimVerificationSchema,
+  verificationReport: VerificationReportSchema.optional(),
   safetyCritical: z.boolean(),
 });
 export type Claim = z.infer<typeof ClaimSchema>;

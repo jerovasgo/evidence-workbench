@@ -5,11 +5,12 @@ import type { BudgetGuard } from '@/shared/security';
 import type { CrossrefClient } from '@/modules/02-retrieval';
 import { extractClaims } from '../agents/claim-extractor';
 import { judgeSupport } from '../agents/support-judge';
-import { windowText } from '../passages/window-text';
+import { beginsResearchSection, windowText } from '../passages/window-text';
 import { checkRetraction } from '../validators/retraction';
 import { extractSurroundingContext } from './support-context';
 import { applySupportJudgment, verifyClaim } from './verify-claim';
 import { normalizeForMatch } from '../validators/quote';
+import { buildVerificationReport } from './verification-report';
 
 // Module 03, "one call per source, run in parallel" (claim-extractor, P5) followed by
 // deterministic verification, followed by the support-judge (P10) — the whole
@@ -22,6 +23,20 @@ import { normalizeForMatch } from '../validators/quote';
 const MAX_JUDGE_CONCURRENCY = 4;
 const MAX_EXTRACT_CONCURRENCY = 2;
 const MAX_PASSAGES_PER_EXTRACTION = 4;
+
+export function batchPassagesForExtraction<T extends { text: string }>(passages: T[]): T[][] {
+  const batches: T[][] = [];
+  let batch: T[] = [];
+  for (const passage of passages) {
+    if (batch.length && (batch.length >= MAX_PASSAGES_PER_EXTRACTION || beginsResearchSection(passage.text))) {
+      batches.push(batch);
+      batch = [];
+    }
+    batch.push(passage);
+  }
+  if (batch.length) batches.push(batch);
+  return batches;
+}
 
 /** Runs `fn` over `items` with at most `limit` in flight at once. */
 async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
@@ -66,7 +81,7 @@ export interface ExtractAndVerifySourceDeps {
 export type ExtractAndVerifySourceResult =
   | { sourceId: string; status: 'no_text' }
   | { sourceId: string; status: 'extraction_failed'; reason: string }
-  | { sourceId: string; status: 'ok'; claims: Claim[]; dropped: { reason: string }[]; withdrawn: { id: string; reason: string }[]; costUsd: number };
+  | { sourceId: string; status: 'ok'; claims: Claim[]; qualified: Claim[]; dropped: { reason: string }[]; withdrawn: { id: string; reason: string }[]; costUsd: number };
 
 export async function extractAndVerifySource(
   input: ExtractAndVerifySourceInput,
@@ -90,9 +105,7 @@ export async function extractAndVerifySource(
     },
     { crossref: deps.crossref },
   );
-  const batches = Array.from({ length: Math.ceil(passages.length / MAX_PASSAGES_PER_EXTRACTION) }, (_, index) =>
-    passages.slice(index * MAX_PASSAGES_PER_EXTRACTION, (index + 1) * MAX_PASSAGES_PER_EXTRACTION),
-  );
+  const batches = batchPassagesForExtraction(passages);
   const extractionResults = await mapWithConcurrency(batches, MAX_EXTRACT_CONCURRENCY, (batch) => extractClaims(
     input.runId,
     { sourceTitle: input.sourceTitle, passages: batch.map((p) => ({ passageId: p.id, locator: p.locator, text: p.text })), subQuestions: input.subQuestions },
@@ -127,7 +140,7 @@ export async function extractAndVerifySource(
   const retraction = await retractionPromise;
   if (retraction.status !== 'checked_no_signal') {
     const reason = retraction.status === 'retracted' ? 'source is retracted or withdrawn' : `retraction status unknown: ${retraction.reason ?? 'check unavailable'}`;
-    return { sourceId: input.sourceId, status: 'ok', claims: [], dropped: [...dropped, ...verifiedClaims.map(() => ({ reason }))], withdrawn: verifiedClaims.map((claim) => ({ id: claim.id, reason })), costUsd: extractionCostUsd };
+    return { sourceId: input.sourceId, status: 'ok', claims: [], qualified: [], dropped: [...dropped, ...verifiedClaims.map(() => ({ reason }))], withdrawn: verifiedClaims.map((claim) => ({ id: claim.id, reason })), costUsd: extractionCostUsd };
   }
 
   // Step 8 (support-judge, P10) — the last verification step. One call per claim,
@@ -164,9 +177,10 @@ export async function extractAndVerifySource(
 
   // Only fully supported claims with a completed retraction check enter downstream views.
   const claims: Claim[] = [];
+  const qualified: Claim[] = [];
   const withdrawn: { id: string; reason: string }[] = [];
   judged.forEach((claim, index) => {
-    const reason = !claim ? 'the cited quote did not support the claim' : claim.verification.support !== 'supports' ? 'source support could not be confirmed' : null;
+    const reason = !claim ? 'the cited quote did not support the claim' : claim.verification.support === 'unknown' ? 'source support could not be confirmed' : null;
     if (reason || !claim) {
       const withdrawalReason = reason ?? 'the cited quote did not support the claim';
       dropped.push({ reason: withdrawalReason });
@@ -177,8 +191,10 @@ export async function extractAndVerifySource(
     // no-signal check. Earlier deterministic checks cannot assert existence.
     claim.verification.exists = true;
     claim.verification.retractionCheck = 'crossref_no_signal';
-    claims.push(claim);
+    claim.verificationReport = buildVerificationReport(claim);
+    if (claim.verification.support === 'partial') qualified.push(claim);
+    else claims.push(claim);
   });
 
-  return { sourceId: input.sourceId, status: 'ok', claims, dropped, withdrawn, costUsd: extractionCostUsd + judgeCostUsd };
+  return { sourceId: input.sourceId, status: 'ok', claims, qualified, dropped, withdrawn, costUsd: extractionCostUsd + judgeCostUsd };
 }

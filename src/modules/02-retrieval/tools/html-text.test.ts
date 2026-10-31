@@ -10,7 +10,7 @@ describe('extractReadableText', () => {
         <p>Give aspirin 325&nbsp;mg &amp; call 911.</p>
       </body></html>`;
     expect(extractReadableText(html, 'text/html; charset=utf-8')).toBe(
-      'Chest pain guideline Give aspirin 325 mg & call 911.',
+      'Chest pain guideline\n\nGive aspirin 325 mg & call 911.',
     );
   });
 
@@ -27,5 +27,10 @@ describe('extractReadableText', () => {
   it('also strips tags from XML (e.g. Europe PMC fullTextXML / JATS)', () => {
     const xml = '<article><body><p>Receptor binds ligand.</p></body></article>';
     expect(extractReadableText(xml, 'application/xml')).toBe('Receptor binds ligand.');
+  });
+
+  it('retains article section boundaries for bounded extraction windows', () => {
+    const xml = '<article><sec><title>Methods</title><p>Cells were edited.</p></sec><sec><title>Results</title><p>Expression increased.</p></sec></article>';
+    expect(extractReadableText(xml, 'application/xml')).toBe('Methods\n\nCells were edited.\n\nResults\n\nExpression increased.');
   });
 });

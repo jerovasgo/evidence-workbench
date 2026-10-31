@@ -7,16 +7,18 @@ import type { Claim } from '@/shared/domain';
 type SourceEntry = { id: string; title: string; url: string; year?: number };
 
 /** Evidence is rendered once. Every finding has a contextual path to its quotation. */
-export function EvidenceLandscape({ sources, provisional, verified, onOpenEvidence }: {
+export function EvidenceLandscape({ sources, provisional, qualified, verified, onOpenEvidence }: {
   sources: Record<string, SourceEntry>;
   provisional: Claim[];
+  qualified: Claim[];
   verified: Claim[];
   onOpenEvidence: (claim: Claim) => void;
 }) {
   const reducedMotion = useReducedMotion();
   const findings = [
     ...verified.map((claim) => ({ claim, state: 'verified' as const })),
-    ...provisional.filter((claim) => !verified.some((item) => item.id === claim.id)).map((claim) => ({ claim, state: 'reviewing' as const })),
+    ...qualified.map((claim) => ({ claim, state: 'partial' as const })),
+    ...provisional.filter((claim) => !verified.some((item) => item.id === claim.id) && !qualified.some((item) => item.id === claim.id)).map((claim) => ({ claim, state: 'reviewing' as const })),
   ];
   const sourceCount = new Set(findings.map(({ claim }) => claim.sourceId)).size;
   const candidateCount = Object.values(sources).filter((source) => !findings.some(({ claim }) => claim.sourceId === source.id)).length;
@@ -40,7 +42,7 @@ export function EvidenceLandscape({ sources, provisional, verified, onOpenEviden
               <p className="min-w-0 flex-1 text-[15px] font-light leading-7 text-fg">{claim.text}</p>
               <button type="button" onClick={() => onOpenEvidence(claim)} title={`Inspect source and original quotation: ${source?.title ?? claim.sourceId}`} aria-label={`Inspect source and original quotation for finding ${index + 1}`} className="evidence-info grid size-8 shrink-0 place-items-center rounded-full border border-border text-muted transition-colors hover:border-border-strong hover:text-fg"><Info size={15} aria-hidden="true" /></button>
             </div>
-            <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted"><span className="inline-block size-1.5 rounded-full bg-current" aria-hidden="true" />{state === 'verified' ? 'Verified against source text' : 'Source checks in progress'}<span aria-hidden="true">·</span><span className="max-w-full truncate">{source?.title ?? claim.sourceId}{source?.year ? `, ${source.year}` : ''}</span></p>
+            <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted"><span className="inline-block size-1.5 rounded-full bg-current" aria-hidden="true" />{state === 'verified' ? 'Verified against source text' : state === 'partial' ? `Partially supported${claim.verification.supportNote ? ` · ${claim.verification.supportNote}` : ''}` : 'Source checks in progress'}<span aria-hidden="true">·</span><span className="max-w-full truncate">{source?.title ?? claim.sourceId}{source?.year ? `, ${source.year}` : ''}</span></p>
           </div>
         </motion.div>;
       })}

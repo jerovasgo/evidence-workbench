@@ -23,6 +23,8 @@ export interface EuropePmcClient {
   search(query: string, options?: { pageSize?: number }): Promise<EuropePmcResultItem[]>;
   /** Returns null (not an error) when the article has no full text available (e.g. HTTP 404). */
   fetchFullText(source: string, id: string): Promise<string | null>;
+  /** A source-grounded fallback when open full text is unavailable. */
+  fetchAbstract?(source: string, id: string): Promise<string | null>;
 }
 
 export interface CreateEuropePmcClientOptions {
@@ -91,14 +93,49 @@ export function createEuropePmcClient(options: CreateEuropePmcClientOptions = {}
       pmcid = record.resultList?.result?.[0]?.pmcid;
     }
     if (!pmcid || !/^PMC\d+$/.test(pmcid)) return null;
-    const res = await fetchImpl(`${EUROPE_PMC_BASE}/${pmcid}/fullTextXML`);
-    if (res.status === 404) return null;
-    if (!res.ok) {
-      throw new Error(`Europe PMC fullTextXML failed: HTTP ${res.status}`);
+    try {
+      const res = await fetchImpl(`${EUROPE_PMC_BASE}/${pmcid}/fullTextXML`);
+      if (res.ok) {
+        const xml = await res.text();
+        return extractReadableText(xml, 'application/xml');
+      }
+    } catch {
+      // The NCBI BioC endpoint below is a separate source for the same PMC record.
     }
-    const xml = await res.text();
-    return extractReadableText(xml, 'application/xml');
+    // Europe PMC occasionally returns 5xx for a PMC record that NCBI can serve.
+    // BioC is limited to the OA/manuscript subset; failure remains null, not a
+    // fabricated full text. Section labels and paragraph breaks remain visible.
+    try {
+      const res = await fetchImpl(`https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/bioc_json/${pmcid}/unicode`);
+      if (!res.ok) return null;
+      const body = await res.json() as { documents?: { passages?: { infons?: { section_type?: string }; text?: string }[] }[] }[];
+      const passages = Array.isArray(body) ? body[0]?.documents?.[0]?.passages : undefined;
+      if (!passages) return null;
+      let lastSection = '';
+      const parts: string[] = [];
+      for (const passage of passages) {
+        const section = passage.infons?.section_type ?? '';
+        if (!passage.text?.trim() || ['TITLE', 'REF', 'SUPPL', 'FIG'].includes(section)) continue;
+        if (section && section !== lastSection) parts.push(section);
+        parts.push(passage.text.trim());
+        lastSection = section;
+      }
+      return parts.length ? parts.join('\n\n') : null;
+    } catch {
+      return null;
+    }
   }
 
-  return { search, fetchFullText };
+  async function fetchAbstract(source: string, id: string): Promise<string | null> {
+    const params = new URLSearchParams({ query: `EXT_ID:${id} AND SRC:${source}`, format: 'json', resultType: 'core', pageSize: '1' });
+    const res = await fetchImpl(`${EUROPE_PMC_BASE}/search?${params}`);
+    if (!res.ok) return null;
+    const response = await res.json() as { resultList?: { result?: { abstractText?: string }[] } };
+    const record = response.resultList?.result?.[0];
+    if (!record?.abstractText?.trim()) return null;
+    const text = extractReadableText(`<abstract>${record.abstractText}</abstract>`, 'application/xml').trim();
+    return text ? `Abstract\n\n${text}` : null;
+  }
+
+  return { search, fetchFullText, fetchAbstract };
 }

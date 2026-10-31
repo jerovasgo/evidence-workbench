@@ -95,8 +95,27 @@ describe('GET /api/runs/[id]/stream', () => {
     const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
     const events = await readAllEvents(res);
 
-    expect(events).toEqual([{ type: 'done', runId: 'run_1', status: 'done' }]);
+    expect(events).toEqual([{ type: 'done', runId: 'run_1', status: 'done' }, { type: 'relations_ready', runId: 'run_1', questions: [], relations: [], status: 'partial' }]);
     expect(metaClient.respond).not.toHaveBeenCalled();
+  });
+
+  it('replays persisted verified and partial claims when a finished run is reopened', async () => {
+    const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
+    const finishedRun: RunRecord = { ...routingRun, status: 'done' };
+    const claim = { id: 'c1', text: 'Cas9 cleaves DNA.', basis: 'primary', actionType: 'finding', conditions: [], sourceId: 'pubmed:1', passageId: 'pubmed:1:0', quote: 'Cas9 cleaves DNA.', grade: { certainty: 'ungraded', origin: 'ai_estimated' }, verification: { exists: true, quoteFound: true, retracted: false, support: 'supports', retractionCheck: 'crossref_no_signal' }, safetyCritical: false };
+    const partial = { ...claim, id: 'c2', verification: { ...claim.verification, support: 'partial', supportNote: 'One model only.' } };
+    const record = (stage: string, value: unknown) => ({ stage, status: 'ok', value, metrics: { ms: 1, costUsd: 0 }, createdAt: '2026-10-30T00:00:00.000Z' });
+    const saved = new Map([
+      ['retrieve', record('retrieve', [{ tempId: 'pubmed:1', family: 'pubmed', title: 'A study', url: 'https://pubmed.ncbi.nlm.nih.gov/1/' }])],
+      ['extract', record('extract', [claim])],
+      ['qualified_claims', record('qualified_claims', [partial])],
+    ]);
+    const runtime = mockRuntime(metaClient, fakeRunsRepository({ getRun: vi.fn(async () => finishedRun) }), createPendingRunContextStore(), { insert: vi.fn(), getLatestPerStage: vi.fn().mockResolvedValue(saved) });
+    const GET = await loadGetWithRuntime(runtime);
+    const events = await readAllEvents(await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) }));
+    expect(events.some((event) => event.type === 'band_ready')).toBe(true);
+    expect(events.some((event) => event.type === 'qualified_claims_ready')).toBe(true);
+    expect(events.some((event) => event.type === 'source_catalog_ready')).toBe(true);
   });
 
   it('emits an error and done(failed) when no pending context is available for a routing run', async () => {

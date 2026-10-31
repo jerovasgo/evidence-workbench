@@ -60,6 +60,24 @@ describe('buildReceipt', () => {
     expect(receipt.supported).toBe(1);
   });
 
+  it('abstains separately for sub-questions without a supported answer', () => {
+    const supported: Claim = { ...claim, subQuestionIndex: 0, verification: { ...claim.verification, support: 'supports' } };
+    const receipt = buildReceipt(baseResult({
+      structure: ok('structure', { context: 'unknown', subQuestions: ['Does expression change?', 'Does phenotype change?'], scopeParameters: {} }),
+      extraction: ok('extract', [supported]),
+    }));
+    expect(receipt.abstained).toBe(1);
+  });
+
+  it('reconciles fully supported, partial and dropped claim counts', () => {
+    const supported: Claim = { ...claim, verification: { ...claim.verification, support: 'supports' } };
+    const receipt = buildReceipt(baseResult({ extraction: ok('extract', [supported], { claimsKept: 1, claimsPartial: 2, claimsDropped: 3, drop_number: 2, drop_quote: 1 }) }));
+    expect(receipt.claimsTotal).toBe(6);
+    expect(receipt.supported).toBe(1);
+    expect(receipt.partial).toBe(2);
+    expect(receipt.dropReasons).toEqual({ number: 2, quote: 1 });
+  });
+
   it('omits oldestSourceYear when no classification has a publicationYear', () => {
     const receipt = buildReceipt(
       baseResult({ classification: ok('classify', [{ sourceId: 's1', kind: 'other', isScientific: false, confidence: 'low' }]) }),

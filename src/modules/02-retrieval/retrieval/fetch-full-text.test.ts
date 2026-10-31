@@ -37,6 +37,12 @@ describe('fetchFullTextForCandidate', () => {
     expect(result).toBeNull();
   });
 
+  it('uses the actual indexed abstract when open full text is unavailable', async () => {
+    const europePmc = fakeEuropePmc({ fetchAbstract: vi.fn().mockResolvedValue('Abstract\n\nHNF1A altered expression.') });
+    expect(await fetchFullTextForCandidate(basePubmedCandidate, europePmc)).toBe('Abstract\n\nHNF1A altered expression.');
+    expect(europePmc.fetchAbstract).toHaveBeenCalledWith('MED', '111');
+  });
+
   it('returns null without calling the client for a pubmed candidate with no pmid', async () => {
     const europePmc = fakeEuropePmc();
     const result = await fetchFullTextForCandidate({ ...basePubmedCandidate, pmid: undefined }, europePmc);

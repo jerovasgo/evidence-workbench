@@ -93,7 +93,8 @@ function bestFuzzyDistance(passage: string, quote: string): number | null {
   return best;
 }
 
-const NUMBER_PATTERN = /\d+(?:[.,]\d+)?\s?(?:mg|mcg|µg|g|kg|mL|ml|L|units?|iu|mmHg|mEq|bpm|%)?/gi;
+// Digits within gene/protein identifiers (HNF1A, SpCas9n) are not measurements.
+const NUMBER_PATTERN = /(?<![\p{L}\p{N}])\d+(?:[.,]\d+)?(?:\s?(?:mg|mcg|µg|kg|g|mL|ml|L|units?|iu|mmHg|mEq|bpm|%))?(?![\p{L}\p{N}])/giu;
 
 /** Extracts number(+unit) tokens, e.g. "325 mg", "90", "2.5 mL", for the module 03 "numbers" check. */
 export function extractNumberTokens(text: string): string[] {
@@ -111,9 +112,10 @@ export interface NumbersCheckResult {
  * then states a different number in the paraphrased claim text.
  */
 export function checkNumbersPreserved(claimText: string, quote: string): NumbersCheckResult {
-  const normalizedQuote = normalizeForMatch(quote);
+  const canonical = (text: string) => normalizeForMatch(text).replace(/(\d)\s+(?=(?:mg|mcg|µg|kg|g|ml|l|units?|iu|mmhg|meq|bpm|%)(?![a-z]))/g, '$1');
+  const normalizedQuote = canonical(quote);
   const missing = extractNumberTokens(claimText).filter(
-    (token) => !normalizedQuote.includes(normalizeForMatch(token)),
+    (token) => !normalizedQuote.includes(canonical(token)),
   );
   return { ok: missing.length === 0, missing };
 }

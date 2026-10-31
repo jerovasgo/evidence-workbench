@@ -25,16 +25,23 @@ describe('windowText', () => {
     expect(passages[1]!.locator).toBe('¶2');
   });
 
-  it('keeps a single oversized paragraph whole rather than splitting it', () => {
+  it('splits a single oversized paragraph into bounded passages', () => {
     const hugeParagraph = Array.from({ length: 2000 }, (_, i) => `word${i}`).join(' ');
     const passages = windowText('src_1', hugeParagraph);
-    expect(passages).toHaveLength(1);
-    expect(passages[0]!.text).toBe(hugeParagraph);
+    expect(passages.length).toBeGreaterThan(1);
+    expect(passages.every((passage) => passage.text.split(/\s+/).length <= 900)).toBe(true);
   });
 
   it('assigns distinct, sequential passage ids', () => {
     const bigParagraph = Array.from({ length: 700 }, (_, i) => `word${i}`).join(' ');
     const passages = windowText('src_42', [bigParagraph, bigParagraph].join('\n\n'));
     expect(passages.map((p) => p.id)).toEqual(['src_42:0', 'src_42:1']);
+  });
+
+  it('does not merge an abstract with the next research section', () => {
+    const passages = windowText('paper', 'ABSTRACT\n\nThe abstract finding.\n\nINTRO\n\nA separate experimental finding.');
+    expect(passages).toHaveLength(2);
+    expect(passages[0]?.text).toContain('The abstract finding.');
+    expect(passages[1]?.text).toContain('A separate experimental finding.');
   });
 });

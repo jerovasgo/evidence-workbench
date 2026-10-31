@@ -8,7 +8,8 @@ import {
 } from '@/modules/01-orchestrator';
 import { labelRelationsBatched, pairClaimsForRelations } from '@/modules/05-governance';
 import type { AgentTraceEvent } from '@/shared/agents';
-import type { Claim, RunEvent } from '@/shared/domain';
+import { ClaimSchema, ReceiptSchema, RelationSchema, type Claim, type RunEvent } from '@/shared/domain';
+import { CandidateSourceSchema } from '@/modules/02-retrieval';
 import { RESEARCH_DEPTH_CONCURRENCY, RESEARCH_DEPTH_TIME_MS } from '@/lib/research-depth';
 import { lookupGeneContext } from '@/modules/02-retrieval';
 
@@ -140,7 +141,22 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       // A reconnect after the run already finished: nothing to stream, just report
       // the terminal state once (module 01: "results retrievable by run id").
       if (run.status === 'done' || run.status === 'partial' || run.status === 'abstained' || run.status === 'failed') {
+        const saved = await runtime.stageOutputsRepository.getLatestPerStage(run.id).catch(() => new Map());
+        const candidates = CandidateSourceSchema.array().safeParse(saved.get('retrieve')?.value);
+        if (candidates.success) send({ type: 'source_catalog_ready', runId: run.id, sources: candidates.data.map(({ tempId, title, url, doi, pmid, year }) => ({ id: tempId, status: 'candidate', title, url, doi, pmid, year })) });
+        const claims = ClaimSchema.array().safeParse(saved.get('extract')?.value);
+        if (claims.success) send({ type: 'band_ready', runId: run.id, payload: { claims: claims.data } });
+        const qualified = ClaimSchema.array().safeParse(saved.get('qualified_claims')?.value);
+        if (qualified.success) {
+          for (const sourceId of [...new Set(qualified.data.map((claim) => claim.sourceId))]) {
+            send({ type: 'qualified_claims_ready', runId: run.id, sourceId, claims: qualified.data.filter((claim) => claim.sourceId === sourceId) });
+          }
+        }
+        const receipt = ReceiptSchema.safeParse(saved.get('receipt')?.value);
+        if (receipt.success) send({ type: 'receipt_ready', runId: run.id, receipt: receipt.data });
         send({ type: 'done', runId: run.id, status: run.status });
+        const relations = RelationSchema.array().safeParse(saved.get('relate')?.value);
+        send({ type: 'relations_ready', runId: run.id, questions: [], relations: relations.success ? relations.data : [], status: relations.success ? 'ok' : 'partial' });
         controller.close();
         return;
       }
@@ -210,6 +226,9 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
                 send({ type: 'provisional_claims_ready', runId: run.id, sourceId: event.sourceId, claims: event.claims });
                 if (provisionalBySource.size === 1) console.log(JSON.stringify({ type: 'first_provisional_latency', runId: run.id, elapsedMs: Date.now() - streamStarted }));
               } else {
+                if (event.outcome.status === 'ok' && event.outcome.qualified.length > 0) {
+                  send({ type: 'qualified_claims_ready', runId: run.id, sourceId: event.sourceId, claims: event.outcome.qualified });
+                }
                 const claimsNote = event.outcome.status === 'ok' ? `, ${event.outcome.claims.length} claim(s)` : '';
                 send({ type: 'stage_progress', runId: run.id, stage: 'extract', detail: `${event.sourceId}: ${event.outcome.status}${claimsNote}` });
 
@@ -224,7 +243,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
                 }
                 const provisionalCount = provisionalBySource.get(event.sourceId) ?? 0;
                 if (provisionalCount > 0) {
-                  const acceptedClaimIds = event.outcome.status === 'ok' ? event.outcome.claims.map((claim) => claim.id) : [];
+                  const acceptedClaimIds = event.outcome.status === 'ok' ? [...event.outcome.claims, ...event.outcome.qualified].map((claim) => claim.id) : [];
                   const withdrawnCount = Math.max(0, provisionalCount - acceptedClaimIds.length);
                   const reason = withdrawnCount > 0
                     ? event.outcome.status === 'ok' ? [...new Set(event.outcome.withdrawn.map((entry) => entry.reason))].join('; ') : 'source verification was interrupted'
@@ -237,12 +256,19 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         );
 
         send({ type: 'band_ready', runId: run.id, payload: { claims: result.extraction.value ?? [], sourceScores: result.sourceScores } });
-        send({ type: 'receipt_ready', runId: run.id, receipt: buildReceipt(result) });
+        const receipt = buildReceipt(result);
+        send({ type: 'receipt_ready', runId: run.id, receipt });
 
         const finalStatus = computeFinalStatus(result);
         await runtime.runsRepository.updateRunStatus(run.id, finalStatus);
         send({ type: 'done', runId: run.id, status: finalStatus });
         console.log(JSON.stringify({ type: 'run_latency', runId: run.id, status: finalStatus, totalMs: Date.now() - streamStarted, claimsTotal: result.extraction.value?.length ?? 0 }));
+
+        try {
+          await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'receipt', status: 'ok', value: receipt, metrics: { ms: 0, costUsd: 0 } });
+        } catch {
+          // The receipt was already sent to the live viewer.
+        }
 
         // Strictly after `done` — see labelRelationsAfterDone's own comment. Never
         // lets a relation-labelling failure surface as a stream `error` event.

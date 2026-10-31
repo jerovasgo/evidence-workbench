@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { CrossrefClient } from '@/modules/02-retrieval';
 import type { MetaClient, RespondResult } from '@/shared/meta';
 import { createInMemoryBudgetGuard } from '@/shared/security';
-import { extractAndVerifySource } from './extract-and-verify-source';
+import { batchPassagesForExtraction, extractAndVerifySource } from './extract-and-verify-source';
 
 function fakeRespondResult(parsed: unknown): RespondResult {
   return {
@@ -34,6 +34,10 @@ function baseDeps(metaClient: MetaClient, crossref: CrossrefClient = fakeCrossre
 const FULL_TEXT = 'Adding 50 mL of polar aprotic solvent increased the SN2 reaction rate.';
 
 describe('extractAndVerifySource', () => {
+  it('starts a new extraction call at a research section boundary', () => {
+    const batches = batchPassagesForExtraction([{ text: 'ABSTRACT\n\nFirst result' }, { text: 'INTRO\n\nBackground' }, { text: 'Follow-up result' }]);
+    expect(batches.map((batch) => batch.length)).toEqual([1, 2]);
+  });
   it('retains a supported finding from a later passage batch', async () => {
     const quote = 'Section 5 reports a second finding.';
     const respond = vi.fn()
@@ -41,7 +45,7 @@ describe('extractAndVerifySource', () => {
       .mockResolvedValueOnce(fakeRespondResult({ claims: [{ text: quote, basis: 'primary', actionType: 'finding', conditions: [], quote, passageId: 'src_1:4', safetyCritical: false }] }))
       .mockResolvedValueOnce(fakeRespondResult({ support: 'supports', issues: [], note: 'Supported.' }));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
-    const paragraph = Array.from({ length: 910 }, () => 'evidence').join(' ');
+    const paragraph = Array.from({ length: 850 }, () => 'evidence').join(' ');
     const fullText = Array.from({ length: 5 }, (_, index) => `${index === 4 ? quote : `Section ${index + 1}.`} ${paragraph}`).join('\n\n');
     const result = await extractAndVerifySource(
       { runId: 'run_1', sourceId: 'src_1', sourceTitle: 'Long article', fullText, subQuestions: ['What does the article report?'], doi: '10.1/long' },
@@ -90,6 +94,22 @@ describe('extractAndVerifySource', () => {
       expect(result.claims).toHaveLength(0);
       expect(result.dropped).toEqual([{ reason: 'retraction status unknown: No DOI available for Crossref status check' }]);
     }
+  });
+
+  it('retains partial support with a caveat outside the fully verified claim set', async () => {
+    const claim = { text: FULL_TEXT, basis: 'primary', actionType: 'finding', conditions: [], quote: FULL_TEXT, passageId: 'src_1:0', safetyCritical: false };
+    const respond = vi.fn().mockResolvedValueOnce(fakeRespondResult({ claims: [claim] }))
+      .mockResolvedValueOnce(fakeRespondResult({ support: 'partial', issues: ['wrong_scope'], note: 'Only one model was tested.' }));
+    const result = await extractAndVerifySource(
+      { runId: 'run_partial', sourceId: 'src_1', sourceTitle: 'x', fullText: FULL_TEXT, subQuestions: [], doi: '10.1/partial' },
+      baseDeps({ respond, listModels: vi.fn() }, fakeCrossref({ lookup: vi.fn().mockResolvedValue({ doi: '10.1/partial', retracted: false, updateNotices: [] }) })),
+    );
+    expect(result.status).toBe('ok');
+    if (result.status !== 'ok') throw new Error('unreachable');
+    expect(result.claims).toHaveLength(0);
+    expect(result.qualified).toHaveLength(1);
+    expect(result.qualified[0]?.verificationReport?.final).toBe('partial');
+    expect(result.qualified[0]?.verification.supportNote).toBe('Only one model was tested.');
   });
 
   it('rejects a supported claim if its retraction status cannot be checked', async () => {
