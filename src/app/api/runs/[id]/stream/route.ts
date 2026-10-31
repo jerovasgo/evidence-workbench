@@ -1,6 +1,5 @@
 import { synthesizeEvidenceOverview, synthesizeRetrievedOverview } from '@/modules/01-orchestrator';
 import { isComparisonRequest } from '@/lib/research-intent';
-import { getOrCreateSessionId } from '@/lib/session-cookie';
 import {
   buildReceipt,
   getRunForViewer,
@@ -45,15 +44,16 @@ function logAgentTrace(runId: string, event: AgentTraceEvent): void {
 //
 // Why a separate GET after POST, not one streaming POST: module 01's own design
 // (multiple viewers could reconnect to the same run; a resumable/persisted run can
-// be watched without re-running it from scratch). Scenario text is never persisted
-// (CLAUDE.md rule 3), so a reconnect after `pendingRunContext` has been consumed (or
-// the server restarted) can't recover the ORIGINAL free text — but `stage_outputs`
-// persistence (module 01's resumable-run design, wired in 2026-10-28) means that
-// only matters for whichever stage hasn't completed yet: a resumed run with
-// `structure` and `plan` already persisted skips straight to `retrieve` without
-// needing free text at all, since neither stage used it directly. Only a run that
-// never got past routing (no stage output exists yet) and lost its pending context
-// truly has nothing to resume — that case alone gets the `error` event below.
+// be watched without re-running it from scratch). `pendingRunContext` is single-use
+// (`take()` deletes on read, docs/DECISIONS.md 2026-10-31) and not conversation
+// history, so a *second* reconnect after it's already been consumed can't recover
+// the ORIGINAL free text — but `stage_outputs` persistence (module 01's
+// resumable-run design, wired in 2026-10-28) means that only matters for whichever
+// stage hasn't completed yet: a resumed run with `structure` and `plan` already
+// persisted skips straight to `retrieve` without needing free text at all, since
+// neither stage used it directly. Only a run that never got past routing (no stage
+// output exists yet) and already lost its one-time pending context truly has
+// nothing to resume — that case alone gets the `error` event below.
 //
 // `band_ready`'s "red-flag/first-action claims first" ordering (module 01) is
 // approximated here, not implemented in full: nothing tags claims as red-flag/
@@ -225,24 +225,11 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         return;
       }
 
-      let pending = runtime.pendingRunContext.take(run.id);
-
-      // Vercel serverless functions give no guarantee that the POST which created
-      // this run and this immediately-following GET land on the same process —
-      // the in-memory handoff documented on `pendingRunContext` itself ("if the
-      // stream never comes... or hits a different instance") can miss even on a
-      // genuine first connection, not only a real reconnect. Recover the free text
-      // from the one place it's already durably stored (field-encrypted) for this
-      // exact run — CLAUDE.md rule 3's scoped exception (docs/DECISIONS.md) — rather
-      // than failing a run that never actually got a chance to stream. Only
-      // freeText is recoverable this way; routerCondition/routerSetting/opening
-      // are optional enrichment the structurer already tolerates missing (see
-      // run-retrieval.ts's own `freeText || routerCondition || '...'` fallback).
-      if (!pending) {
-        const sessionId = await getOrCreateSessionId();
-        const recovered = await runtime.conversationsRepository.getTurnByRunId(run.id, sessionId).catch(() => null);
-        if (recovered) pending = { freeText: recovered.freeText };
-      }
+      // `pendingRunContext` is now Supabase-backed (docs/DECISIONS.md, 2026-10-31) —
+      // durable across the Vercel serverless instances the POST and this GET can
+      // independently land on, unlike the in-memory `Map` it replaced. Still no
+      // "conversation history": single-use (deleted on read by `take` itself).
+      const pending = await runtime.pendingRunContext.take(run.id);
 
       // Reference lookups run beside the literature pipeline. They may enrich the
       // overview, but cannot delay retrieval or turn a gene record into a study.
@@ -250,10 +237,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         if (genes.length && !closed) send({ type: 'gene_context_ready', runId: run.id, genes });
       }).catch(() => undefined) : Promise.resolve());
 
-      // Still nothing (no in-memory context, nothing recoverable): only an actual
-      // blocker if nothing was persisted either — otherwise this is exactly the
-      // resumable-reconnect case stage persistence exists for, and the pipeline's
-      // own resume logic picks up from whichever stage last completed.
+      // No context: only an actual blocker if nothing was persisted either —
+      // otherwise this is exactly the resumable-reconnect case stage persistence
+      // exists for, and the pipeline's own resume logic picks up from whichever
+      // stage last completed.
       if (!pending) {
         const alreadyPersisted = await runtime.stageOutputsRepository.getLatestPerStage(run.id).catch(() => new Map());
         if (alreadyPersisted.size === 0) {

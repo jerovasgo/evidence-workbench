@@ -55,10 +55,19 @@ section 9 (pipeline/performance) and section 10 (security) are binding.
 3. **No personal data.** Reject identifiers of a specific, real, identifiable person. Scenario
    text is not persisted by default. Never log prompts, scenario text or document content; log
    ids, timings, costs, hashes.
-   **Scoped exception (2026-10-28, explicit user decision, see `docs/DECISIONS.md`):** the
-   conversation-history feature persists scenario text, field-encrypted (AES-256-GCM,
-   same mechanism as rule 10) at rest — this is the one place scenario text is stored;
-   it is still never logged/traced in plaintext anywhere (`onTrace`, server logs).
+   **Two narrow, logged exceptions (see `docs/DECISIONS.md`), both field-encrypted (AES-256-GCM,
+   same mechanism as rule 10) and never logged/traced in plaintext anywhere (`onTrace`, server
+   logs):**
+   - **Conversation history** (2026-10-28 decision) — durable, browsable, per-session. **Inactive
+     since 2026-10-31**: no real login exists yet, so `POST /api/runs` never writes to it; every
+     query today is anonymous and nothing is retained. The schema/repository/routes stay in place,
+     ready to re-enable once real auth exists.
+   - **`pendingRunContext`** (2026-10-31 decision) — the always-on POST→GET handoff for the SSE
+     stream route, Supabase-backed. Single-use (deleted the moment it's read) or swept after an
+     hour if abandoned; never listed or shown in any UI. Not "conversation history" — it exists
+     because Vercel's serverless functions give no guarantee the POST and the immediately-following
+     GET land on the same process, so an in-memory handoff alone silently drops the scenario text
+     (this caused a real "Retrieval context is no longer available" production bug).
 4. **Reader-addressed language.** Statements say "assess", "consider measuring", "consider
    replicating". Never second-person instructions to act on a specific real-world case. UI copy
    and README use *navigate, compare, audit, verify*; avoid *recommends*, *advises*, *tells you

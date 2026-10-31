@@ -2,12 +2,13 @@ import path from 'node:path';
 import { createSupabaseRunsRepository, type RunsRepository } from '../data/runs-repository';
 import { createSupabaseStageOutputsRepository, type StageOutputsRepository } from '../data/stage-outputs-repository';
 import { createSupabaseConversationsRepository, type ConversationsRepository } from '../data/conversations-repository';
+import { createSupabasePendingRunContextStore } from '../data/pending-run-store';
 import { createMetaClient, type MetaClient } from '@/shared/meta';
 import { loadPromptBody } from '@/shared/prompts';
 import { createInMemoryBudgetGuard, createSingleKeyKeyring, loadEncryptionKey, type BudgetGuard } from '@/shared/security';
 import { createServiceRoleClient } from '@/shared/supabase';
 import { createCrossrefClient, createEuropePmcClient, createPubmedClient, type CrossrefClient, type EuropePmcClient, type PubmedClient } from '@/modules/02-retrieval';
-import { createPendingRunContextStore, type PendingRunContextStore } from './pending-run-context';
+import type { PendingRunContextStore } from './pending-run-context';
 
 // One runtime per server process, built lazily on first request and reused after
 // that — this is what keeps the budget guard's daily counter meaningful across
@@ -72,9 +73,11 @@ export function buildServerRuntime(): ServerRuntime {
   const supabase = createServiceRoleClient({ url: supabaseUrl, serviceRoleKey });
   const runsRepository = createSupabaseRunsRepository(supabase);
   const stageOutputsRepository = createSupabaseStageOutputsRepository(supabase);
-  // First real wiring of module 10's field encryption into a route handler (built
-  // 2026-10-27, unused until now) — the conversation-history feature's scoped
-  // exception to CLAUDE.md rule 3 (docs/DECISIONS.md) is what finally needs it.
+  // Module 10's field encryption (built 2026-10-27). `conversationsRepository` is
+  // kept wired but inactive — no real login exists yet, so `POST /api/runs` never
+  // calls it (docs/DECISIONS.md, 2026-10-31) — ready to re-enable behind real auth
+  // later without rebuilding. `pendingRunContext` is the one always-active consumer
+  // now: a durable, single-use, non-browsable handoff, not conversation history.
   const encryptionKeyring = createSingleKeyKeyring(loadEncryptionKey(appEncryptionKey));
   const conversationsRepository = createSupabaseConversationsRepository(supabase, encryptionKeyring);
   const budgetGuard = createInMemoryBudgetGuard({ runCostCapUsd, dailyBudgetUsd, concordanceReserveUsd: Math.min(0.10, runCostCapUsd / 4) });
@@ -87,7 +90,7 @@ export function buildServerRuntime(): ServerRuntime {
   const pubmed = createPubmedClient({ apiKey: ncbiApiKey });
   const europePmc = createEuropePmcClient();
   const crossref = createCrossrefClient();
-  const pendingRunContext = createPendingRunContextStore();
+  const pendingRunContext = createSupabasePendingRunContextStore(supabase, encryptionKeyring);
 
   const promptsDir = path.join(process.cwd(), 'prompts');
   const loadPrompt = (name: string) => loadPromptBody(path.join(promptsDir, name));

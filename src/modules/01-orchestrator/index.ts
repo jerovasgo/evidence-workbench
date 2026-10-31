@@ -7,6 +7,7 @@ export * from './validators/identifiers';
 export * from './data/runs-repository';
 export * from './data/stage-outputs-repository';
 export * from './data/conversations-repository';
+export * from './data/pending-run-store';
 export * from './agents/scenario-structurer';
 export * from './pipeline/create-run';
 export * from './pipeline/run-retrieval';
