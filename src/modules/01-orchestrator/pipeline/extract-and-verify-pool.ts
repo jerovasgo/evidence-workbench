@@ -9,7 +9,7 @@ import {
   type EuropePmcClient,
   type SourceClassification,
 } from '@/modules/02-retrieval';
-import { extractAndVerifySource } from '@/modules/03-extraction-verification';
+import { extractAndVerifySource, type SectionAudit } from '@/modules/03-extraction-verification';
 
 // Fetch-full-text + extract + verify, per candidate, run with bounded concurrency —
 // the time-to-first-token piece: `onSourceDone` fires as EACH source finishes, not
@@ -57,6 +57,7 @@ export interface ExtractAndVerifyPoolDeps {
   onSourceDone?: (sourceId: string, outcome: PoolSourceOutcome) => void;
   onProvisionalClaims?: (sourceId: string, claims: Claim[]) => void;
   onTrace?: (event: AgentTraceEvent) => void;
+  onSectionAudit?: (sourceId: string, audit: SectionAudit[]) => Promise<void>;
 }
 
 export interface ExtractAndVerifyPoolResult {
@@ -97,6 +98,7 @@ export async function extractAndVerifyPool(
           subQuestions: input.subQuestions,
           doi: candidate.doi,
           pubTypes: candidate.pubTypes,
+          extractionBatchConcurrency: Math.max(1, Math.floor(4 / maxConcurrency)),
         },
         {
           metaClient: deps.metaClient,
@@ -106,6 +108,7 @@ export async function extractAndVerifyPool(
           p5PromptTemplate: deps.p5PromptTemplate,
           p10PromptTemplate: deps.p10PromptTemplate,
           onTrace: deps.onTrace,
+          onSectionAudit: deps.onSectionAudit,
           onProvisionalClaims: (claims) => deps.onProvisionalClaims?.(candidate.tempId, claims),
         },
       );

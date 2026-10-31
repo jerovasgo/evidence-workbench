@@ -34,7 +34,8 @@ export interface Turn {
    * then. `error` means the POST itself failed; the question is kept, never dropped,
    * so `retryTurn` can resend it. Absent once a real run is underway/finished.
    */
-  status?: 'sending' | 'error' | 'clarifying';
+  status?: 'sending' | 'error' | 'clarifying' | 'answered';
+  answer?: string;
   clarification?: string;
   errorMessage?: string;
 }
@@ -89,6 +90,10 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
         });
         const body = await res.json();
 
+        if (body.status === 'direct_answer') {
+          setTurns((prev) => prev.map((t) => t.id === turnId ? { ...t, status: 'answered', answer: body.answer } : t));
+          return;
+        }
         if (body.status === 'clarification_required') {
           setTurns((prev) => prev.map((t) => t.id === turnId ? { ...t, status: 'clarifying', clarification: body.clarification } : t));
           return;

@@ -1,0 +1,13 @@
+# Latency and screening audit — 2026-10-31
+
+Runtime: muse-spark-1.3 via https://api.meta.ai/v1/responses. GET /models confirmed Spark 1.1/1.2/1.3 and Wonder 1.0, no Llama. T0 minimal, T1 medium extraction, T2 high support judgment. Deterministic orchestration with schema validation, bounded concurrency, repair and budget guards. Local pricing table: $1.25/M input, $0.15/M cached input, $4.25/M output; estimates, not invoices.
+
+Context: approximately 1200 tokens per passage, up to four passages per extraction batch, two batches concurrently per source; all batches currently finish before that source publishes provisional findings. Overview uses up to three abstracts, truncated at 6000 characters each. More context would increase prefill/cost and does not address serial routing, database round trips or publication barriers.
+
+Implemented low-risk change: publish deduplicated candidates from the existing search promise without waiting for P2 scenario structuring; preserve later persistence and fallback retrieval. No duplicate searches. Regression suite: 589 passing.
+
+Prioritized follow-up: (1) matched repeated end-to-end measurements with cold/warm cache labels and per-stage timings; (2) deterministic routing only for unambiguous supported requests; (3) title ranking, retaining uncertain candidates; (4) batched abstract assessment of question fit and experimental comparability; (5) selective Results/Abstract-first deep extraction. Screening must persist source ID, criteria version, matched/missing criteria, decision, reason and stage. A low title score is deferred, not excluded. Unavailable abstract is unknown, not irrelevant. Counts must distinguish retrieved, deduplicated, assessed, selected, deferred and excluded. This is screening inspired by PRISMA, not a systematic review.
+
+Llama evaluation: Scout advertises 10M context and Maverick 1M; provider limits may differ. No latency, biomedical precision or cost superiority has been established on this corpus. Current endpoint does not offer Llama, pricing estimator rejects unknown models, and structured-output/reasoning contracts need adapter validation. Keep Spark until a same-corpus, blinded factuality/quote-entailment comparison supports migration. Do not widen context merely because supported.
+
+Baseline end-to-end overview: 13.590 s, n=1. Standalone retrieval+synthesis: 6.385 and 5.882 s, not interchangeable with end-to-end. These samples cannot substantiate p95 or an under-10-second SLA. Live follow-up is recorded separately; budget abstentions must remain failures in quality reporting rather than being counted as successful fast results.

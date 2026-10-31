@@ -1,0 +1,2635 @@
+{
+  "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+  "events": [
+    {
+      "ms": 1558,
+      "type": "stage_started",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "stage": "plan"
+    },
+    {
+      "ms": 1729,
+      "type": "stage_progress",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "stage": "plan",
+      "detail": "ok (2ms)"
+    },
+    {
+      "ms": 1731,
+      "type": "stage_started",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "stage": "retrieve"
+    },
+    {
+      "ms": 1731,
+      "type": "stage_started",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "stage": "structure"
+    },
+    {
+      "ms": 2567,
+      "type": "overview_ready",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "sources": [
+        {
+          "title": "Long term hypoxia during gestation alters perirenal adipose tissue gene expression in the lamb.",
+          "year": 2020,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/32403966/"
+        },
+        {
+          "title": "Hypoxia-induced SATB homeobox 2 increases hypoxia-inducible factor-1-dependent tumorigenesis and drives bevacizumab resistance in lung adenocarcinoma.",
+          "year": 2026,
+          "url": "https://europepmc.org/article/MED/42896440"
+        },
+        {
+          "title": "A Hypoxia Associated STC2 High Endothelial Subpopulation is Linked to Lipid Metabolic Reprogramming, Pathological Angiogenesis, and Immune Remodeling in Head and Neck Squamous Cell Carcinoma.",
+          "year": 2026,
+          "url": "https://europepmc.org/article/MED/42801171"
+        },
+        {
+          "title": "High confidence HIF-1 target genes for quantifying the activation of the HIF-1-mediated hypoxia response.",
+          "year": 2026,
+          "url": "https://europepmc.org/article/MED/42819788"
+        },
+        {
+          "title": "Development and External Evaluation of Hypoxia-Related Prognostic Signatures in Head and Neck Squamous Cell Carcinoma.",
+          "year": 2026,
+          "url": "https://europepmc.org/article/MED/42938372"
+        }
+      ]
+    },
+    {
+      "ms": 2567,
+      "type": "source_catalog_ready",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "sources": [
+        {
+          "id": "pubmed:32403966",
+          "status": "candidate",
+          "title": "Long term hypoxia during gestation alters perirenal adipose tissue gene expression in the lamb.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/32403966/",
+          "doi": "10.1080/21623945.2020.1763726",
+          "pmid": "32403966",
+          "year": 2020
+        },
+        {
+          "id": "europe_pmc:MED:42896440",
+          "status": "candidate",
+          "title": "Hypoxia-induced SATB homeobox 2 increases hypoxia-inducible factor-1-dependent tumorigenesis and drives bevacizumab resistance in lung adenocarcinoma.",
+          "url": "https://europepmc.org/article/MED/42896440",
+          "doi": "10.1016/j.tranon.2026.103069",
+          "pmid": "42896440",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42801171",
+          "status": "candidate",
+          "title": "A Hypoxia Associated STC2 High Endothelial Subpopulation is Linked to Lipid Metabolic Reprogramming, Pathological Angiogenesis, and Immune Remodeling in Head and Neck Squamous Cell Carcinoma.",
+          "url": "https://europepmc.org/article/MED/42801171",
+          "doi": "10.2147/ijgm.s619908",
+          "pmid": "42801171",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42819788",
+          "status": "candidate",
+          "title": "High confidence HIF-1 target genes for quantifying the activation of the HIF-1-mediated hypoxia response.",
+          "url": "https://europepmc.org/article/MED/42819788",
+          "doi": "10.17912/micropub.biology.002304",
+          "pmid": "42819788",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42938372",
+          "status": "candidate",
+          "title": "Development and External Evaluation of Hypoxia-Related Prognostic Signatures in Head and Neck Squamous Cell Carcinoma.",
+          "url": "https://europepmc.org/article/MED/42938372",
+          "doi": "10.3390/genes17101256",
+          "pmid": "42938372",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:PPR:PPR1346278",
+          "status": "candidate",
+          "title": "Hypoxia reduces induced LRIG1 protein despite sustained mRNA induction in colorectal cancer organoids",
+          "url": "https://europepmc.org/article/PPR/PPR1346278",
+          "doi": "10.64898/2026.10.19.760078",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42945612",
+          "status": "candidate",
+          "title": "Transcriptomic and biochemical analyses reveal the regulatory mechanisms of pikeperch (Sander lucioperca) under acute hypoxia and reoxygenation stress.",
+          "url": "https://europepmc.org/article/MED/42945612",
+          "doi": "10.1016/j.cbd.2026.102063",
+          "pmid": "42945612",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:38781959",
+          "status": "candidate",
+          "title": "Single-cell multiomics profiling reveals heterogeneous transcriptional programs and microenvironment in DSRCTs.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/38781959/",
+          "doi": "10.1016/j.xcrm.2024.101582",
+          "pmid": "38781959",
+          "year": 2024
+        },
+        {
+          "id": "europe_pmc:MED:42759407",
+          "status": "candidate",
+          "title": "Exploratory single-nucleus transcriptomic analysis of endothelial heterogeneity and ferroptosis-related gene patterns in a human hepatocellular carcinoma sample.",
+          "url": "https://europepmc.org/article/MED/42759407",
+          "doi": "10.1016/j.tranon.2026.103047",
+          "pmid": "42759407",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:PMC:PMC13661358",
+          "status": "candidate",
+          "title": "Ceramidase is involved in metabolic reprogramming of fibroblasts under hypoxia conditions",
+          "url": "https://europepmc.org/article/PMC/PMC13661358"
+        },
+        {
+          "id": "europe_pmc:PPR:PPR1346282",
+          "status": "candidate",
+          "title": "Distinct viability and oxygen-sensing responses to hypoxia and reoxygenation in pancreatic islets",
+          "url": "https://europepmc.org/article/PPR/PPR1346282",
+          "doi": "10.64898/2026.10.18.759980",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:41086113",
+          "status": "candidate",
+          "title": "Integrated genomic and transcriptomic profiling of glioblastoma reveals ecDNA-driven heterogeneity and microenvironmental reprogramming.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/41086113/",
+          "doi": "10.1016/j.celrep.2025.116426",
+          "pmid": "41086113",
+          "year": 2025
+        },
+        {
+          "id": "europe_pmc:MED:42726733",
+          "status": "candidate",
+          "title": "Sustained hypoxia induces divergent response patterns in cardiac metabolic-immune adaptation and circadian rhythm regulation.",
+          "url": "https://europepmc.org/article/MED/42726733",
+          "doi": "10.1371/journal.pone.0357966",
+          "pmid": "42726733",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:35641902",
+          "status": "candidate",
+          "title": "Hypoxia classifier for transcriptome datasets.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/35641902/",
+          "doi": "10.1186/s12859-022-04741-8",
+          "pmid": "35641902",
+          "year": 2022
+        },
+        {
+          "id": "pubmed:39137781",
+          "status": "candidate",
+          "title": "Transcriptome- and proteome-wide association studies identify genes associated with renal cell carcinoma.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/39137781/",
+          "doi": "10.1016/j.ajhg.2024.07.012",
+          "pmid": "39137781",
+          "year": 2024
+        },
+        {
+          "id": "europe_pmc:MED:42950042",
+          "status": "candidate",
+          "title": "The nonsense-mediated decay RNA-surveillance pathway facilitates the hypoxia response by &lt;i&gt;C. elegans&lt;/i&gt;.",
+          "url": "https://europepmc.org/article/MED/42950042",
+          "doi": "10.1126/sciadv.aej4259",
+          "pmid": "42950042",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:40585969",
+          "status": "candidate",
+          "title": "Single-cell transcriptomics of vascularized human brain organoids decipher lineage-specific stress adaptation in fetal hypoxia-reoxygenation injury.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/40585969/",
+          "doi": "10.7150/thno.117001",
+          "pmid": "40585969",
+          "year": 2025
+        },
+        {
+          "id": "pubmed:37322330",
+          "status": "candidate",
+          "title": "Transcriptomics of the Carotid Body.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/37322330/",
+          "doi": "10.1007/978-3-031-32371-3_1",
+          "pmid": "37322330",
+          "year": 2023
+        },
+        {
+          "id": "pubmed:36283023",
+          "status": "candidate",
+          "title": "Spatial Transcriptomic Analysis of a Diverse Patient Cohort Reveals a Conserved Architecture in Triple-Negative Breast Cancer.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/36283023/",
+          "doi": "10.1158/0008-5472.CAN-22-2682",
+          "pmid": "36283023",
+          "year": 2023
+        },
+        {
+          "id": "pubmed:39167456",
+          "status": "candidate",
+          "title": "Integrative Multiomics in the Lung Reveals a Protective Role of Asporin in Pulmonary Arterial Hypertension.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/39167456/",
+          "doi": "10.1161/CIRCULATIONAHA.124.069864",
+          "pmid": "39167456",
+          "year": 2024
+        },
+        {
+          "id": "pubmed:38806057",
+          "status": "candidate",
+          "title": "Distinctive multicellular immunosuppressive hubs confer different intervention strategies for left- and right-sided colon cancers.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/38806057/",
+          "doi": "10.1016/j.xcrm.2024.101589",
+          "pmid": "38806057",
+          "year": 2024
+        },
+        {
+          "id": "europe_pmc:MED:42953106",
+          "status": "candidate",
+          "title": "STK39 is associated with endothelial dysfunction and inflammatory activation under hypoxic conditions in moyamoya disease.",
+          "url": "https://europepmc.org/article/MED/42953106",
+          "doi": "10.3389/fnhum.2026.1854099",
+          "pmid": "42953106",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:40855036",
+          "status": "candidate",
+          "title": "Integrating multi-modal transcriptomics identifies cellular subtypes with distinct roles in PDAC progression.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/40855036/",
+          "doi": "10.1007/s13402-025-01100-6",
+          "pmid": "40855036",
+          "year": 2025
+        },
+        {
+          "id": "europe_pmc:PPR:PPR1351635",
+          "status": "candidate",
+          "title": "Tetrahydrobiopterin restores oligodendrocyte maturation after hypoxic white matter injury by reprogramming translational output",
+          "url": "https://europepmc.org/article/PPR/PPR1351635",
+          "doi": "10.64898/2026.10.23.761441",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:40849425",
+          "status": "candidate",
+          "title": "Molecular landscape, subtypes, and therapeutic vulnerabilities of central nervous system solitary fibrous tumors.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/40849425/",
+          "doi": "10.1038/s41467-025-63039-4",
+          "pmid": "40849425",
+          "year": 2025
+        },
+        {
+          "id": "pubmed:28819234",
+          "status": "candidate",
+          "title": "Transcriptome of neonatal preBötzinger complex neurones in Dbx1 reporter mice.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/28819234/",
+          "doi": "10.1038/s41598-017-09418-4",
+          "pmid": "28819234",
+          "year": 2017
+        },
+        {
+          "id": "pubmed:38579562",
+          "status": "candidate",
+          "title": "Integrative analyses of whole-transcriptome sequencing reveals CeRNA regulatory network in pulmonary hypertension treated with FGF21.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/38579562/",
+          "doi": "10.1016/j.intimp.2024.111925",
+          "pmid": "38579562",
+          "year": 2024
+        },
+        {
+          "id": "europe_pmc:MED:42703908",
+          "status": "candidate",
+          "title": "KDM2B controls HIF levels and activity through its JmjC and CxxC domains.",
+          "url": "https://europepmc.org/article/MED/42703908",
+          "doi": "10.1042/bcj20260212",
+          "pmid": "42703908",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:41092315",
+          "status": "candidate",
+          "title": "Spatial transcriptomics reveals unique inflammatory signatures across all anatomic locations in postoperative Crohn's disease.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/41092315/",
+          "doi": "10.1093/ecco-jcc/jjaf180",
+          "pmid": "41092315",
+          "year": 2025
+        },
+        {
+          "id": "europe_pmc:MED:42377256",
+          "status": "candidate",
+          "title": "MAPK-driven glioma progression and reprogramming of the tumor-associated immune response.",
+          "url": "https://europepmc.org/article/MED/42377256",
+          "doi": "10.1093/neuonc/noag147",
+          "pmid": "42377256",
+          "year": 2026
+        }
+      ]
+    },
+    {
+      "ms": 6235,
+      "type": "stage_progress",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "stage": "structure",
+      "detail": "ok (4226ms)"
+    },
+    {
+      "ms": 6668,
+      "type": "stage_progress",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "stage": "retrieve",
+      "detail": "ok (4524ms)"
+    },
+    {
+      "ms": 6670,
+      "type": "stage_started",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "stage": "classify"
+    },
+    {
+      "ms": 6826,
+      "type": "stage_progress",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "stage": "classify",
+      "detail": "ok (0ms)"
+    },
+    {
+      "ms": 6826,
+      "type": "stage_started",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "stage": "extract"
+    },
+    {
+      "ms": 7407,
+      "type": "opening_ready",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "text": "La hipoxia reprograma la expresión génica según el tejido. En corderos, tras el nacimiento se pierde el perfil de grasa parda y disminuye el gasto energético. En cáncer de pulmón, aumenta un regulador que amplifica programas de hipoxia y resistencia terapéutica. En cáncer de cabeza y cuello, marca endotelio angiogénico con metabolismo lipídico alterado. Es orientación preliminar basada en resúmenes.\n\nSíntesis inicial basada en resúmenes recuperados; la verificación detallada sigue en curso."
+    },
+    {
+      "ms": 21273,
+      "type": "provisional_claims_ready",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "sourceId": "pubmed:32403966",
+      "claims": [
+        {
+          "id": "59987bea-527d-43a6-a9bb-e6945c9fcd6c",
+          "text": "Considere que el ARNm de UCP-1 disminuye en grasa perirrenal de cordero en ambos grupos LTH frente a control.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "UCP-1",
+            "organism": "lamb",
+            "model": "perirenal adipose",
+            "perturbation": "LTH-SL and LTH-HA",
+            "measurement": "mRNA",
+            "effect": "significantly lower"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:4",
+          "quote": "UCP-1 mRNA was significantly lower in both LTH-SL and LTH-HA lamb perirenal adipose compared to control lambs ( Figure 1(a )).",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "276ceb24-a644-41cd-82e1-a8edfeb21d1a",
+          "text": "Considere que el ARNm de leptina aumenta solo en corderos LTH-SL y no en LTH-HA frente a control.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "Leptin",
+            "organism": "lambs",
+            "model": "PRF",
+            "perturbation": "LTH-SL",
+            "measurement": "mRNA",
+            "effect": "significantly higher"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:4",
+          "quote": "Leptin mRNA in PRF was significantly higher in LTH-SL lambs but not LTH-HA lamb PRF compared to control lambs ( Figure 1(b )).",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "eeeb984c-c11d-4993-8f85-26a36f885345",
+          "text": "Considere que el ARNm de DIO2 disminuye en ambos grupos LTH frente a control sin diferencias entre ellos.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "DIO2",
+            "perturbation": "LTH-SL and LTH-HA",
+            "measurement": "DIO2 mRNA",
+            "effect": "significantly lower"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:4",
+          "quote": "DIO2 mRNA was significantly lower in both LTH-SL and LTH-HA compared to control ( Figure 3(a )); no differences were observed between LTH-SL and LTH-HA for DIO2.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "29a7230f-f3db-4d0a-a465-8f6da3b79a57",
+          "text": "Considere que el ARNm de PGCα disminuye en ambos grupos LTH frente a control.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "PGCα",
+            "perturbation": "LTH-SL and LTH-HA vs. control",
+            "effect": "significantly lower"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:4",
+          "quote": "PGCα was significantly lower in LTH-SL and LTH-HA vs. control ( Figure 3(c )), and no differences were found between either LTH group.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "8ed2c2a1-6738-42c2-ab6e-598343d7e64e",
+          "text": "Mida la expresión génica como concentración de ARNm en fg por 50 ng de ARN total en grasa perirrenal.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "geneticContext": {
+            "organism": "lambs",
+            "model": "perirenal fat",
+            "measurement": "Messenger RNA concentrations (fg mRNA per 50 ng total RNA)"
+          },
+          "subQuestionIndex": 2,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:4",
+          "quote": "Messenger RNA concentrations (fg mRNA per 50 ng total RNA) for Uncoupling Protein 1 (UCP1) (a) and leptin (b) in perirenal fat from 14-day old control (CONT) lambs",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "348742ba-0f47-41f3-8498-24659628e28a",
+          "text": "Asocie PPARγ y PGC1α a adipogénesis y DIO2 a producción de T3 para diferenciación grasa parda/beige.",
+          "basis": "primary",
+          "actionType": "mechanism",
+          "conditions": [],
+          "geneticContext": {},
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:5",
+          "quote": "The former two are primary transcriptional switches for adipogenesis, and DIO2 mediates T3 production, which is critical for brown/beige fat differentiation.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "15c8a6c8-04d2-47ce-8060-00d833c530cc",
+          "text": "Assess UCP-1 and PGC1α as significantly decreased in PRF of LTH lambs at ~14 days post-birth.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [
+            {
+              "variable": "age",
+              "op": "=",
+              "value": "~14 days post-birth"
+            }
+          ],
+          "geneticContext": {
+            "gene": "UCP-1",
+            "organism": "lambs",
+            "perturbation": "LTH",
+            "effect": "significantly decreased"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:6",
+          "quote": "at ~14 days post-birth both UCP-1 and a critical gene that governs the BAT/beige phenotype (PGC1α) were significantly decreased in the LTH lambs regardless of whether they were born at high altitude or at near sea level.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "c26e5b58-41bc-4893-b2e0-3eafb2418dd3",
+          "text": "Consider PPARγ upregulated in PRF of LTH lambs born at sea level, not high altitude.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [
+            {
+              "variable": "birth location",
+              "op": "=",
+              "value": "sea level"
+            },
+            {
+              "variable": "comparison birth location",
+              "op": "=",
+              "value": "high altitude"
+            }
+          ],
+          "geneticContext": {
+            "gene": "PPARγ",
+            "organism": "lambs",
+            "model": "PRF",
+            "perturbation": "LTH",
+            "effect": "significantly upregulated"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:6",
+          "quote": "PPARγ was significantly upregulated in PRF of LTH lambs born at sea level but not at high altitude.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "bcf20028-891b-4785-a4f2-8dd41f296cfe",
+          "text": "Consider DIO2 expression significantly lower in PRF of both LTH lamb groups.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [
+            {
+              "variable": "birth location",
+              "op": "=",
+              "value": "high altitude and those born at sea level"
+            }
+          ],
+          "geneticContext": {
+            "gene": "DIO2",
+            "organism": "lambs",
+            "model": "PRF",
+            "perturbation": "LTH",
+            "measurement": "expression",
+            "effect": "significantly lower"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:7",
+          "quote": "DIO2 expression was significantly lower in the PRF of both LTH lambs born at high altitude and those born at sea level.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "d06a76a1-e454-4560-9d37-76235ab4eb16",
+          "text": "Assess leptin expression elevated in lamb PRF only for LTH lambs born at sea level.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [
+            {
+              "variable": "birth location",
+              "op": "=",
+              "value": "sea level"
+            }
+          ],
+          "geneticContext": {
+            "gene": "leptin",
+            "organism": "lamb",
+            "model": "PRF",
+            "perturbation": "LTH",
+            "measurement": "expression",
+            "effect": "elevated"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:7",
+          "quote": "lamb PRF expression of leptin was elevated but only in the LTH lambs born at sea level.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "02e9bee6-8857-4cc1-b2e2-6bbac41bb924",
+          "text": "Consider RIP140 increased in LTH lambs born at high altitude, not sea level.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [
+            {
+              "variable": "birth location",
+              "op": "=",
+              "value": "high altitude"
+            }
+          ],
+          "geneticContext": {
+            "gene": "RIP140",
+            "organism": "LTH lambs",
+            "effect": "increased"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:6",
+          "quote": "RIP140 was increased in the LTH lambs born at high altitude but not in those born at sea level.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "346148c1-2ba8-4b3c-a5e5-cdb37cfa2feb",
+          "text": "Consider loss of thyroid hormone signalling in PRF may drive post-birth loss of UCP-1 after LTH.",
+          "basis": "primary",
+          "actionType": "mechanism",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "UCP-1",
+            "organism": "lambs",
+            "model": "PRF",
+            "perturbation": "LTH",
+            "effect": "loss of UCP-1"
+          },
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:7",
+          "quote": "This indicates that the loss of thyroid hormone signalling in the PRF in response to LTH may play a significant role in the loss of UCP-1 in these lambs post-birth.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "d03dd0ef-891d-4425-8d01-551f2ceea83e",
+          "text": "Assess reduced UCP1 expression in perirenal fat of LTH lambs versus normoxic controls during fetal-to-neonatal transition.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "UCP1",
+            "model": "lambs",
+            "perturbation": "LTH",
+            "effect": "significant reduction"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:8",
+          "quote": "in the transition from foetal to neonatal life when compared to normoxic controls, LTH lambs demonstrated a significant reduction in UCP1.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "e6fe8d53-0cfc-4ccd-9502-4fd9b7a5ece9",
+          "text": "Consider prior finding that LTH upregulated UCP1 and associated regulatory genes in the ovine fetus.",
+          "basis": "background",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "UCP1",
+            "perturbation": "LTH",
+            "effect": "upregulated"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:8",
+          "quote": "the expression of UCP1, a gene essential for non-shivering as well as associated regulatory genes were also upregulated by LTH.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "36cf65cd-ef09-4dec-a248-d54e409308dd",
+          "text": "Consider prior finding that LTH augmented genes for endocrine regulation of adipocyte function and differentiation.",
+          "basis": "background",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "genes critical to the endocrine regulation of adipocyte function and differentiation",
+            "perturbation": "conditions of LTH",
+            "effect": "augmented expression"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:8",
+          "quote": "development under conditions of LTH gave rise to the augmented expression of genes critical to the endocrine regulation of adipocyte function and differentiation.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "14147aa0-70f4-4b38-b1bb-948a912f9f44",
+          "text": "Assess subtle PRF gene-expression differences in LTH lambs born and maintained at high-altitude hypoxia.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [
+            {
+              "variable": "birth environment",
+              "op": "in",
+              "value": "mildly hypoxic high altitude mountain environment"
+            }
+          ],
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:8",
+          "quote": "there were subtle differences in gene expression in the PRF of LTH lambs born and maintained in a mildly hypoxic high altitude mountain environment",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "d5cdc7e6-75d4-443c-829f-5ff6a939d2a8",
+          "text": "Compare LTH lamb PRF expression to LTH lambs born in oxygen-replete near-sea-level conditions.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [
+            {
+              "variable": "birth environment",
+              "op": "in",
+              "value": "oxygen replete conditions at near sea level"
+            }
+          ],
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:8",
+          "quote": "compared to those born in oxygen replete conditions at near sea level.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "77284cc3-196e-4e9e-a57c-cd7a77ad1155",
+          "text": "Note that pathways responsible for the LTH-induced shift in PRF gene expression remain undetermined.",
+          "basis": "primary",
+          "actionType": "limitation",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:32403966",
+          "passageId": "pubmed:32403966:8",
+          "quote": "the pathways responsible for this dramatic shift in PRF gene expression observed in response to LTH remained to be determined.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        }
+      ]
+    },
+    {
+      "ms": 24712,
+      "type": "provisional_claims_ready",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "sourceId": "europe_pmc:MED:42896440",
+      "claims": [
+        {
+          "id": "67b700be-0179-4705-aa9d-fd21d0cb25be",
+          "text": "Assess that SATB2 mRNA is markedly induced by hypoxia across tested LUAD cell lines.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "SATB2",
+            "model": "LUAD cell lines",
+            "measurement": "mRNA expression",
+            "effect": "markedly induced by hypoxia"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:8",
+          "quote": "RT-qPCR analysis showed that SATB2 mRNA expression was markedly induced by hypoxia across these LUAD cell lines ( Fig. 1A ).",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "66107232-d54e-4bb1-86c6-7c0535b46f99",
+          "text": "Consider increased SATB2 protein with HIF-1α stabilization in hypoxia-treated LUAD cells.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "SATB2",
+            "model": "LUAD cells",
+            "perturbation": "hypoxia-treated",
+            "measurement": "protein levels",
+            "effect": "increased SATB2 protein levels accompanied by HIF-1α stabilization"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:8",
+          "quote": "Consistently, western blot analysis revealed increased SATB2 protein levels accompanied by HIF-1α stabilization in hypoxia-treated LUAD cells ( Fig. 1B and Supplementary Fig. 1A).",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "0f2cdbe7-9887-4f3a-857f-6003d80e2741",
+          "text": "Note loss of HIF-1α markedly reduces SATB2 expression under normoxia and hypoxia.",
+          "basis": "primary",
+          "actionType": "mechanism",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "SATB2",
+            "perturbation": "Loss of HIF-1α",
+            "measurement": "SATB2 expression",
+            "effect": "marked reduction in SATB2 expression"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:8",
+          "quote": "Loss of HIF-1α led to a marked reduction in SATB2 expression under both normoxic and hypoxic conditions.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "c6f7d5d6-3a9a-4c12-9a03-d694baab8225",
+          "text": "Measure SATB2 mRNA by RT-qPCR after 24 h at 20% O2 versus 1% O2.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [
+            {
+              "variable": "normoxia",
+              "op": "=",
+              "value": "20% O₂"
+            },
+            {
+              "variable": "hypoxia",
+              "op": "=",
+              "value": "1% O₂"
+            },
+            {
+              "variable": "duration",
+              "op": "=",
+              "value": 24,
+              "unit": "h"
+            }
+          ],
+          "geneticContext": {
+            "gene": "SATB2",
+            "model": "LUAD cell lines",
+            "measurement": "RT-qPCR analysis of SATB2 mRNA expression"
+          },
+          "subQuestionIndex": 3,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:8",
+          "quote": "(A) RT-qPCR analysis of SATB2 mRNA expression in indicated LUAD cell lines cultured under normoxia (20% O 2 ) or hypoxia (1% O 2 ) for 24 h.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "f2c5d9a5-5c2f-460f-bdca-694100d4c85d",
+          "text": "Measure HIF-1α and SATB2 protein by western blot after normoxia or hypoxia for 24 h.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "geneticContext": {
+            "model": "LUAD cells",
+            "measurement": "Western blot analysis of HIF-1α and SATB2 protein expression"
+          },
+          "subQuestionIndex": 2,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:8",
+          "quote": "(B) Western blot analysis of HIF-1α and SATB2 protein expression in indicated LUAD cells exposed to normoxia or hypoxia for 24 h.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "a3798ec2-d2fb-47cb-a711-39a4b9a2b99a",
+          "text": "Consider significantly increased SATB2 mRNA in LUAD tumors versus normal lung in TCGA-LUAD.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "SATB2",
+            "measurement": "mRNA expression"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:8",
+          "quote": "Analysis of the TCGA-LUAD cohort demonstrated significantly increased SATB2 mRNA expression in tumor tissues relative to normal lung tissues ( Fig. 2A ).",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "03d499e7-4eb4-465d-b9d7-c5215f63ec9b",
+          "text": "Consider SATB2 promotes clonogenic growth, migratory capacity and angiogenic potential in LUAD cells.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "SATB2",
+            "model": "LUAD cells",
+            "effect": "clonogenic growth, migratory capacity, and angiogenic potential"
+          },
+          "subQuestionIndex": 4,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:10",
+          "quote": "SATB2 promotes multiple malignant phenotypes of LUAD cells, including clonogenic growth, migratory capacity, and angiogenic potential",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "f15c4f92-72c4-4f69-b258-2bfba3b19c93",
+          "text": "Consider SATB2 enhances LUAD pro-angiogenic activity through regulation of tumor-derived soluble factors.",
+          "basis": "primary",
+          "actionType": "mechanism",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "SATB2",
+            "model": "LUAD cells",
+            "effect": "pro-angiogenic activity"
+          },
+          "subQuestionIndex": 4,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:10",
+          "quote": "These observations indicate that SATB2 enhances the pro-angiogenic activity of LUAD cells through the regulation of tumor-derived soluble factors.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "8d2b3ff0-a2d8-44c9-9985-6489c8a73c45",
+          "text": "Consider Western blotting to confirm SATB2 overexpression in A549, H1299 and Calu-3 cells.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "SATB2",
+            "model": "A549, H1299, and Calu-3 cells",
+            "perturbation": "SATB2 overexpression",
+            "measurement": "Western blotting"
+          },
+          "subQuestionIndex": 2,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:10",
+          "quote": "SATB2 overexpression was confirmed by Western blotting in A549, H1299, and Calu-3 cells",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "bd41c2f8-4e29-483a-ae87-857ca92c1ddd",
+          "text": "Consider SATB2 as induced by hypoxia and directly regulated by HIF-1α via promoter binding.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 0,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:15",
+          "quote": "We found that SATB2 expression was induced by hypoxia and directly regulated by HIF-1α through promoter binding.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "cfc78cad-87a6-4a52-97c2-6bf2982e4c02",
+          "text": "Assess luciferase reporter and ChIP assays as support for SATB2 hypoxia-responsiveness in LUAD.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 2,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:15",
+          "quote": "Luciferase reporter and ChIP assays supported SATB2 as a hypoxia-responsive chromatin regulator in LUAD.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "e77a68ce-9ea1-448c-8791-68d6b65ce7ce",
+          "text": "Consider HIF1A, VEGFA, SLC2A1, PGK1, LOX, LDHA, BNIP3 and ALDOA as similarly enriched in malignant niches.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 0,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:15",
+          "quote": "Consistently, multiple hypoxia-responsive genes, including HIF1A, VEGFA, SLC2A1, PGK1, LOX, LDHA, BNIP3, and ALDOA, displayed similar enrichment patterns.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "295052fb-269d-4d20-9e72-1e78c3e6ea4e",
+          "text": "Consider hypoxia as contributing to angiogenesis, metabolic adaptation, immune remodeling and therapeutic resistance.",
+          "basis": "background",
+          "actionType": "theory",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:15",
+          "quote": "Hypoxia represents a critical component of the LUAD tumor microenvironment and contributes to angiogenesis, metabolic adaptation, immune remodeling, and therapeutic resistance [ 22 ].",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "ca34d3a2-578d-4916-a105-e36812afb4f9",
+          "text": "Consider SATB2 cooperating with HIF-1α and p300 to enhance hypoxia-responsive transcription.",
+          "basis": "primary",
+          "actionType": "mechanism",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:15",
+          "quote": "our findings indicate that SATB2 cooperates with HIF-1α and p300 to enhance hypoxia-responsive transcription.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "e442a5c8-0223-4953-8b18-9b4edf711613",
+          "text": "Interpret immune-related findings as correlative only given immunodeficient mouse models used.",
+          "basis": "primary",
+          "actionType": "limitation",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:16",
+          "quote": "The immunodeficient BALB/c nude mouse models used in this study cannot support functional conclusions regarding immune regulation",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "c3b2ade9-bda6-40d9-b4b7-6ac7d973e490",
+          "text": "Considere SATB2 como regulador epigenético inducible por hipoxia en LUAD.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "SATB2",
+            "model": "LUAD"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:1",
+          "quote": "we identify SATB2 as a previously unrecognized hypoxia-inducible epigenetic regulator in LUAD.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "5e31d161-989b-45cc-a56b-613c57b9c1e8",
+          "text": "Evalúe que HIF-1α activa el promotor de SATB2 y promueve su expresión en hipoxia.",
+          "basis": "primary",
+          "actionType": "mechanism",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "SATB2",
+            "perturbation": "HIF-1α, unlike HIF-2α, directly interacts with the promoter of SATB2",
+            "effect": "promoting its expression in hypoxic environments"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:1",
+          "quote": "HIF-1α, unlike HIF-2α, directly interacts with the promoter of SATB2, promoting its expression in hypoxic environments.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "5e04cc18-3125-4551-a538-5b0b73989382",
+          "text": "Considere que perder SATB2 reduce H3K27ac y Pol II en elongación en loci diana HIF-1.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "perturbation": "SATB2 loss",
+            "effect": "reduces H3K27 acetylation and elongating RNA polymerase II occupancy"
+          },
+          "subQuestionIndex": 4,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:1",
+          "quote": "while SATB2 loss reduces H3K27 acetylation and elongating RNA polymerase II occupancy at HIF-1 target loci",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "8fb2b644-a936-4e96-9d0e-e76b74b7976f",
+          "text": "Considere modelos celulares LUAD, murinos y transcriptómica espacial con deconvolución para expresión.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 2,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:1",
+          "quote": "by integrating LUAD cell models, murine tumor models, and spatial transcriptomics with reference-based cell-type deconvolution",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "3f7ce57a-becf-4d2b-880a-393826c27c4a",
+          "text": "Evalúe programas hipóxicos asociados a SATB2 enriquecidos en nichos malignos y remodelación.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "model": "malignant tumor niches"
+          },
+          "subQuestionIndex": 4,
+          "sourceId": "europe_pmc:MED:42896440",
+          "passageId": "europe_pmc:MED:42896440:1",
+          "quote": "SATB2-associated hypoxic programs are preferentially enriched within malignant tumor niches and are associated with remodeling of the local tumor microenvironment.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        }
+      ]
+    },
+    {
+      "ms": 30468,
+      "type": "stage_progress",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "stage": "extract",
+      "detail": "europe_pmc:MED:42896440: ok, 2 claim(s)"
+    },
+    {
+      "ms": 30469,
+      "type": "band_ready",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "payload": {
+        "claims": [
+          {
+            "id": "67b700be-0179-4705-aa9d-fd21d0cb25be",
+            "text": "Assess that SATB2 mRNA is markedly induced by hypoxia across tested LUAD cell lines.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "SATB2",
+              "model": "LUAD cell lines",
+              "measurement": "mRNA expression",
+              "effect": "markedly induced by hypoxia"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "europe_pmc:MED:42896440",
+            "passageId": "europe_pmc:MED:42896440:8",
+            "quote": "RT-qPCR analysis showed that SATB2 mRNA expression was markedly induced by hypoxia across these LUAD cell lines ( Fig. 1A ).",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "67b700be-0179-4705-aa9d-fd21d0cb25be",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "66107232-d54e-4bb1-86c6-7c0535b46f99",
+            "text": "Consider increased SATB2 protein with HIF-1α stabilization in hypoxia-treated LUAD cells.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "SATB2",
+              "model": "LUAD cells",
+              "perturbation": "hypoxia-treated",
+              "measurement": "protein levels",
+              "effect": "increased SATB2 protein levels accompanied by HIF-1α stabilization"
+            },
+            "subQuestionIndex": 1,
+            "sourceId": "europe_pmc:MED:42896440",
+            "passageId": "europe_pmc:MED:42896440:8",
+            "quote": "Consistently, western blot analysis revealed increased SATB2 protein levels accompanied by HIF-1α stabilization in hypoxia-treated LUAD cells ( Fig. 1B and Supplementary Fig. 1A).",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "66107232-d54e-4bb1-86c6-7c0535b46f99",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ms": 30469,
+      "type": "source_reviewed",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "sourceId": "europe_pmc:MED:42896440",
+      "acceptedClaimIds": [
+        "67b700be-0179-4705-aa9d-fd21d0cb25be",
+        "66107232-d54e-4bb1-86c6-7c0535b46f99"
+      ],
+      "withdrawnCount": 18,
+      "reason": "source support could not be confirmed"
+    },
+    {
+      "ms": 33895,
+      "type": "stage_progress",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "stage": "extract",
+      "detail": "pubmed:32403966: ok, 3 claim(s)"
+    },
+    {
+      "ms": 33895,
+      "type": "band_ready",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "payload": {
+        "claims": [
+          {
+            "id": "67b700be-0179-4705-aa9d-fd21d0cb25be",
+            "text": "Assess that SATB2 mRNA is markedly induced by hypoxia across tested LUAD cell lines.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "SATB2",
+              "model": "LUAD cell lines",
+              "measurement": "mRNA expression",
+              "effect": "markedly induced by hypoxia"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "europe_pmc:MED:42896440",
+            "passageId": "europe_pmc:MED:42896440:8",
+            "quote": "RT-qPCR analysis showed that SATB2 mRNA expression was markedly induced by hypoxia across these LUAD cell lines ( Fig. 1A ).",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "67b700be-0179-4705-aa9d-fd21d0cb25be",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "66107232-d54e-4bb1-86c6-7c0535b46f99",
+            "text": "Consider increased SATB2 protein with HIF-1α stabilization in hypoxia-treated LUAD cells.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "SATB2",
+              "model": "LUAD cells",
+              "perturbation": "hypoxia-treated",
+              "measurement": "protein levels",
+              "effect": "increased SATB2 protein levels accompanied by HIF-1α stabilization"
+            },
+            "subQuestionIndex": 1,
+            "sourceId": "europe_pmc:MED:42896440",
+            "passageId": "europe_pmc:MED:42896440:8",
+            "quote": "Consistently, western blot analysis revealed increased SATB2 protein levels accompanied by HIF-1α stabilization in hypoxia-treated LUAD cells ( Fig. 1B and Supplementary Fig. 1A).",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "66107232-d54e-4bb1-86c6-7c0535b46f99",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "59987bea-527d-43a6-a9bb-e6945c9fcd6c",
+            "text": "Considere que el ARNm de UCP-1 disminuye en grasa perirrenal de cordero en ambos grupos LTH frente a control.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "UCP-1",
+              "organism": "lamb",
+              "model": "perirenal adipose",
+              "perturbation": "LTH-SL and LTH-HA",
+              "measurement": "mRNA",
+              "effect": "significantly lower"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:32403966",
+            "passageId": "pubmed:32403966:4",
+            "quote": "UCP-1 mRNA was significantly lower in both LTH-SL and LTH-HA lamb perirenal adipose compared to control lambs ( Figure 1(a )).",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "59987bea-527d-43a6-a9bb-e6945c9fcd6c",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "276ceb24-a644-41cd-82e1-a8edfeb21d1a",
+            "text": "Considere que el ARNm de leptina aumenta solo en corderos LTH-SL y no en LTH-HA frente a control.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "Leptin",
+              "organism": "lambs",
+              "model": "PRF",
+              "perturbation": "LTH-SL",
+              "measurement": "mRNA",
+              "effect": "significantly higher"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:32403966",
+            "passageId": "pubmed:32403966:4",
+            "quote": "Leptin mRNA in PRF was significantly higher in LTH-SL lambs but not LTH-HA lamb PRF compared to control lambs ( Figure 1(b )).",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "276ceb24-a644-41cd-82e1-a8edfeb21d1a",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "eeeb984c-c11d-4993-8f85-26a36f885345",
+            "text": "Considere que el ARNm de DIO2 disminuye en ambos grupos LTH frente a control sin diferencias entre ellos.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "DIO2",
+              "perturbation": "LTH-SL and LTH-HA",
+              "measurement": "DIO2 mRNA",
+              "effect": "significantly lower"
+            },
+            "subQuestionIndex": 1,
+            "sourceId": "pubmed:32403966",
+            "passageId": "pubmed:32403966:4",
+            "quote": "DIO2 mRNA was significantly lower in both LTH-SL and LTH-HA compared to control ( Figure 3(a )); no differences were observed between LTH-SL and LTH-HA for DIO2.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "eeeb984c-c11d-4993-8f85-26a36f885345",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ms": 33895,
+      "type": "source_reviewed",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "sourceId": "pubmed:32403966",
+      "acceptedClaimIds": [
+        "59987bea-527d-43a6-a9bb-e6945c9fcd6c",
+        "276ceb24-a644-41cd-82e1-a8edfeb21d1a",
+        "eeeb984c-c11d-4993-8f85-26a36f885345"
+      ],
+      "withdrawnCount": 15,
+      "reason": "source support could not be confirmed"
+    },
+    {
+      "ms": 34560,
+      "type": "stage_progress",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "stage": "extract",
+      "detail": "partial (27325ms)"
+    },
+    {
+      "ms": 34562,
+      "type": "band_ready",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "payload": {
+        "claims": [
+          {
+            "id": "67b700be-0179-4705-aa9d-fd21d0cb25be",
+            "text": "Assess that SATB2 mRNA is markedly induced by hypoxia across tested LUAD cell lines.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "geneticContext": {
+              "gene": "SATB2",
+              "model": "LUAD cell lines",
+              "measurement": "mRNA expression",
+              "effect": "markedly induced by hypoxia"
+            },
+            "sourceId": "europe_pmc:MED:42896440",
+            "passageId": "europe_pmc:MED:42896440:8",
+            "quote": "RT-qPCR analysis showed that SATB2 mRNA expression was markedly induced by hypoxia across these LUAD cell lines ( Fig. 1A ).",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "67b700be-0179-4705-aa9d-fd21d0cb25be",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "66107232-d54e-4bb1-86c6-7c0535b46f99",
+            "text": "Consider increased SATB2 protein with HIF-1α stabilization in hypoxia-treated LUAD cells.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "geneticContext": {
+              "gene": "SATB2",
+              "model": "LUAD cells",
+              "perturbation": "hypoxia-treated",
+              "measurement": "protein levels",
+              "effect": "increased SATB2 protein levels accompanied by HIF-1α stabilization"
+            },
+            "sourceId": "europe_pmc:MED:42896440",
+            "passageId": "europe_pmc:MED:42896440:8",
+            "quote": "Consistently, western blot analysis revealed increased SATB2 protein levels accompanied by HIF-1α stabilization in hypoxia-treated LUAD cells ( Fig. 1B and Supplementary Fig. 1A).",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "66107232-d54e-4bb1-86c6-7c0535b46f99",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "59987bea-527d-43a6-a9bb-e6945c9fcd6c",
+            "text": "Considere que el ARNm de UCP-1 disminuye en grasa perirrenal de cordero en ambos grupos LTH frente a control.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "geneticContext": {
+              "gene": "UCP-1",
+              "organism": "lamb",
+              "model": "perirenal adipose",
+              "perturbation": "LTH-SL and LTH-HA",
+              "measurement": "mRNA",
+              "effect": "significantly lower"
+            },
+            "sourceId": "pubmed:32403966",
+            "passageId": "pubmed:32403966:4",
+            "quote": "UCP-1 mRNA was significantly lower in both LTH-SL and LTH-HA lamb perirenal adipose compared to control lambs ( Figure 1(a )).",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "59987bea-527d-43a6-a9bb-e6945c9fcd6c",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "276ceb24-a644-41cd-82e1-a8edfeb21d1a",
+            "text": "Considere que el ARNm de leptina aumenta solo en corderos LTH-SL y no en LTH-HA frente a control.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "geneticContext": {
+              "gene": "Leptin",
+              "organism": "lambs",
+              "model": "PRF",
+              "perturbation": "LTH-SL",
+              "measurement": "mRNA",
+              "effect": "significantly higher"
+            },
+            "sourceId": "pubmed:32403966",
+            "passageId": "pubmed:32403966:4",
+            "quote": "Leptin mRNA in PRF was significantly higher in LTH-SL lambs but not LTH-HA lamb PRF compared to control lambs ( Figure 1(b )).",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "276ceb24-a644-41cd-82e1-a8edfeb21d1a",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "eeeb984c-c11d-4993-8f85-26a36f885345",
+            "text": "Considere que el ARNm de DIO2 disminuye en ambos grupos LTH frente a control sin diferencias entre ellos.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "geneticContext": {
+              "gene": "DIO2",
+              "perturbation": "LTH-SL and LTH-HA",
+              "measurement": "DIO2 mRNA",
+              "effect": "significantly lower"
+            },
+            "sourceId": "pubmed:32403966",
+            "passageId": "pubmed:32403966:4",
+            "quote": "DIO2 mRNA was significantly lower in both LTH-SL and LTH-HA compared to control ( Figure 3(a )); no differences were observed between LTH-SL and LTH-HA for DIO2.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "eeeb984c-c11d-4993-8f85-26a36f885345",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          }
+        ],
+        "sourceScores": {
+          "pubmed:32403966": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.7857142857142857,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.12571428571428572
+          },
+          "europe_pmc:MED:42896440": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42801171": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42819788": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42938372": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:PPR:PPR1346278": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42945612": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:38781959": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42759407": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:PMC:PMC13661358": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.7,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.11199999999999999
+          },
+          "europe_pmc:PPR:PPR1346282": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:41086113": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42726733": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:35641902": {
+            "relevance": 1,
+            "level": 1,
+            "quality": 1,
+            "currency": 0.9285714285714286,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.7428571428571429
+          },
+          "pubmed:39137781": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42950042": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:40585969": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:37322330": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:36283023": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:39167456": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:38806057": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42953106": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:40855036": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:PPR:PPR1351635": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:40849425": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:28819234": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.5714285714285714,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.09142857142857143
+          },
+          "pubmed:38579562": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42703908": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:41092315": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42377256": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          }
+        }
+      }
+    },
+    {
+      "ms": 34562,
+      "type": "receipt_ready",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "receipt": {
+        "claimsTotal": 38,
+        "citationsExist": 5,
+        "quotesFound": 5,
+        "retracted": 0,
+        "supported": 5,
+        "partial": 0,
+        "dropReasons": {
+          "support": 33
+        },
+        "abstained": 3,
+        "sourcesByKind": {
+          "other": 29,
+          "meta_analysis": 1
+        },
+        "oldestSourceYear": 2017,
+        "generatedAt": "2026-10-31T21:40:32.267Z"
+      }
+    },
+    {
+      "ms": 34708,
+      "type": "done",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "status": "partial"
+    },
+    {
+      "ms": 36973,
+      "type": "relations_ready",
+      "runId": "cb5468a9-9893-41df-8d82-2f788d93bed6",
+      "questions": [
+        "¿Qué genes presentan expresión diferencial bajo hipoxia?",
+        "¿Qué magnitud y dirección de cambio de expresión se reporta?",
+        "¿Qué métodos se utilizan para medir la expresión génica?",
+        "¿Qué condiciones y duración de hipoxia se aplican?",
+        "¿Qué vías o procesos biológicos se asocian a los cambios de expresión?"
+      ],
+      "relations": [],
+      "status": "ok"
+    }
+  ]
+}

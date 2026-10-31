@@ -61,6 +61,10 @@ Rules:
   it to the investigated perturbation or biological model.
 - One claim = one finding/result; never merge content across passages.
 - Assign subQuestionIndex only when the claim directly answers that exact sub-question.
+- A passage may support one component needed for a multi-source synthesis without
+  stating the user's requested final ranking, list or conclusion verbatim. Retain
+  that component when it is relevant; the synthesis layer, not this extractor,
+  decides how supported components combine.
 - Exclude generic background and bare descriptions of what the authors set up
   when the question asks for demonstrated findings or capabilities. A method is
   relevant only when the question asks about methods or the method itself is a

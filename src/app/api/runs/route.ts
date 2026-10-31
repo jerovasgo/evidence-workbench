@@ -1,3 +1,4 @@
+import { simpleResponse } from '@/lib/simple-response';
 import { comparisonClarification } from '@/lib/research-intent';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -40,6 +41,9 @@ export async function POST(request: Request): Promise<Response> {
   if (!parsed.success) {
     return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
   }
+
+  const answer = simpleResponse(parsed.data.freeText);
+  if (answer) return NextResponse.json({ status: 'direct_answer', answer });
 
   const clarification = comparisonClarification(parsed.data.freeText);
   if (clarification) return NextResponse.json({ status: 'clarification_required', clarification });

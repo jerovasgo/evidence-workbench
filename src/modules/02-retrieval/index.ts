@@ -34,3 +34,5 @@ export * from './retrieval/seed-search-plan';
 export * from './retrieval/fetch-full-text';
 export * from './retrieval/default-allowed-domains';
 export * from './agents/web-source-finder';
+
+export * from './retrieval/prioritize-sources';

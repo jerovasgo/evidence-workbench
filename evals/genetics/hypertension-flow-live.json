@@ -1,0 +1,3861 @@
+{
+  "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+  "query": "¿Cuáles son los cinco genes más asociados con hipertensión primaria?",
+  "events": [
+    {
+      "ms": 1132,
+      "type": "stage_started",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "plan"
+    },
+    {
+      "ms": 1296,
+      "type": "stage_progress",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "plan",
+      "detail": "ok (1ms)"
+    },
+    {
+      "ms": 1297,
+      "type": "stage_started",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "retrieve"
+    },
+    {
+      "ms": 1298,
+      "type": "stage_started",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "structure"
+    },
+    {
+      "ms": 2427,
+      "type": "overview_ready",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "sources": [
+        {
+          "title": "Identifying susceptibility genes for essential hypertension by transcriptome-wide association study.",
+          "year": 2022,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/36438602/"
+        },
+        {
+          "title": "Genetic Risk of Primary Aldosteronism and Its Contribution to Hypertension: A Cross-Ancestry Meta-Analysis of Genome-Wide Association Studies.",
+          "year": 2023,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/36802911/"
+        },
+        {
+          "title": "Current concepts and molecular mechanisms in pharmacogenetics of essential hypertension.",
+          "year": 2021,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/34414909/"
+        },
+        {
+          "title": "Genetic polymorphisms and hypertension in Indian populations: a systematic review and integrative bioinformatics approach.",
+          "year": 2026,
+          "url": "https://europepmc.org/article/MED/42919376"
+        },
+        {
+          "title": "Natural Selection of ATP2B1 Underlies Susceptibility to Essential Hypertension.",
+          "year": 2021,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/33777100/"
+        }
+      ]
+    },
+    {
+      "ms": 2427,
+      "type": "source_catalog_ready",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "sources": [
+        {
+          "id": "pubmed:36438602",
+          "status": "candidate",
+          "title": "Identifying susceptibility genes for essential hypertension by transcriptome-wide association study.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/36438602/",
+          "doi": "10.1016/j.bbrep.2022.101387",
+          "pmid": "36438602",
+          "year": 2022
+        },
+        {
+          "id": "pubmed:36802911",
+          "status": "candidate",
+          "title": "Genetic Risk of Primary Aldosteronism and Its Contribution to Hypertension: A Cross-Ancestry Meta-Analysis of Genome-Wide Association Studies.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/36802911/",
+          "doi": "10.1161/CIRCULATIONAHA.122.062349",
+          "pmid": "36802911",
+          "year": 2023
+        },
+        {
+          "id": "pubmed:34414909",
+          "status": "candidate",
+          "title": "Current concepts and molecular mechanisms in pharmacogenetics of essential hypertension.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/34414909/",
+          "doi": "10.4103/ijp.IJP_593_19",
+          "pmid": "34414909",
+          "year": 2021
+        },
+        {
+          "id": "europe_pmc:MED:42919376",
+          "status": "candidate",
+          "title": "Genetic polymorphisms and hypertension in Indian populations: a systematic review and integrative bioinformatics approach.",
+          "url": "https://europepmc.org/article/MED/42919376",
+          "doi": "10.1186/s12920-026-02437-z",
+          "pmid": "42919376",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:33777100",
+          "status": "candidate",
+          "title": "Natural Selection of ATP2B1 Underlies Susceptibility to Essential Hypertension.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/33777100/",
+          "doi": "10.3389/fgene.2021.628516",
+          "pmid": "33777100",
+          "year": 2021
+        },
+        {
+          "id": "pubmed:28682143",
+          "status": "candidate",
+          "title": "Replication of a genome-wide association study on essential hypertension in Mongolians.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/28682143/",
+          "doi": "10.1080/10641963.2017.1334796",
+          "pmid": "28682143",
+          "year": 2018
+        },
+        {
+          "id": "pubmed:40726397",
+          "status": "candidate",
+          "title": "Perirenal Adipose Tissue and Hypertension: Observational and Genetic Analyses.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/40726397/",
+          "doi": "10.1161/HYPERTENSIONAHA.125.24995",
+          "pmid": "40726397",
+          "year": 2025
+        },
+        {
+          "id": "pubmed:29650769",
+          "status": "candidate",
+          "title": "Is Plasma Renin Activity Genetically Determined and How Much Does It Matter for Treating Hypertension?",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/29650769/",
+          "doi": "10.1161/CIRCGEN.118.002139",
+          "pmid": "29650769",
+          "year": 2018
+        },
+        {
+          "id": "pubmed:35061109",
+          "status": "candidate",
+          "title": "Novel methylation mark and essential hypertension.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/35061109/",
+          "doi": "10.1186/s43141-022-00301-y",
+          "pmid": "35061109",
+          "year": 2022
+        },
+        {
+          "id": "europe_pmc:MED:42527560",
+          "status": "candidate",
+          "title": "Multi-ancestry genome-wide association analyses provide insights into the genetic basis of Hashimoto's thyroiditis.",
+          "url": "https://europepmc.org/article/MED/42527560",
+          "doi": "10.1038/s41588-026-02704-w",
+          "pmid": "42527560",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:39604029",
+          "status": "candidate",
+          "title": "Identification of Novel Proteins Mediating Causal Association Between Smoking and Essential Hypertension: A Mendelian Randomization Study.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/39604029/",
+          "doi": "10.1161/JAHA.124.036202",
+          "pmid": "39604029",
+          "year": 2024
+        },
+        {
+          "id": "europe_pmc:MED:42792799",
+          "status": "candidate",
+          "title": "Irritable Bowel Syndrome and Incident Hypertension: Epidemiologic and Genetic Insights.",
+          "url": "https://europepmc.org/article/MED/42792799",
+          "doi": "10.3390/biomedicines14092057",
+          "pmid": "42792799",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:34166551",
+          "status": "candidate",
+          "title": "Hypertension genetics past, present and future applications.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/34166551/",
+          "doi": "10.1111/joim.13352",
+          "pmid": "34166551",
+          "year": 2021
+        },
+        {
+          "id": "europe_pmc:MED:41898884",
+          "status": "candidate",
+          "title": "A Pooled Blood Genome-Wide Association Study of Hypertension in Sindhi Families: Results from the DISFIN Study.",
+          "url": "https://europepmc.org/article/MED/41898884",
+          "doi": "10.3390/genes17030351",
+          "pmid": "41898884",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:25511780",
+          "status": "candidate",
+          "title": "Progress and issues of the genome-wide association study for hypertension.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/25511780/",
+          "doi": "10.2174/0929867321666141216124537",
+          "pmid": "25511780",
+          "year": 2015
+        },
+        {
+          "id": "europe_pmc:MED:42596011",
+          "status": "candidate",
+          "title": "Cross-trait genetic analysis maps shared polygenic architecture between primary aldosteronism and blood pressure to adrenal cell states.",
+          "url": "https://europepmc.org/article/MED/42596011",
+          "doi": "10.1186/s12967-026-08819-2",
+          "pmid": "42596011",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42893988",
+          "status": "candidate",
+          "title": "Genetic architecture of MRI-derived cervical spinal cord morphology reveals sensory-motor axis and systemic disease associations.",
+          "url": "https://europepmc.org/article/MED/42893988",
+          "doi": "10.1038/s41467-026-77419-x",
+          "pmid": "42893988",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42411037",
+          "status": "candidate",
+          "title": "The Use of Population Isolates to Identify Metabolic Syndrome's Genetic Aetiology.",
+          "url": "https://europepmc.org/article/MED/42411037",
+          "doi": "10.1002/mgg3.70262",
+          "pmid": "42411037",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42454014",
+          "status": "candidate",
+          "title": "SMR Analysis Integrating GWAS and eQTL Data Reveals UHRF1BP1 and SNRPC as Potential Drug Targets for Low Back Pain.",
+          "url": "https://europepmc.org/article/MED/42454014",
+          "doi": "10.2147/jpr.s593304",
+          "pmid": "42454014",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:31044621",
+          "status": "candidate",
+          "title": "Genome-wide association study of white-coat effect in hypertensive patients.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/31044621/",
+          "doi": "10.1080/08037051.2019.1604066",
+          "pmid": "31044621",
+          "year": 2019
+        },
+        {
+          "id": "europe_pmc:MED:42230780",
+          "status": "candidate",
+          "title": "GFPT1 as a cross-ancestry validated target for degenerative spinal disease: genetic association in a Chinese cohort and functional characterization in zebrafish.",
+          "url": "https://europepmc.org/article/MED/42230780",
+          "doi": "10.1038/s42003-026-10320-x",
+          "pmid": "42230780",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42707253",
+          "status": "candidate",
+          "title": "Evaluation of population-specific polygenic risk scores for blood lipids: insights from Taiwanese cohorts and multiancestry meta-analysis.",
+          "url": "https://europepmc.org/article/MED/42707253",
+          "doi": "10.3389/fbinf.2026.1823599",
+          "pmid": "42707253",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42432750",
+          "status": "candidate",
+          "title": "Genome-wide association and polygenic risk score analyses of MASLD-related hepatic steatosis severity in a Taiwanese Han population.",
+          "url": "https://europepmc.org/article/MED/42432750",
+          "doi": "10.1186/s13578-026-01619-7",
+          "pmid": "42432750",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:41627341",
+          "status": "candidate",
+          "title": "PheCode-guided multi-modal topic modeling of electronic health records improves disease incidence prediction and GWAS discovery from UK Biobank.",
+          "url": "https://europepmc.org/article/MED/41627341",
+          "doi": "10.1093/bib/bbag030",
+          "pmid": "41627341",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:29973135",
+          "status": "candidate",
+          "title": "Genome-wide association study of nocturnal blood pressure dipping in hypertensive patients.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/29973135/",
+          "doi": "10.1186/s12881-018-0624-7",
+          "pmid": "29973135",
+          "year": 2018
+        },
+        {
+          "id": "pubmed:33390048",
+          "status": "candidate",
+          "title": "An Academic Clinician's Road Map to Hypertension Genomics: Recent Advances and Future Directions MMXX.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/33390048/",
+          "doi": "10.1161/HYPERTENSIONAHA.120.14535",
+          "pmid": "33390048",
+          "year": 2021
+        },
+        {
+          "id": "europe_pmc:PPR:PPR1265072",
+          "status": "candidate",
+          "title": "Hypertrophic cardiomyopathy: a genome wide association meta-analysis and polygenic risk score",
+          "url": "https://europepmc.org/article/PPR/PPR1265072",
+          "doi": "10.64898/2026.05.05.26352435",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:39286647",
+          "status": "candidate",
+          "title": "Causal relationship between modifiable risk factors and knee osteoarthritis: a Mendelian randomization study.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/39286647/",
+          "doi": "10.3389/fmed.2024.1405188",
+          "pmid": "39286647",
+          "year": 2024
+        },
+        {
+          "id": "europe_pmc:MED:42020658",
+          "status": "candidate",
+          "title": "Multi ancestry genome wide association meta analysis of urinary aMT6s levels.",
+          "url": "https://europepmc.org/article/MED/42020658",
+          "doi": "10.1038/s41598-026-49491-2",
+          "pmid": "42020658",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42749890",
+          "status": "candidate",
+          "title": "Sex-specific biological aging clocks across organs and omics.",
+          "url": "https://europepmc.org/article/MED/42749890",
+          "doi": "10.1038/s41591-026-04662-6",
+          "pmid": "42749890",
+          "year": 2026
+        }
+      ]
+    },
+    {
+      "ms": 5872,
+      "type": "stage_progress",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "structure",
+      "detail": "ok (4340ms)"
+    },
+    {
+      "ms": 6254,
+      "type": "stage_progress",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "retrieve",
+      "detail": "partial (4593ms)"
+    },
+    {
+      "ms": 6256,
+      "type": "stage_started",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "classify"
+    },
+    {
+      "ms": 6410,
+      "type": "stage_progress",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "classify",
+      "detail": "ok (1ms)"
+    },
+    {
+      "ms": 6410,
+      "type": "stage_started",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "extract"
+    },
+    {
+      "ms": 6772,
+      "type": "opening_ready",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "text": "Los resúmenes no proporcionan un ranking autorizado de los cinco genes más asociados con hipertensión primaria. El estudio TWAS identificó 1010 genes asociados tras corrección FDR y destaca RBM6, HLA-DRB5, UHRF1BP1, LYZ y TMEM116 por vía autoinmune. Como inferencia provisional, esos son candidatos relevantes, no un top cinco definitivo. Otro trabajo se centra en aldosteronismo primario, con WNT2B como señal más fuerte, distinto de hipertensión primaria.\n\nSíntesis inicial basada en resúmenes recuperados; la verificación detallada sigue en curso."
+    },
+    {
+      "ms": 19208,
+      "type": "provisional_claims_ready",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "sourceId": "pubmed:36438602",
+      "claims": [
+        {
+          "id": "9f9559a7-1ef6-4aa6-b811-363dbf54d960",
+          "text": "Considere que RBM6, HLA-DRB5, UHRF1BP1, LYZ y TMEM116 se reportan asociados a hipertensión y a autoinmunidad.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116",
+            "effect": "associated with autoimmune system"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:0",
+          "quote": "five of the genes ( RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116 ) were associated with autoimmune system",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "4ab18635-dd6b-4804-bfee-3037fac462e7",
+          "text": "Valore que 1010 genes no solapados se asociaron significativamente con hipertensión tras corrección FDR en cuatro tejidos.",
+          "basis": "primary",
+          "actionType": "measurement",
+          "conditions": [
+            {
+              "variable": "PFDR",
+              "op": "<",
+              "value": 0.05
+            }
+          ],
+          "geneticContext": {
+            "gene": "1010 non-overlapping genes",
+            "model": "left heart ventricle, aorta, whole blood, and peripheral blood",
+            "measurement": "genes expression",
+            "effect": "significantly associated with hypertension"
+          },
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:0",
+          "quote": "1010 non-overlapping genes expression were significantly associated with hypertension after FDR correction (PFDR <0.05) in four tissues (left heart ventricle, aorta, whole blood, and peripheral blood)",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "621bbe84-f3e8-4ecc-ae3c-6a8c3e18f5e7",
+          "text": "Considere que se identificaron 15 genes nuevos de susceptibilidad a hipertensión en todos los tejidos.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "15 novel hypertension-susceptible genes",
+            "measurement": "identified in all tissues",
+            "effect": "novel hypertension-susceptible genes"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:0",
+          "quote": "Moreover, 15 novel hypertension-susceptible genes were identified in all tissues",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "8be35b17-caa9-4f6c-9abb-c638ab5b3646",
+          "text": "Considere que el TWAS usó pesos de expresión de ventrículo izquierdo, aorta y sangre.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "geneticContext": {
+            "model": "left heart ventricle, aorta, whole blood, and peripheral blood"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:1",
+          "quote": "we used the gene expression weights for the left heart ventricle, aorta, whole blood, and peripheral blood as references",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "a3480f5e-1140-4022-b648-ea9694e2aabc",
+          "text": "Tenga en cuenta que la mayoría de SNPs de GWAS están en regiones intergénicas sin función clara.",
+          "basis": "background",
+          "actionType": "limitation",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:0",
+          "quote": "the most associated single nucleotide polymorphism (SNP) markers of GWAS are not located in or near genes but rather in intergenic regions",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "863342af-8746-460b-8f43-60f19a88210d",
+          "text": "Considere 15 genes susceptibles a hipertensión identificados por TWAS en cuatro tejidos, incluidos GFPT1, RBM6 y ZNF589.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:2",
+          "quote": "Finally, 15 novel hypertension-susceptible genes were identified by TWAS in all tissues, and they were Glutamine-Fructose-6-Phosphate Transaminase 1 (GFPT1), RNA-binding motif protein 6 (RBM6), Zinc Finger Protein 589 (ZNF589),",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "c44d7f13-7efc-41cf-aec8-15a0eb4705b1",
+          "text": "Considere que cinco genes TWAS de hipertensión (RBM6, HLA-DRB5, UHRF1BP1, LYZ y TMEM116) se asocian con autoinmunidad.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:2",
+          "quote": "Five TWAS-identified genes ( RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116 ) were identified to associate with autoimmunity by the combined search, which is shown in Table 2 .",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "01d105ba-5644-406b-9001-f13b5fb390fe",
+          "text": "Considere valores P_FDR significativos para TNNT3 en cuatro tejidos, hasta 2.21E-12 en sangre total.",
+          "basis": "primary",
+          "actionType": "measurement",
+          "conditions": [
+            {
+              "variable": "P_FDR_left_ventricle_TNNT3",
+              "op": "=",
+              "value": "2.18E-09"
+            },
+            {
+              "variable": "P_FDR_whole_blood_TNNT3",
+              "op": "=",
+              "value": "2.21E-12"
+            }
+          ],
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:3",
+          "quote": "TNNT3 11 rs4980379 2.18E-09 2.95E-06 2.21E-12 2.40E-07 NR",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "fb493c2f-1ea4-48c6-8f79-7cd925d60c7b",
+          "text": "Considere que los datos GWAS son predominantemente de cohorte UK Biobank de ancestría europea, lo que limita generalización.",
+          "basis": "primary",
+          "actionType": "limitation",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:3",
+          "quote": "our results should be used with caution as the GWAS data in this study are predominantly from the UK Biobank cohort with European ancestry, therefore, limiting the generalisability of the findings.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "84d9235d-efa9-4ef4-a8d2-42aa4d104419",
+          "text": "Considere que hay pocos estudios sobre los cinco genes hipertensivos relacionados con autoinmunidad y su vínculo no está elucidado.",
+          "basis": "primary",
+          "actionType": "limitation",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:3",
+          "quote": "there are few studies on the five autoimmune-related hypertension susceptibility genes identified by TWAS, and the link between them can not be well elucidated.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "5b3573bf-9907-4823-b56d-2e61b89788fd",
+          "text": "Considere que este estudio integró GWAS de hipertensión de UK Biobank con expresión de ARNm para realizar TWAS en cuatro tejidos.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 2,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:4",
+          "quote": "we integrated the GWAS datasets of hypertension from the UK Biobank and mRNA expression profiling together to complete a TWAS in four tissues",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "9ee3bee5-6949-487d-80cd-e1509850942e",
+          "text": "Considere que los resultados apoyan que un mecanismo autoinmune tiene un papel importante en el desarrollo de hipertensión.",
+          "basis": "primary",
+          "actionType": "mechanism",
+          "conditions": [],
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:4",
+          "quote": "our results support that an autoimmune mechanism plays an important role in the development of hypertension.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        }
+      ]
+    },
+    {
+      "ms": 21054,
+      "type": "provisional_claims_ready",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "sourceId": "pubmed:36802911",
+      "claims": [
+        {
+          "id": "84c5b11f-253a-48e1-8fcc-8a78d01c1108",
+          "text": "Considere que el metaanálisis identificó 5 loci significativos y 1 casi significativo, con la señal más fuerte en WNT2B en 1p13.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {},
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:8",
+          "quote": "We identified 5 genome-wide association loci in the GWAS meta-analysis and 1 nearly genome-wide significant locus, which presented a significant association in the gene-based test.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "73bb8efa-7cde-41c6-bc80-2c0a8c3a9a8c",
+          "text": "Evalúe que todos los loci de riesgo de PA mostraron efectos positivos sobre PA frente a hipertensión tras ajustar por medición de PA.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "measurement": "case-case association test between PA and hypertension",
+            "effect": "significantly positive effects on PA against hypertension"
+          },
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:8",
+          "quote": "all the PA risk-associated loci identified in this study showed significantly positive effects on PA against hypertension in the case-case association test between PA and hypertension even after adjustment for 1-time measurement of BP.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "e47aa3a8-2274-4298-b889-a56f2c68ad17",
+          "text": "Considere que la superposición de RXFP2 y LSP1 con otro GWAS europeo refuerza la fiabilidad de su asociación con PA.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "RXFP2"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:8",
+          "quote": "RXFP2 and LSP1 were overlapped with the loci identified in this study, which enhances the reliability of their association with PA.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "6d800691-d297-457f-9ab8-e616dac943d6",
+          "text": "Evalúe que las señales de PA colocalizaron fuertemente con efectos eQTL de RXFP2 en glándula suprarrenal.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "RXFP2",
+            "model": "adrenal gland",
+            "measurement": "eQTL effects in the adrenal gland",
+            "effect": "strongly colocalized with the RXFP2 eQTL effects"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:8",
+          "quote": "Considering our findings that the PA association signals strongly colocalized with the RXFP2 eQTL effects in the adrenal gland",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "8c12777a-d9fd-4e54-9bf1-98cc85165f80",
+          "text": "Considere que, salvo RXFP2, los loci no alcanzaron significación genómica en cohorte individual, lo que impide un ranking universal.",
+          "basis": "primary",
+          "actionType": "limitation",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "RXFP2",
+            "measurement": "genome-wide significance threshold",
+            "effect": "did not satisfy the genome-wide significance threshold in a single cohort, except for the RXFP2 locus"
+          },
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:9",
+          "quote": "First, the PA risk-associated loci identified in the current study did not satisfy the genome-wide significance threshold in a single cohort, except for the RXFP2 locus.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "54714ffd-78e1-4f72-a79e-1c6e06854067",
+          "text": "Considere que definiciones y pruebas confirmatorias distintas entre cohortes pueden sesgar estimaciones del metaanálisis.",
+          "basis": "primary",
+          "actionType": "limitation",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:9",
+          "quote": "we note the different definitions and guideline of the phenotypes (including confirmatory tests for PA) between cohorts, which might introduce biased estimates in our meta-analysis.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "14551aa4-3299-4705-8abf-126a493fa1e8",
+          "text": "Considere que WNT2B, HOTTIP, LSP1, TBX3 y RXFP2 fueron los genes más cercanos a loci significativos en el metaanálisis transancestral de aldosteronismo primario.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "WNT2B"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:5",
+          "quote": "for which the genes nearest to the lead variants were WNT2B , HOTTIP , LSP1 , TBX3 , and RXFP2 , respectively ( P <5.0×10 −8 ; Figures 1 B and 2 ; Table 2 ; Figure S4 ).",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "0cb679bc-8e41-486f-a085-12a4300ccfcd",
+          "text": "Valore la evidencia génica MAGMA que apoya CYP11B2/GML además del análisis de marcador único.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "CYP11B2/GML"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:5",
+          "quote": "In addition, we identified significant associations for the genes CYP11B2/GML ( P =7.2×10 −7 and 5.3×10 −7 , respectively).",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "7b86ffd8-4a5d-4f02-903d-583268f62a0c",
+          "text": "Considere que la asociación japonesa rs9354826 no se replicó en UKB ni FinnGen, lo que dificulta un ranking universal.",
+          "basis": "primary",
+          "actionType": "limitation",
+          "conditions": [],
+          "geneticContext": {
+            "model": "UKB and FinnGen cohorts",
+            "measurement": "association of rs9354826 (6q12)",
+            "effect": "was not replicated"
+          },
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:5",
+          "quote": "The association of rs9354826 (6q12), which was observed in the Japanese GWAS, was not replicated in the UKB and FinnGen cohorts ( P >0.05).",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "51e330f5-bc6b-40ba-8da3-7137a7fe717b",
+          "text": "Note that 42 BP-associated variants from previous independent Japanese GWAS were investigated.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 2,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:7",
+          "quote": "We investigated 42 BP-associated variants that have been established in previous independent Japanese GWAS ( Excel File S1 ).",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "0bc0ec96-437a-4822-b9bc-e1bcf423eed3",
+          "text": "Consider 66.7% (28 of 42) showed higher ORs for PA risk than hypertension risk.",
+          "basis": "primary",
+          "actionType": "measurement",
+          "conditions": [],
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:7",
+          "quote": "However, 66.7% (28 of 42) of the BP-associated variants presented higher ORs for the PA risk than for the hypertension risk",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "d02d1164-9aff-400b-984a-76ae76f81013",
+          "text": "Note simulation expected only 25.6% (95% CI, 12.5-38.6) to show higher ORs.",
+          "basis": "primary",
+          "actionType": "measurement",
+          "conditions": [],
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:7",
+          "quote": "The simulation analysis estimated that the expected proportion of BP-associated variants having higher ORs for independent traits than for hypertension was only 25.6% (95% CI, 12.5−38.6).",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "4b317791-1ec7-4e63-841e-66c70af8a794",
+          "text": "Note case-case analysis between PA and hypertension with BP adjustment was used.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:7",
+          "quote": "we performed the case-case association analysis between PA and hypertension with the adjustment of BP to strictly compare the effects",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "f7d58322-29cd-444b-96ce-5477468ffe0c",
+          "text": "Consider 61.9% (26 of 42) showed higher effect on PA, rising to 80.0% (8 of 10).",
+          "basis": "primary",
+          "actionType": "measurement",
+          "conditions": [],
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:36802911",
+          "passageId": "pubmed:36802911:7",
+          "quote": "Of all the variants, 61.9% (26 of 42) showed a higher effect on PA than on hypertension, and its proportion increased to 80.0% (8 of 10)",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        }
+      ]
+    },
+    {
+      "ms": 25218,
+      "type": "stage_progress",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "extract",
+      "detail": "pubmed:36802911: ok, 1 claim(s)"
+    },
+    {
+      "ms": 25219,
+      "type": "band_ready",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "payload": {
+        "claims": [
+          {
+            "id": "84c5b11f-253a-48e1-8fcc-8a78d01c1108",
+            "text": "Considere que el metaanálisis identificó 5 loci significativos y 1 casi significativo, con la señal más fuerte en WNT2B en 1p13.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {},
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36802911",
+            "passageId": "pubmed:36802911:8",
+            "quote": "We identified 5 genome-wide association loci in the GWAS meta-analysis and 1 nearly genome-wide significant locus, which presented a significant association in the gene-based test.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "84c5b11f-253a-48e1-8fcc-8a78d01c1108",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ms": 25220,
+      "type": "source_reviewed",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "sourceId": "pubmed:36802911",
+      "acceptedClaimIds": [
+        "84c5b11f-253a-48e1-8fcc-8a78d01c1108"
+      ],
+      "withdrawnCount": 13,
+      "reason": "source support could not be confirmed"
+    },
+    {
+      "ms": 34641,
+      "type": "stage_progress",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "extract",
+      "detail": "pubmed:36438602: ok, 8 claim(s)"
+    },
+    {
+      "ms": 34641,
+      "type": "band_ready",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "payload": {
+        "claims": [
+          {
+            "id": "84c5b11f-253a-48e1-8fcc-8a78d01c1108",
+            "text": "Considere que el metaanálisis identificó 5 loci significativos y 1 casi significativo, con la señal más fuerte en WNT2B en 1p13.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {},
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36802911",
+            "passageId": "pubmed:36802911:8",
+            "quote": "We identified 5 genome-wide association loci in the GWAS meta-analysis and 1 nearly genome-wide significant locus, which presented a significant association in the gene-based test.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "84c5b11f-253a-48e1-8fcc-8a78d01c1108",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "9f9559a7-1ef6-4aa6-b811-363dbf54d960",
+            "text": "Considere que RBM6, HLA-DRB5, UHRF1BP1, LYZ y TMEM116 se reportan asociados a hipertensión y a autoinmunidad.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116",
+              "effect": "associated with autoimmune system"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "five of the genes ( RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116 ) were associated with autoimmune system",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "9f9559a7-1ef6-4aa6-b811-363dbf54d960",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "4ab18635-dd6b-4804-bfee-3037fac462e7",
+            "text": "Valore que 1010 genes no solapados se asociaron significativamente con hipertensión tras corrección FDR en cuatro tejidos.",
+            "basis": "primary",
+            "actionType": "measurement",
+            "conditions": [
+              {
+                "variable": "PFDR",
+                "op": "<",
+                "value": 0.05
+              }
+            ],
+            "geneticContext": {
+              "gene": "1010 non-overlapping genes",
+              "model": "left heart ventricle, aorta, whole blood, and peripheral blood",
+              "measurement": "genes expression",
+              "effect": "significantly associated with hypertension"
+            },
+            "subQuestionIndex": 3,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "1010 non-overlapping genes expression were significantly associated with hypertension after FDR correction (PFDR <0.05) in four tissues (left heart ventricle, aorta, whole blood, and peripheral blood)",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "4ab18635-dd6b-4804-bfee-3037fac462e7",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "621bbe84-f3e8-4ecc-ae3c-6a8c3e18f5e7",
+            "text": "Considere que se identificaron 15 genes nuevos de susceptibilidad a hipertensión en todos los tejidos.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "15 novel hypertension-susceptible genes",
+              "measurement": "identified in all tissues",
+              "effect": "novel hypertension-susceptible genes"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "Moreover, 15 novel hypertension-susceptible genes were identified in all tissues",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "621bbe84-f3e8-4ecc-ae3c-6a8c3e18f5e7",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "8be35b17-caa9-4f6c-9abb-c638ab5b3646",
+            "text": "Considere que el TWAS usó pesos de expresión de ventrículo izquierdo, aorta y sangre.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "geneticContext": {
+              "model": "left heart ventricle, aorta, whole blood, and peripheral blood"
+            },
+            "subQuestionIndex": 1,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:1",
+            "quote": "we used the gene expression weights for the left heart ventricle, aorta, whole blood, and peripheral blood as references",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "8be35b17-caa9-4f6c-9abb-c638ab5b3646",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "a3480f5e-1140-4022-b648-ea9694e2aabc",
+            "text": "Tenga en cuenta que la mayoría de SNPs de GWAS están en regiones intergénicas sin función clara.",
+            "basis": "background",
+            "actionType": "limitation",
+            "conditions": [],
+            "subQuestionIndex": 4,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "the most associated single nucleotide polymorphism (SNP) markers of GWAS are not located in or near genes but rather in intergenic regions",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "a3480f5e-1140-4022-b648-ea9694e2aabc",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "863342af-8746-460b-8f43-60f19a88210d",
+            "text": "Considere 15 genes susceptibles a hipertensión identificados por TWAS en cuatro tejidos, incluidos GFPT1, RBM6 y ZNF589.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:2",
+            "quote": "Finally, 15 novel hypertension-susceptible genes were identified by TWAS in all tissues, and they were Glutamine-Fructose-6-Phosphate Transaminase 1 (GFPT1), RNA-binding motif protein 6 (RBM6), Zinc Finger Protein 589 (ZNF589),",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "863342af-8746-460b-8f43-60f19a88210d",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "c44d7f13-7efc-41cf-aec8-15a0eb4705b1",
+            "text": "Considere que cinco genes TWAS de hipertensión (RBM6, HLA-DRB5, UHRF1BP1, LYZ y TMEM116) se asocian con autoinmunidad.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:2",
+            "quote": "Five TWAS-identified genes ( RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116 ) were identified to associate with autoimmunity by the combined search, which is shown in Table 2 .",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "c44d7f13-7efc-41cf-aec8-15a0eb4705b1",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "01d105ba-5644-406b-9001-f13b5fb390fe",
+            "text": "Considere valores P_FDR significativos para TNNT3 en cuatro tejidos, hasta 2.21E-12 en sangre total.",
+            "basis": "primary",
+            "actionType": "measurement",
+            "conditions": [
+              {
+                "variable": "P_FDR_left_ventricle_TNNT3",
+                "op": "=",
+                "value": "2.18E-09"
+              },
+              {
+                "variable": "P_FDR_whole_blood_TNNT3",
+                "op": "=",
+                "value": "2.21E-12"
+              }
+            ],
+            "subQuestionIndex": 3,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:3",
+            "quote": "TNNT3 11 rs4980379 2.18E-09 2.95E-06 2.21E-12 2.40E-07 NR",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "01d105ba-5644-406b-9001-f13b5fb390fe",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ms": 34642,
+      "type": "source_reviewed",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "sourceId": "pubmed:36438602",
+      "acceptedClaimIds": [
+        "9f9559a7-1ef6-4aa6-b811-363dbf54d960",
+        "4ab18635-dd6b-4804-bfee-3037fac462e7",
+        "621bbe84-f3e8-4ecc-ae3c-6a8c3e18f5e7",
+        "8be35b17-caa9-4f6c-9abb-c638ab5b3646",
+        "a3480f5e-1140-4022-b648-ea9694e2aabc",
+        "863342af-8746-460b-8f43-60f19a88210d",
+        "c44d7f13-7efc-41cf-aec8-15a0eb4705b1",
+        "01d105ba-5644-406b-9001-f13b5fb390fe"
+      ],
+      "withdrawnCount": 4,
+      "reason": "source support could not be confirmed"
+    },
+    {
+      "ms": 34983,
+      "type": "provisional_claims_ready",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "sourceId": "pubmed:34414909",
+      "claims": [
+        {
+          "id": "d58331be-9d8d-4338-918e-e6e3dae3e4ff",
+          "text": "Considere que estudios GWAS ayudaron a identificar nuevos loci de regulación de presión arterial como ACE y canales de calcio.",
+          "basis": "background",
+          "actionType": "method",
+          "conditions": [],
+          "geneticContext": {
+            "measurement": "BP regulation"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:5",
+          "quote": "Genome-wide association study (GWAS) has helped in identifying many Novel loci involved in BP regulation and lengthen our knowledge of genetic regulation of BP such as molecular pathway involved in ACE, voltage-dependent calcium channel, adrenergic 2 receptor, etcetera.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "5b0af926-2510-4ea9-999b-5624fcf1ce39",
+          "text": "Evalúe que NEDD4L y ADD1 regulan la homeostasis del sodio en el túbulo renal.",
+          "basis": "primary",
+          "actionType": "mechanism",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "NEDD4 L gene",
+            "measurement": "sodium balance in the renal tubule",
+            "effect": "regulate homeostasis of sodium balance"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:5",
+          "quote": "The NEDD4 L gene and ADD1 gene regulate homeostasis of sodium balance in the renal tubule.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "2ac12957-36c9-4cd4-91e7-25ddc812bdcd",
+          "text": "Considere que la sobreexpresión de AGT o ACE se correlaciona con más angiotensinógeno y vasoconstricción.",
+          "basis": "primary",
+          "actionType": "mechanism",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "AGT gene",
+            "perturbation": "Overexpression",
+            "measurement": "circulating angiotensinogen and vasoconstriction",
+            "effect": "correlates with an increase in circulating angiotensinogen and vasoconstriction"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:5",
+          "quote": "Overexpression of the AGT gene or ACE gene correlates with an increase in circulating angiotensinogen and vasoconstriction.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "2fca345c-ae8f-4b68-b3d4-82561b78da84",
+          "text": "Evalúe que la variante ADRB1 con regulación negativa del receptor beta1 aumenta el riesgo de hipertensión.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "ADRB1 gene variant",
+            "perturbation": "Downregulation of the β 1 receptor",
+            "measurement": "risk of hypertension",
+            "effect": "increases the risk of hypertension"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:5",
+          "quote": "Downregulation of the β 1 receptor by the ADRB1 gene variant increases the risk of hypertension, while GKR4 gene variation leads to therapeutic failure.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "9d6cfad2-7b5f-4d82-9964-cf11cae335a5",
+          "text": "Considere que la farmacogenética de hipertensión genera resultados conflictivos e inconsistentes, lo que impide un ranking universal.",
+          "basis": "primary",
+          "actionType": "limitation",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:5",
+          "quote": "hypertension pharmacogenetics often generates conflicting and inconsistent results with regard to genetic polymorphisms, BP response, and use of antihypertensive drugs.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        }
+      ]
+    },
+    {
+      "ms": 39844,
+      "type": "stage_progress",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "extract",
+      "detail": "pubmed:34414909: ok, 4 claim(s)"
+    },
+    {
+      "ms": 39844,
+      "type": "band_ready",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "payload": {
+        "claims": [
+          {
+            "id": "84c5b11f-253a-48e1-8fcc-8a78d01c1108",
+            "text": "Considere que el metaanálisis identificó 5 loci significativos y 1 casi significativo, con la señal más fuerte en WNT2B en 1p13.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {},
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36802911",
+            "passageId": "pubmed:36802911:8",
+            "quote": "We identified 5 genome-wide association loci in the GWAS meta-analysis and 1 nearly genome-wide significant locus, which presented a significant association in the gene-based test.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "84c5b11f-253a-48e1-8fcc-8a78d01c1108",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "9f9559a7-1ef6-4aa6-b811-363dbf54d960",
+            "text": "Considere que RBM6, HLA-DRB5, UHRF1BP1, LYZ y TMEM116 se reportan asociados a hipertensión y a autoinmunidad.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116",
+              "effect": "associated with autoimmune system"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "five of the genes ( RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116 ) were associated with autoimmune system",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "9f9559a7-1ef6-4aa6-b811-363dbf54d960",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "4ab18635-dd6b-4804-bfee-3037fac462e7",
+            "text": "Valore que 1010 genes no solapados se asociaron significativamente con hipertensión tras corrección FDR en cuatro tejidos.",
+            "basis": "primary",
+            "actionType": "measurement",
+            "conditions": [
+              {
+                "variable": "PFDR",
+                "op": "<",
+                "value": 0.05
+              }
+            ],
+            "geneticContext": {
+              "gene": "1010 non-overlapping genes",
+              "model": "left heart ventricle, aorta, whole blood, and peripheral blood",
+              "measurement": "genes expression",
+              "effect": "significantly associated with hypertension"
+            },
+            "subQuestionIndex": 3,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "1010 non-overlapping genes expression were significantly associated with hypertension after FDR correction (PFDR <0.05) in four tissues (left heart ventricle, aorta, whole blood, and peripheral blood)",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "4ab18635-dd6b-4804-bfee-3037fac462e7",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "621bbe84-f3e8-4ecc-ae3c-6a8c3e18f5e7",
+            "text": "Considere que se identificaron 15 genes nuevos de susceptibilidad a hipertensión en todos los tejidos.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "15 novel hypertension-susceptible genes",
+              "measurement": "identified in all tissues",
+              "effect": "novel hypertension-susceptible genes"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "Moreover, 15 novel hypertension-susceptible genes were identified in all tissues",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "621bbe84-f3e8-4ecc-ae3c-6a8c3e18f5e7",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "8be35b17-caa9-4f6c-9abb-c638ab5b3646",
+            "text": "Considere que el TWAS usó pesos de expresión de ventrículo izquierdo, aorta y sangre.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "geneticContext": {
+              "model": "left heart ventricle, aorta, whole blood, and peripheral blood"
+            },
+            "subQuestionIndex": 1,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:1",
+            "quote": "we used the gene expression weights for the left heart ventricle, aorta, whole blood, and peripheral blood as references",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "8be35b17-caa9-4f6c-9abb-c638ab5b3646",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "a3480f5e-1140-4022-b648-ea9694e2aabc",
+            "text": "Tenga en cuenta que la mayoría de SNPs de GWAS están en regiones intergénicas sin función clara.",
+            "basis": "background",
+            "actionType": "limitation",
+            "conditions": [],
+            "subQuestionIndex": 4,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "the most associated single nucleotide polymorphism (SNP) markers of GWAS are not located in or near genes but rather in intergenic regions",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "a3480f5e-1140-4022-b648-ea9694e2aabc",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "863342af-8746-460b-8f43-60f19a88210d",
+            "text": "Considere 15 genes susceptibles a hipertensión identificados por TWAS en cuatro tejidos, incluidos GFPT1, RBM6 y ZNF589.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:2",
+            "quote": "Finally, 15 novel hypertension-susceptible genes were identified by TWAS in all tissues, and they were Glutamine-Fructose-6-Phosphate Transaminase 1 (GFPT1), RNA-binding motif protein 6 (RBM6), Zinc Finger Protein 589 (ZNF589),",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "863342af-8746-460b-8f43-60f19a88210d",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "c44d7f13-7efc-41cf-aec8-15a0eb4705b1",
+            "text": "Considere que cinco genes TWAS de hipertensión (RBM6, HLA-DRB5, UHRF1BP1, LYZ y TMEM116) se asocian con autoinmunidad.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:2",
+            "quote": "Five TWAS-identified genes ( RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116 ) were identified to associate with autoimmunity by the combined search, which is shown in Table 2 .",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "c44d7f13-7efc-41cf-aec8-15a0eb4705b1",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "01d105ba-5644-406b-9001-f13b5fb390fe",
+            "text": "Considere valores P_FDR significativos para TNNT3 en cuatro tejidos, hasta 2.21E-12 en sangre total.",
+            "basis": "primary",
+            "actionType": "measurement",
+            "conditions": [
+              {
+                "variable": "P_FDR_left_ventricle_TNNT3",
+                "op": "=",
+                "value": "2.18E-09"
+              },
+              {
+                "variable": "P_FDR_whole_blood_TNNT3",
+                "op": "=",
+                "value": "2.21E-12"
+              }
+            ],
+            "subQuestionIndex": 3,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:3",
+            "quote": "TNNT3 11 rs4980379 2.18E-09 2.95E-06 2.21E-12 2.40E-07 NR",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "01d105ba-5644-406b-9001-f13b5fb390fe",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "d58331be-9d8d-4338-918e-e6e3dae3e4ff",
+            "text": "Considere que estudios GWAS ayudaron a identificar nuevos loci de regulación de presión arterial como ACE y canales de calcio.",
+            "basis": "background",
+            "actionType": "method",
+            "conditions": [],
+            "geneticContext": {
+              "measurement": "BP regulation"
+            },
+            "subQuestionIndex": 1,
+            "sourceId": "pubmed:34414909",
+            "passageId": "pubmed:34414909:5",
+            "quote": "Genome-wide association study (GWAS) has helped in identifying many Novel loci involved in BP regulation and lengthen our knowledge of genetic regulation of BP such as molecular pathway involved in ACE, voltage-dependent calcium channel, adrenergic 2 receptor, etcetera.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "d58331be-9d8d-4338-918e-e6e3dae3e4ff",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "5b0af926-2510-4ea9-999b-5624fcf1ce39",
+            "text": "Evalúe que NEDD4L y ADD1 regulan la homeostasis del sodio en el túbulo renal.",
+            "basis": "primary",
+            "actionType": "mechanism",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "NEDD4 L gene",
+              "measurement": "sodium balance in the renal tubule",
+              "effect": "regulate homeostasis of sodium balance"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:34414909",
+            "passageId": "pubmed:34414909:5",
+            "quote": "The NEDD4 L gene and ADD1 gene regulate homeostasis of sodium balance in the renal tubule.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "5b0af926-2510-4ea9-999b-5624fcf1ce39",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "2ac12957-36c9-4cd4-91e7-25ddc812bdcd",
+            "text": "Considere que la sobreexpresión de AGT o ACE se correlaciona con más angiotensinógeno y vasoconstricción.",
+            "basis": "primary",
+            "actionType": "mechanism",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "AGT gene",
+              "perturbation": "Overexpression",
+              "measurement": "circulating angiotensinogen and vasoconstriction",
+              "effect": "correlates with an increase in circulating angiotensinogen and vasoconstriction"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:34414909",
+            "passageId": "pubmed:34414909:5",
+            "quote": "Overexpression of the AGT gene or ACE gene correlates with an increase in circulating angiotensinogen and vasoconstriction.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "2ac12957-36c9-4cd4-91e7-25ddc812bdcd",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "2fca345c-ae8f-4b68-b3d4-82561b78da84",
+            "text": "Evalúe que la variante ADRB1 con regulación negativa del receptor beta1 aumenta el riesgo de hipertensión.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "ADRB1 gene variant",
+              "perturbation": "Downregulation of the β 1 receptor",
+              "measurement": "risk of hypertension",
+              "effect": "increases the risk of hypertension"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:34414909",
+            "passageId": "pubmed:34414909:5",
+            "quote": "Downregulation of the β 1 receptor by the ADRB1 gene variant increases the risk of hypertension, while GKR4 gene variation leads to therapeutic failure.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "2fca345c-ae8f-4b68-b3d4-82561b78da84",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ms": 39844,
+      "type": "source_reviewed",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "sourceId": "pubmed:34414909",
+      "acceptedClaimIds": [
+        "d58331be-9d8d-4338-918e-e6e3dae3e4ff",
+        "5b0af926-2510-4ea9-999b-5624fcf1ce39",
+        "2ac12957-36c9-4cd4-91e7-25ddc812bdcd",
+        "2fca345c-ae8f-4b68-b3d4-82561b78da84"
+      ],
+      "withdrawnCount": 1,
+      "reason": "source support could not be confirmed"
+    },
+    {
+      "ms": 40799,
+      "type": "stage_progress",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "stage": "extract",
+      "detail": "partial (33764ms)"
+    },
+    {
+      "ms": 40801,
+      "type": "band_ready",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "payload": {
+        "claims": [
+          {
+            "id": "84c5b11f-253a-48e1-8fcc-8a78d01c1108",
+            "text": "Considere que el metaanálisis identificó 5 loci significativos y 1 casi significativo, con la señal más fuerte en WNT2B en 1p13.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "geneticContext": {},
+            "sourceId": "pubmed:36802911",
+            "passageId": "pubmed:36802911:8",
+            "quote": "We identified 5 genome-wide association loci in the GWAS meta-analysis and 1 nearly genome-wide significant locus, which presented a significant association in the gene-based test.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "84c5b11f-253a-48e1-8fcc-8a78d01c1108",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "9f9559a7-1ef6-4aa6-b811-363dbf54d960",
+            "text": "Considere que RBM6, HLA-DRB5, UHRF1BP1, LYZ y TMEM116 se reportan asociados a hipertensión y a autoinmunidad.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "geneticContext": {
+              "gene": "RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116",
+              "effect": "associated with autoimmune system"
+            },
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "five of the genes ( RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116 ) were associated with autoimmune system",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "9f9559a7-1ef6-4aa6-b811-363dbf54d960",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "4ab18635-dd6b-4804-bfee-3037fac462e7",
+            "text": "Valore que 1010 genes no solapados se asociaron significativamente con hipertensión tras corrección FDR en cuatro tejidos.",
+            "basis": "primary",
+            "actionType": "measurement",
+            "conditions": [
+              {
+                "variable": "PFDR",
+                "op": "<",
+                "value": 0.05
+              }
+            ],
+            "subQuestionIndex": 3,
+            "geneticContext": {
+              "gene": "1010 non-overlapping genes",
+              "model": "left heart ventricle, aorta, whole blood, and peripheral blood",
+              "measurement": "genes expression",
+              "effect": "significantly associated with hypertension"
+            },
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "1010 non-overlapping genes expression were significantly associated with hypertension after FDR correction (PFDR <0.05) in four tissues (left heart ventricle, aorta, whole blood, and peripheral blood)",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "4ab18635-dd6b-4804-bfee-3037fac462e7",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "621bbe84-f3e8-4ecc-ae3c-6a8c3e18f5e7",
+            "text": "Considere que se identificaron 15 genes nuevos de susceptibilidad a hipertensión en todos los tejidos.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "geneticContext": {
+              "gene": "15 novel hypertension-susceptible genes",
+              "measurement": "identified in all tissues",
+              "effect": "novel hypertension-susceptible genes"
+            },
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "Moreover, 15 novel hypertension-susceptible genes were identified in all tissues",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "621bbe84-f3e8-4ecc-ae3c-6a8c3e18f5e7",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "8be35b17-caa9-4f6c-9abb-c638ab5b3646",
+            "text": "Considere que el TWAS usó pesos de expresión de ventrículo izquierdo, aorta y sangre.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "geneticContext": {
+              "model": "left heart ventricle, aorta, whole blood, and peripheral blood"
+            },
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:1",
+            "quote": "we used the gene expression weights for the left heart ventricle, aorta, whole blood, and peripheral blood as references",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "8be35b17-caa9-4f6c-9abb-c638ab5b3646",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "a3480f5e-1140-4022-b648-ea9694e2aabc",
+            "text": "Tenga en cuenta que la mayoría de SNPs de GWAS están en regiones intergénicas sin función clara.",
+            "basis": "background",
+            "actionType": "limitation",
+            "conditions": [],
+            "subQuestionIndex": 4,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "the most associated single nucleotide polymorphism (SNP) markers of GWAS are not located in or near genes but rather in intergenic regions",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "a3480f5e-1140-4022-b648-ea9694e2aabc",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "863342af-8746-460b-8f43-60f19a88210d",
+            "text": "Considere 15 genes susceptibles a hipertensión identificados por TWAS en cuatro tejidos, incluidos GFPT1, RBM6 y ZNF589.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:2",
+            "quote": "Finally, 15 novel hypertension-susceptible genes were identified by TWAS in all tissues, and they were Glutamine-Fructose-6-Phosphate Transaminase 1 (GFPT1), RNA-binding motif protein 6 (RBM6), Zinc Finger Protein 589 (ZNF589),",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "863342af-8746-460b-8f43-60f19a88210d",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "c44d7f13-7efc-41cf-aec8-15a0eb4705b1",
+            "text": "Considere que cinco genes TWAS de hipertensión (RBM6, HLA-DRB5, UHRF1BP1, LYZ y TMEM116) se asocian con autoinmunidad.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:2",
+            "quote": "Five TWAS-identified genes ( RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116 ) were identified to associate with autoimmunity by the combined search, which is shown in Table 2 .",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "c44d7f13-7efc-41cf-aec8-15a0eb4705b1",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "01d105ba-5644-406b-9001-f13b5fb390fe",
+            "text": "Considere valores P_FDR significativos para TNNT3 en cuatro tejidos, hasta 2.21E-12 en sangre total.",
+            "basis": "primary",
+            "actionType": "measurement",
+            "conditions": [
+              {
+                "variable": "P_FDR_left_ventricle_TNNT3",
+                "op": "=",
+                "value": "2.18E-09"
+              },
+              {
+                "variable": "P_FDR_whole_blood_TNNT3",
+                "op": "=",
+                "value": "2.21E-12"
+              }
+            ],
+            "subQuestionIndex": 3,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:3",
+            "quote": "TNNT3 11 rs4980379 2.18E-09 2.95E-06 2.21E-12 2.40E-07 NR",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "01d105ba-5644-406b-9001-f13b5fb390fe",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "d58331be-9d8d-4338-918e-e6e3dae3e4ff",
+            "text": "Considere que estudios GWAS ayudaron a identificar nuevos loci de regulación de presión arterial como ACE y canales de calcio.",
+            "basis": "background",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "geneticContext": {
+              "measurement": "BP regulation"
+            },
+            "sourceId": "pubmed:34414909",
+            "passageId": "pubmed:34414909:5",
+            "quote": "Genome-wide association study (GWAS) has helped in identifying many Novel loci involved in BP regulation and lengthen our knowledge of genetic regulation of BP such as molecular pathway involved in ACE, voltage-dependent calcium channel, adrenergic 2 receptor, etcetera.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "d58331be-9d8d-4338-918e-e6e3dae3e4ff",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "5b0af926-2510-4ea9-999b-5624fcf1ce39",
+            "text": "Evalúe que NEDD4L y ADD1 regulan la homeostasis del sodio en el túbulo renal.",
+            "basis": "primary",
+            "actionType": "mechanism",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "geneticContext": {
+              "gene": "NEDD4 L gene",
+              "measurement": "sodium balance in the renal tubule",
+              "effect": "regulate homeostasis of sodium balance"
+            },
+            "sourceId": "pubmed:34414909",
+            "passageId": "pubmed:34414909:5",
+            "quote": "The NEDD4 L gene and ADD1 gene regulate homeostasis of sodium balance in the renal tubule.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "5b0af926-2510-4ea9-999b-5624fcf1ce39",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "2ac12957-36c9-4cd4-91e7-25ddc812bdcd",
+            "text": "Considere que la sobreexpresión de AGT o ACE se correlaciona con más angiotensinógeno y vasoconstricción.",
+            "basis": "primary",
+            "actionType": "mechanism",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "geneticContext": {
+              "gene": "AGT gene",
+              "perturbation": "Overexpression",
+              "measurement": "circulating angiotensinogen and vasoconstriction",
+              "effect": "correlates with an increase in circulating angiotensinogen and vasoconstriction"
+            },
+            "sourceId": "pubmed:34414909",
+            "passageId": "pubmed:34414909:5",
+            "quote": "Overexpression of the AGT gene or ACE gene correlates with an increase in circulating angiotensinogen and vasoconstriction.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "2ac12957-36c9-4cd4-91e7-25ddc812bdcd",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "2fca345c-ae8f-4b68-b3d4-82561b78da84",
+            "text": "Evalúe que la variante ADRB1 con regulación negativa del receptor beta1 aumenta el riesgo de hipertensión.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "geneticContext": {
+              "gene": "ADRB1 gene variant",
+              "perturbation": "Downregulation of the β 1 receptor",
+              "measurement": "risk of hypertension",
+              "effect": "increases the risk of hypertension"
+            },
+            "sourceId": "pubmed:34414909",
+            "passageId": "pubmed:34414909:5",
+            "quote": "Downregulation of the β 1 receptor by the ADRB1 gene variant increases the risk of hypertension, while GKR4 gene variation leads to therapeutic failure.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "2fca345c-ae8f-4b68-b3d4-82561b78da84",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          }
+        ],
+        "sourceScores": {
+          "pubmed:36438602": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.9285714285714286,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.14857142857142858
+          },
+          "pubmed:36802911": {
+            "relevance": 1,
+            "level": 1,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.8
+          },
+          "pubmed:34414909": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.8571428571428572,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.13714285714285718
+          },
+          "europe_pmc:MED:42919376": {
+            "relevance": 1,
+            "level": 0.85,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.68
+          },
+          "pubmed:33777100": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.8571428571428572,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.13714285714285718
+          },
+          "pubmed:28682143": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.6428571428571428,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.10285714285714286
+          },
+          "pubmed:40726397": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:29650769": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.6428571428571428,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.10285714285714286
+          },
+          "pubmed:35061109": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.9285714285714286,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.14857142857142858
+          },
+          "europe_pmc:MED:42527560": {
+            "relevance": 1,
+            "level": 1,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.8
+          },
+          "pubmed:39604029": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42792799": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:34166551": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.8571428571428572,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.13714285714285718
+          },
+          "europe_pmc:MED:41898884": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:25511780": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.5,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.08000000000000002
+          },
+          "europe_pmc:MED:42596011": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42893988": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42411037": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42454014": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:31044621": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.7142857142857143,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.11428571428571431
+          },
+          "europe_pmc:MED:42230780": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42707253": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42432750": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:41627341": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:29973135": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.6428571428571428,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.10285714285714286
+          },
+          "pubmed:33390048": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.8571428571428572,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.13714285714285718
+          },
+          "europe_pmc:PPR:PPR1265072": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:39286647": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42020658": {
+            "relevance": 1,
+            "level": 1,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.8
+          },
+          "europe_pmc:MED:42749890": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          }
+        }
+      }
+    },
+    {
+      "ms": 40801,
+      "type": "receipt_ready",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "receipt": {
+        "claimsTotal": 38,
+        "citationsExist": 13,
+        "quotesFound": 13,
+        "retracted": 0,
+        "supported": 13,
+        "partial": 0,
+        "dropReasons": {
+          "number": 7,
+          "support": 18
+        },
+        "abstained": 1,
+        "sourcesByKind": {
+          "other": 26,
+          "meta_analysis": 3,
+          "systematic_review": 1
+        },
+        "oldestSourceYear": 2015,
+        "generatedAt": "2026-10-31T21:58:57.029Z"
+      }
+    },
+    {
+      "ms": 40978,
+      "type": "done",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "status": "partial"
+    },
+    {
+      "ms": 44895,
+      "type": "relations_ready",
+      "runId": "a043d26e-e3e1-4293-8ac8-1d7166b0313e",
+      "questions": [
+        "¿Qué genes se reportan como asociados con hipertensión primaria en estudios genéticos?",
+        "¿Qué tipo de evidencia apoya cada asociación gen-hipertensión primaria reportada?",
+        "¿En qué poblaciones, muestras o diseños de estudio se observó cada asociación?",
+        "¿Qué medidas de efecto o significación se informan para cada asociación genética?",
+        "¿Qué limitaciones metodológicas dificultan establecer un ranking universal de los cinco genes más asociados?"
+      ],
+      "relations": [
+        {
+          "from": "84c5b11f-253a-48e1-8fcc-8a78d01c1108",
+          "to": "621bbe84-f3e8-4ecc-ae3c-6a8c3e18f5e7",
+          "kind": "differs",
+          "evidence": "Quote A reports 5 loci plus 1 nearly significant locus while Quote B reports 15 novel genes identified in all tissues.",
+          "contextAssessment": {
+            "status": "review_needed",
+            "matching": [],
+            "different": [],
+            "missing": [
+              "gene",
+              "organism",
+              "model",
+              "perturbation",
+              "measurement"
+            ]
+          }
+        },
+        {
+          "from": "84c5b11f-253a-48e1-8fcc-8a78d01c1108",
+          "to": "863342af-8746-460b-8f43-60f19a88210d",
+          "kind": "differs",
+          "evidence": "Quote A reports 5 loci plus 1 nearly significant locus while Quote B reports 15 novel genes by TWAS including GFPT1, RBM6 and ZNF589.",
+          "contextAssessment": {
+            "status": "review_needed",
+            "matching": [],
+            "different": [],
+            "missing": [
+              "gene",
+              "organism",
+              "model",
+              "perturbation",
+              "measurement"
+            ]
+          }
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

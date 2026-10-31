@@ -1,4 +1,4 @@
-import { isComparisonRequest } from '@/lib/research-intent';
+import { isComparisonRequest, isGeneticsEvidenceRequest } from '@/lib/research-intent';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { runAgent, type AgentTraceEvent } from '@/shared/agents';
@@ -79,7 +79,14 @@ export async function createRun(request: CreateRunRequest, deps: CreateRunDeps):
 
   const runId = randomUUID();
 
-  const routerResult = await runAgent({
+  const simpleGeneQuestion = /^(?:what is|what does|qu[eé] es|qu[eé] hace)\s+(?:(?:the )?gene?\s+)?[A-Z][A-Z0-9-]{1,12}\s*\??$/.test(parsed.freeText.trim());
+  const explicitComparison = isComparisonRequest(parsed.freeText);
+  const explicitGeneticsEvidence = isGeneticsEvidenceRequest(parsed.freeText);
+  const routerResult = simpleGeneQuestion || explicitComparison || explicitGeneticsEvidence
+    ? { ok: true as const, value: explicitComparison
+      ? { ...fallbackRouterOutput(parsed.freeText), intent: 'comparison' as const, confidence: 'high' as const }
+      : { intent: 'fact_lookup' as const, confidence: 'high' as const } }
+    : await runAgent({
     name: 'router',
     promptVersion: 'P1@0.3',
     tier: 'T0',

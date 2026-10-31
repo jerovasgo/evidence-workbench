@@ -15,4 +15,4 @@ export * from './pipeline/build-receipt';
 export * from './server/runtime';
 export * from './server/pending-run-context';
 
-export { synthesizeEvidenceOverview } from './agents/evidence-overview';
+export { synthesizeEvidenceOverview, synthesizeRetrievedOverview } from './agents/evidence-overview';

@@ -1,3 +1,4 @@
+import { prioritizeSections, selectDeepReadingPassages, type SectionAudit } from '../passages/prioritize-sections';
 import type { AgentTraceEvent } from '@/shared/agents';
 import type { Claim } from '@/shared/domain';
 import type { MetaClient } from '@/shared/meta';
@@ -22,7 +23,7 @@ import { buildVerificationReport } from './verification-report';
 // varies and a single claim's judge call must never be the slow path.
 const MAX_JUDGE_CONCURRENCY = 4;
 const MAX_EXTRACT_CONCURRENCY = 2;
-const MAX_PASSAGES_PER_EXTRACTION = 4;
+const MAX_PASSAGES_PER_EXTRACTION = 2;
 
 export function batchPassagesForExtraction<T extends { text: string }>(passages: T[]): T[][] {
   const batches: T[][] = [];
@@ -64,6 +65,8 @@ export interface ExtractAndVerifySourceInput {
   doi?: string;
   /** PubMed publication types, if this source came from the PubMed family (module 02). */
   pubTypes?: string[];
+  /** Coordinated with pool concurrency so extraction reservations stay bounded. */
+  extractionBatchConcurrency?: number;
 }
 
 export interface ExtractAndVerifySourceDeps {
@@ -76,6 +79,7 @@ export interface ExtractAndVerifySourceDeps {
   /** Located, deterministic-check-passing claims; source and support checks remain pending. */
   onProvisionalClaims?: (claims: Claim[]) => void;
   onTrace?: (event: AgentTraceEvent) => void;
+  onSectionAudit?: (sourceId: string, audit: SectionAudit[]) => Promise<void>;
 }
 
 export type ExtractAndVerifySourceResult =
@@ -105,12 +109,31 @@ export async function extractAndVerifySource(
     },
     { crossref: deps.crossref },
   );
-  const batches = batchPassagesForExtraction(passages);
-  const extractionResults = await mapWithConcurrency(batches, MAX_EXTRACT_CONCURRENCY, (batch) => extractClaims(
+  const selected = prioritizeSections(passages, input.subQuestions.join(' '));
+  const audit = selected.map((entry) => entry.audit);
+  const deepReading = selectDeepReadingPassages(selected);
+  const deepReadingIds = new Set(deepReading.map((entry) => entry.passage.id));
+  for (const entry of audit) {
+    if (!deepReadingIds.has(entry.passageId)) {
+      entry.status = 'unreviewed';
+      entry.reason = 'Deferred after section-balanced deep-reading selection';
+    }
+  }
+  await deps.onSectionAudit?.(input.sourceId, audit);
+  const batches = batchPassagesForExtraction(deepReading.map((entry) => entry.passage));
+  const extractionResults = await mapWithConcurrency(batches, input.extractionBatchConcurrency ?? MAX_EXTRACT_CONCURRENCY, (batch) => extractClaims(
     input.runId,
     { sourceTitle: input.sourceTitle, passages: batch.map((p) => ({ passageId: p.id, locator: p.locator, text: p.text })), subQuestions: input.subQuestions },
     { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p5PromptTemplate: deps.p5PromptTemplate, onTrace: deps.onTrace },
   ));
+  extractionResults.forEach((result, index) => {
+    for (const passage of batches[index]!) {
+      const entry = audit.find((item) => item.passageId === passage.id)!;
+      entry.status = result.ok ? 'reviewed' : 'unreviewed';
+      entry.reason = result.ok ? 'Extraction completed; claims may still fail verification' : result.reason;
+    }
+  });
+  await deps.onSectionAudit?.(input.sourceId, audit);
   const succeeded = extractionResults.filter((result) => result.ok);
   if (succeeded.length === 0) {
     const failed = extractionResults.find((result) => !result.ok);

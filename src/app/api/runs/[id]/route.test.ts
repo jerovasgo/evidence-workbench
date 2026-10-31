@@ -53,3 +53,22 @@ describe('GET /api/runs/[id]', () => {
     expect(res.status).toBe(403);
   });
 });
+
+it('does not expose audit records for a private run', async () => {
+ const GET = await loadGetWithRepository({ createRun: vi.fn(), getRun: vi.fn(async () => privateRun), updateRunStatus: vi.fn() });
+ const res = await GET(new Request('http://localhost/api/runs/run_2?audit=1'), { params: Promise.resolve({ id: 'run_2' }) });
+ expect(res.status).toBe(403);
+});
+
+it('returns only saved audit fields for an authorized run', async () => {
+ const { getServerRuntime } = await import('@/modules/01-orchestrator');
+ vi.mocked(getServerRuntime).mockReturnValue({
+  runsRepository: { getRun: vi.fn(async () => precomputedRun) },
+  stageOutputsRepository: { getLatestPerStage: vi.fn(async () => new Map([['source_selection', { value: [{ sourceId: 's', rank: 0, reason: 'Title match', decision: 'queued' }] }]])) },
+ } as never);
+ const { GET } = await import('./route');
+ const response = await GET(new Request('http://localhost/api/runs/run_1?audit=1'), { params: Promise.resolve({ id: 'run_1' }) });
+ expect(response.status).toBe(200);
+ expect((await response.json()).audit.selection[0].sourceId).toBe('s');
+ expect(response.headers.get('Cache-Control')).toBe('no-store');
+});

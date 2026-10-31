@@ -1,10 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildSeedSearchPlan, extractSearchHints } from './seed-search-plan';
+import { buildSeedSearchPlan, detectQueryShape, extractSearchHints } from './seed-search-plan';
 
 
 
 describe('deterministic seed search', () => {
+
+  it.each([
+    ['Top genes associated with drought tolerance', 'ranking'],
+    ['Variants associated with Alzheimer disease', 'association'],
+    ['Compara HIF1A y EPAS1', 'comparison'],
+    ['¿Qué mecanismos relacionan la autofagia con el envejecimiento muscular?', 'mechanism'],
+    ['Recent studies about CRISPR delivery', 'recency'],
+    ['What is TP53?', 'general'],
+  ] as const)('classifies query shape: %s', (question, expected) => {
+    expect(detectQueryShape(question)).toBe(expected);
+  });
 
   it('retains explicit gene-like terms and named studies without inventing either', () => {
 
@@ -28,7 +39,7 @@ describe('deterministic seed search', () => {
 
     const plan = buildSeedSearchPlan('How does horizontal gene transfer occur?');
 
-    expect(plan.queries).toHaveLength(2);
+    expect(plan.queries).toHaveLength(3);
 
     expect(plan.queries.every((query) => query.text.length > 0)).toBe(true);
 
@@ -48,7 +59,7 @@ describe('deterministic seed search', () => {
 
    expect(plan.queries[1]?.text).toBe('gene expression hypoxia');
 
-   expect(plan.queries.every((query) => !/compara|estudios/i.test(query.text))).toBe(true);
+   expect(plan.queries.every((query) => !/\bcompara\b|\bestudios\b/i.test(query.text))).toBe(true);
 
  });
 
@@ -56,4 +67,15 @@ describe('deterministic seed search', () => {
 it('preserves a specific gene constraint rather than replacing it with the broad topic', () => {
   const plan = buildSeedSearchPlan('Compara estudios de expresión génica de HIF1A bajo hipoxia');
   expect(plan.queries.every((query) => query.text.includes('HIF1A'))).toBe(true);
+});
+
+it.each([
+  '¿Cuáles son los cinco genes más asociados con hipertensión primaria?',
+  'What genes are most associated with drought tolerance in rice?',
+  'Principales variantes asociadas con enfermedad de Alzheimer',
+])('expands ranking and association questions with association and synthesis facets: %s', (question) => {
+  const plan = buildSeedSearchPlan(question);
+  expect(plan.queries).toHaveLength(4);
+  expect(plan.queries.some((query) => /GWAS/.test(query.text))).toBe(true);
+  expect(plan.queries.some((query) => /review OR "meta-analysis" OR replication/.test(query.text))).toBe(true);
 });

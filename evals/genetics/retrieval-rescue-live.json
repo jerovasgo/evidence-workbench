@@ -1,0 +1,154 @@
+[
+  {
+    "query": "What genes are most associated with drought tolerance in rice?",
+    "elapsedMs": 1137,
+    "assessment": {
+      "status": "sufficient",
+      "reason": "35 candidates passed the fast relevance screen",
+      "relevantCount": 35,
+      "candidateCount": 36,
+      "distinctFamilies": 2
+    },
+    "seedPlan": {
+      "queries": [
+        {
+          "family": "pubmed",
+          "text": "genes most associated drought tolerance in rice",
+          "purpose": "Initial literature search"
+        },
+        {
+          "family": "europe_pmc",
+          "text": "genes most associated drought tolerance in rice",
+          "purpose": "Initial open literature search"
+        },
+        {
+          "family": "pubmed",
+          "text": "(genes most associated drought tolerance in rice) AND (\"genetic association\" OR GWAS OR \"genetic loci\" OR susceptibility)",
+          "purpose": "Association and replication evidence"
+        },
+        {
+          "family": "europe_pmc",
+          "text": "(genes most associated drought tolerance in rice) AND (review OR \"meta-analysis\" OR replication)",
+          "purpose": "Synthesis and replication context"
+        }
+      ]
+    },
+    "rescuePlan": null,
+    "initialCount": 36,
+    "rescuedCount": 0,
+    "finalAssessment": {
+      "status": "sufficient",
+      "reason": "35 candidates passed the fast relevance screen",
+      "relevantCount": 35,
+      "candidateCount": 36,
+      "distinctFamilies": 2
+    },
+    "topTitles": [
+      "Genetic analysis for detection of genes associated to drought tolerance in rice accessions belonging to north east India.",
+      "An Integrated Meta-QTL and Transcriptome Analysis Provides Candidate Genes Associated with Drought Tolerance in Rice Seedlings.",
+      "Identification and characterization of genes for drought tolerance in upland rice cultivar 'Banglami' of North East India.",
+      "Genome-Wide Association Study Reveals Candidate Genes for Root-Related Traits in Rice.",
+      "&lt;i&gt;OsMOCSalt&lt;/i&gt; as a candidate salt tolerance gene in rice (&lt;i&gt;Oryza sativa&lt;/i&gt;) identified through meta-analysis, overview analysis and collinearity analysis."
+    ]
+  },
+  {
+    "query": "¿Qué mecanismos relacionan la autofagia con el envejecimiento muscular?",
+    "elapsedMs": 5062,
+    "assessment": {
+      "status": "empty",
+      "reason": "No candidates returned by the initial search",
+      "relevantCount": 0,
+      "candidateCount": 0,
+      "distinctFamilies": 0
+    },
+    "seedPlan": {
+      "queries": [
+        {
+          "family": "pubmed",
+          "text": "Qu mecanismos relacionan autofagia envejecimiento muscular",
+          "purpose": "Initial literature search"
+        },
+        {
+          "family": "europe_pmc",
+          "text": "Qu mecanismos relacionan autofagia envejecimiento muscular",
+          "purpose": "Initial open literature search"
+        }
+      ]
+    },
+    "rescuePlan": {
+      "queries": [
+        {
+          "family": "pubmed",
+          "text": "autophagy sarcopenia skeletal muscle aging mechanisms review",
+          "filters": {
+            "publication_type": "review"
+          },
+          "purpose": "map general mechanisms linking autophagy to skeletal muscle aging and sarcopenia"
+        },
+        {
+          "family": "pubmed",
+          "text": "mitophagy mitochondrial quality control aged skeletal muscle",
+          "filters": {
+            "publication_type": "review"
+          },
+          "purpose": "cover selective mitophagy and mitochondrial quality control in aged muscle"
+        },
+        {
+          "family": "europe_pmc",
+          "text": "autophagy flux skeletal muscle aging muscle atrophy mouse model",
+          "filters": {
+            "publication_type": "research-article"
+          },
+          "purpose": "find primary functional evidence on autophagy flux and muscle mass maintenance with aging"
+        },
+        {
+          "family": "europe_pmc",
+          "text": "mTOR AMPK FoxO autophagy regulation skeletal muscle aging",
+          "filters": {
+            "publication_type": "research-article"
+          },
+          "purpose": "cover autophagy regulators mTOR AMPK FoxO in aging muscle"
+        },
+        {
+          "family": "europe_pmc",
+          "text": "autophagy activation inhibition sarcopenia divergent effects aged muscle",
+          "filters": {
+            "publication_type": "research-article"
+          },
+          "purpose": "identify discrepant or context-dependent effects of autophagy activation versus impairment in muscle aging"
+        },
+        {
+          "family": "web",
+          "text": "autophagy proteostasis inflammaging satellite cells skeletal muscle aging",
+          "purpose": "seek synthesis on proteostasis inflammation and satellite cell links to autophagy in muscle aging"
+        },
+        {
+          "family": "local",
+          "text": "autofagia envejecimiento muscular sarcopenia mitofagia",
+          "purpose": "check local pool for muscle aging and autophagy documents"
+        },
+        {
+          "family": "web",
+          "text": "autophagy skeletal muscle aging sarcopenia recent review 2023 2024 2025",
+          "purpose": "currency check for recent reviews on autophagy and muscle aging"
+        }
+      ]
+    },
+    "initialCount": 0,
+    "rescuedCount": 69,
+    "finalAssessment": {
+      "status": "sufficient",
+      "reason": "15 candidates passed the fast relevance screen",
+      "relevantCount": 15,
+      "candidateCount": 69,
+      "distinctFamilies": 2
+    },
+    "topTitles": [
+      "Targeting ubiquitin-dependent mitochondrial autophagy and apoptosis in sarcopenia: the therapeutic potential of phytochemicals.",
+      "Sarcopenia - Molecular mechanisms and open questions.",
+      "Defective mitochondrial quality control in the aging of skeletal muscle.",
+      "Protein arginine methyltransferases coordinate mitochondrial stress adaptation and neuromuscular function.",
+      "Deubiquitinating Enzymes Regulate Skeletal Muscle Mitochondrial Quality Control and Insulin Sensitivity in Patients With Type 2 Diabetes."
+    ]
+  }
+]

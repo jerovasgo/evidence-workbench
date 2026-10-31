@@ -126,7 +126,7 @@ export function createEuropePmcClient(options: CreateEuropePmcClientOptions = {}
     }
   }
 
-  async function fetchAbstract(source: string, id: string): Promise<string | null> {
+  async function fetchAbstractUncached(source: string, id: string): Promise<string | null> {
     const params = new URLSearchParams({ query: `EXT_ID:${id} AND SRC:${source}`, format: 'json', resultType: 'core', pageSize: '1' });
     const res = await fetchImpl(`${EUROPE_PMC_BASE}/search?${params}`);
     if (!res.ok) return null;
@@ -137,5 +137,15 @@ export function createEuropePmcClient(options: CreateEuropePmcClientOptions = {}
     return text ? `Abstract\n\n${text}` : null;
   }
 
+  const abstractCache = new Map<string, { expires: number; value: Promise<string | null> }>();
+  function fetchAbstract(source: string, id: string): Promise<string | null> {
+    const key = `${source}:${id}`;
+    const cached = abstractCache.get(key);
+    if (cached && cached.expires > Date.now()) return cached.value;
+    if (abstractCache.size >= 100) abstractCache.delete(abstractCache.keys().next().value!);
+    const value = fetchAbstractUncached(source, id).catch((error) => { abstractCache.delete(key); throw error; });
+    abstractCache.set(key, { expires: Date.now() + 60_000, value });
+    return value;
+  }
   return { search, fetchFullText, fetchAbstract };
 }

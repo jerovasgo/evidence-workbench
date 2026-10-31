@@ -1,3 +1,4 @@
+import { buildReviewAudit } from '@/lib/review-audit';
 import { NextResponse } from 'next/server';
 import { getRunForViewer, getServerRuntime } from '@/modules/01-orchestrator';
 
@@ -19,6 +20,14 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     case 'forbidden':
       return NextResponse.json({ error: 'Not authorized to view this run' }, { status: 403 });
     case 'found':
+      if (new URL(_request.url).searchParams.get('audit') === '1') {
+        try {
+          const stages = await runtime.stageOutputsRepository.getLatestPerStage(id);
+          return NextResponse.json({ audit: buildReviewAudit(stages) }, { headers: { 'Cache-Control': 'no-store' } });
+        } catch {
+          return NextResponse.json({ error: 'Review audit unavailable' }, { status: 503 });
+        }
+      }
       return NextResponse.json({ run: outcome.run }, { status: 200 });
   }
 }

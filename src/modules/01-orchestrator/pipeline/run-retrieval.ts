@@ -11,6 +11,8 @@ import {
   SearchPlanSchema,
   SourceClassificationSchema,
   buildSeedSearchPlan,
+  assessRetrievalSufficiency,
+  prioritizeSources,
   classifyCandidateMetadata,
   deduplicateCandidates,
   executeSearchPlan,
@@ -176,6 +178,21 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
     perQueryTimeoutMs: deps.perQueryTimeoutMs,
   }) : null;
 
+  // Publish the existing search results independently of scenario structuring.
+  // No second retrieval: the same promise is joined and persisted below.
+  let earlySourcesPublished = false;
+  const earlySources = searchPromise?.then((result) => {
+    const initial = deduplicateCandidates(result.candidates);
+    const assessment = assessRetrievalSufficiency(input.freeText, initial);
+    const sources = prioritizeSources(input.freeText, initial).map((entry) => entry.source);
+    // Do not publish a fast overview from a clearly off-topic first pass. Thin but
+    // relevant evidence remains useful while semantic rescue runs in parallel.
+    if (sources.length && assessment.status !== 'off_topic') {
+      earlySourcesPublished = true;
+      deps.onStageEvent?.({ type: 'sources_retrieved', sources });
+    }
+  }).catch(() => undefined);
+
   // --- structure (P2) ---
   let structure = resumeStage('structure', ScenarioStructureSchema, latest);
   const structureResumed = structure !== null;
@@ -224,9 +241,12 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
     } else {
       let executed = await searchPromise;
       let expanded = false;
-      if (executed.candidates.length === 0) {
-        // Only an empty first pass pays for an agent-planned expansion. Its query
-        // output is still executed through the same bounded, allow-listed tools.
+      const initialCandidates = deduplicateCandidates(executed.candidates);
+      const initialAssessment = assessRetrievalSufficiency(input.freeText, initialCandidates);
+      if (initialAssessment.status !== 'sufficient') {
+        // Empty, off-topic or thin complex searches pay once for a semantic rescue.
+        // The planner can translate terminology and vary evidence facets, but the
+        // resulting queries still run through the same bounded allow-listed tools.
         const expansion = await planSearch(
           input.runId,
           { condition: input.freeText || input.routerCondition || 'scientific evidence', subQuestions: structure.value?.subQuestions, setting: structure.value?.context },
@@ -241,11 +261,31 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
             perQueryTimeoutMs: deps.perQueryTimeoutMs,
             webSearch: { runId: input.runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES },
           });
-          executed = { candidates: next.candidates, skipped: [...executed.skipped, ...next.skipped], failed: [...executed.failed, ...next.failed] };
+          executed = { candidates: [...executed.candidates, ...next.candidates], skipped: [...executed.skipped, ...next.skipped], failed: [...executed.failed, ...next.failed] };
+          await Promise.resolve(deps.stageOutputs?.insert({
+            runId: input.runId,
+            stage: 'retrieval_rescue',
+            status: next.candidates.length ? 'ok' : 'partial',
+            value: {
+              trigger: initialAssessment,
+              initialQueries: plan.value?.queries.map(({ family, text, purpose }) => ({ family, text, purpose })) ?? [],
+              rescueQueries: expansion.value.queries.map(({ family, text, purpose }) => ({ family, text, purpose })),
+              rescuedCandidates: next.candidates.length,
+            },
+            reasons: next.candidates.length ? undefined : ['Semantic rescue returned no additional candidates'],
+            metrics: { ms: 0, costUsd: expansion.usage.costUsd, counts: { initial: initialCandidates.length, rescued: next.candidates.length } },
+          })).catch(() => console.warn(JSON.stringify({ type: 'audit_persistence_failed', runId: input.runId })));
+        } else {
+          await Promise.resolve(deps.stageOutputs?.insert({
+            runId: input.runId, stage: 'retrieval_rescue', status: 'failed', value: { trigger: initialAssessment },
+            reasons: [expansion.detail], metrics: { ms: 0, costUsd: 0, counts: { initial: initialCandidates.length, rescued: 0 } },
+          })).catch(() => console.warn(JSON.stringify({ type: 'audit_persistence_failed', runId: input.runId })));
         }
       }
       const retrieveMs = Date.now() - retrieveStarted;
-      const deduped = deduplicateCandidates(executed.candidates);
+      const ranked = prioritizeSources(input.freeText, deduplicateCandidates(executed.candidates));
+      const deduped = ranked.map((entry) => entry.source);
+      await Promise.resolve(deps.stageOutputs?.insert({ runId: input.runId, stage: 'source_selection', status: 'ok', value: ranked.map(({ source, score, matched, reason }, rank) => ({ sourceId: source.tempId, rank, score, matched, reason, decision: 'queued', criteriaVersion: 'title-priority@2' })), metrics: { ms: 0, costUsd: 0 } })).catch(() => console.warn(JSON.stringify({ type: 'audit_persistence_failed', runId: input.runId })));
       const hasIssues = executed.skipped.length > 0 || executed.failed.length > 0;
 
       retrieval = toStageResult(candidateArraySchema, {
@@ -268,7 +308,8 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
     await persistStage(deps.stageOutputs, input.runId, retrieval);
   }
   deps.onStageEvent?.({ type: 'stage_result', stage: 'retrieve', status: retrieval.status, metrics: retrieval.metrics, resumed: retrievalResumed });
-  if (retrieval.value?.length) deps.onStageEvent?.({ type: 'sources_retrieved', sources: retrieval.value });
+  await earlySources;
+  if ((!earlySourcesPublished || (retrieval.metrics.counts?.expanded ?? 0) > 0) && retrieval.value?.length) deps.onStageEvent?.({ type: 'sources_retrieved', sources: retrieval.value });
 
   // --- classify from explicit metadata only --- unknown design stays `other`.
   const classificationArraySchema = z.array(SourceClassificationSchema);
@@ -340,10 +381,12 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
           p5PromptTemplate: deps.p5PromptTemplate,
           p10PromptTemplate: deps.p10PromptTemplate,
           onTrace: deps.onTrace,
+          onSectionAudit: async (sourceId, audit) => { await Promise.resolve(deps.stageOutputs?.insert({ runId: input.runId, stage: `sections:${sourceId}`, status: 'ok', value: audit, metrics: { ms: 0, costUsd: 0 } })).catch(() => console.warn(JSON.stringify({ type: 'audit_persistence_failed', runId: input.runId }))); },
           onSourceDone: (sourceId, outcome) => deps.onStageEvent?.({ type: 'source_extracted', sourceId, outcome }),
           onProvisionalClaims: (sourceId, claims) => deps.onStageEvent?.({ type: 'provisional_claims', sourceId, claims }),
         },
       );
+      await Promise.resolve(deps.stageOutputs?.insert({ runId: input.runId, stage: 'source_review_status', status: 'ok', value: retrieval.value.map((source) => ({ sourceId: source.tempId, status: pool.perSource.find((entry) => entry.sourceId === source.tempId)?.outcome.status ?? 'pending', reason: pool.perSource.some((entry) => entry.sourceId === source.tempId) ? 'See extraction and section audit' : 'Not started within exploration window' })), metrics: { ms: 0, costUsd: 0 } })).catch(() => console.warn(JSON.stringify({ type: 'audit_persistence_failed', runId: input.runId })));
       const extractMs = Date.now() - extractStarted;
 
       const noFullText = pool.perSource.filter((s) => s.outcome.status === 'no_full_text').length;

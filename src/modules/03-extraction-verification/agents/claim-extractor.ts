@@ -36,11 +36,13 @@ export async function extractClaims(
   return runAgent({
     name: 'claim-extractor',
     promptVersion: 'P5@0.8',
-    tier: 'T1',
+    // Extraction proposes short, quote-bound claims. Deterministic quote/number
+    // checks and the T2 support judge remain authoritative downstream.
+    tier: 'T0',
     systemPreamble: deps.p0Preamble,
     prompt,
     outputSchema: ExtractClaimsOutputSchema,
-    limits: { maxOutputTokens: 6000, timeoutMs: 60000, maxCostUsd: 0.08 },
+    limits: { maxOutputTokens: 3000, timeoutMs: 30000, maxCostUsd: 0.04 },
     ctx: { runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, onTrace: deps.onTrace },
   });
 }

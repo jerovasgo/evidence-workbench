@@ -74,7 +74,7 @@ describe('runRetrievalPipeline', () => {
     const pubmed = fakePubmed({
       search: vi.fn().mockResolvedValue({ pmids: ['111'] }),
       fetchSummaries: vi.fn().mockResolvedValue([
-        { pmid: '111', title: 'A trial', pubTypes: ['Practice Guideline'] },
+        { pmid: '111', title: 'SN2 reaction rate in polar aprotic solvents', pubTypes: ['Practice Guideline'] },
       ]),
     });
 
@@ -110,6 +110,34 @@ describe('runRetrievalPipeline', () => {
     const result = await pending;
     expect(result.structure.status).toBe('ok');
     expect(result.plan.value?.queries.some((query) => query.text.includes('solvent'))).toBe(true);
+  });
+
+  it('rescues a thin complex search, merges both passes and persists the trigger and queries', async () => {
+    const structure = { context: 'field_study' as const, subQuestions: ['Which genes are repeatedly associated with drought tolerance?'], scopeParameters: { system: 'rice' } };
+    const rescuePlan = { queries: [{ family: 'pubmed' as const, text: 'rescue rice drought tolerance GWAS replication', purpose: 'Replicated associations' }] };
+    const respond = vi.fn()
+      .mockResolvedValueOnce(fakeRespondResult(structure))
+      .mockResolvedValueOnce(fakeRespondResult(rescuePlan));
+    const pubmed = fakePubmed({
+      search: vi.fn(async (query: string) => ({ pmids: [query.startsWith('rescue') ? '222' : '111'] })),
+      fetchSummaries: vi.fn(async (pmids: string[]) => pmids.map((pmid) => ({
+        pmid,
+        title: pmid === '222' ? 'Replicated GWAS loci for rice drought tolerance' : 'One gene association with drought tolerance in rice',
+        pubTypes: [],
+      }))),
+    });
+    const stageOutputs = fakeStageOutputsRepository();
+    const result = await runRetrievalPipeline(
+      { runId: 'run_rescue', freeText: 'What genes are most associated with drought tolerance in rice?' },
+      baseDeps({ respond, listModels: vi.fn() }, { pubmed, stageOutputs }),
+    );
+
+    expect(result.retrieval.value?.map((source) => source.pmid)).toEqual(expect.arrayContaining(['111', '222']));
+    expect(result.retrieval.metrics.counts?.expanded).toBe(1);
+    const audit = stageOutputs.inserted.find((entry) => entry.stage === 'retrieval_rescue');
+    expect(audit?.status).toBe('ok');
+    expect(audit?.value).toMatchObject({ trigger: { status: 'thin' }, rescuedCandidates: 1 });
+    expect(respond).toHaveBeenCalledTimes(2);
   });
 
   it('keeps the deterministic search plan when structure fails', async () => {
@@ -198,7 +226,7 @@ describe('runRetrievalPipeline', () => {
 
       await runRetrievalPipeline({ runId: 'run_1', freeText: 'x' }, baseDeps(metaClient, { stageOutputs }));
 
-      expect(stageOutputs.inserted.map((r) => r.stage)).toEqual(['plan', 'structure', 'retrieve', 'classify', 'extract']);
+      expect(stageOutputs.inserted.map((r) => r.stage)).toEqual(['plan', 'structure', 'retrieval_rescue', 'source_selection', 'retrieve', 'classify', 'extract']);
     });
 
     it('still completes the run when persistence itself fails', async () => {

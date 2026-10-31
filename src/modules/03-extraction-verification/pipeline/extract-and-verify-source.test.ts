@@ -42,6 +42,7 @@ describe('extractAndVerifySource', () => {
     const quote = 'Section 5 reports a second finding.';
     const respond = vi.fn()
       .mockResolvedValueOnce(fakeRespondResult({ claims: [] }))
+      .mockResolvedValueOnce(fakeRespondResult({ claims: [] }))
       .mockResolvedValueOnce(fakeRespondResult({ claims: [{ text: quote, basis: 'primary', actionType: 'finding', conditions: [], quote, passageId: 'src_1:4', safetyCritical: false }] }))
       .mockResolvedValueOnce(fakeRespondResult({ support: 'supports', issues: [], note: 'Supported.' }));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
@@ -55,7 +56,7 @@ describe('extractAndVerifySource', () => {
     if (result.status !== 'ok') throw new Error('unreachable');
     expect(result.claims).toHaveLength(1);
     expect(result.claims[0]!.quote).toBe(quote);
-    expect(respond).toHaveBeenCalledTimes(3);
+    expect(respond).toHaveBeenCalledTimes(4);
   });
   it('returns status no_text when the source has no fetchable full text', async () => {
     const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };

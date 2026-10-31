@@ -1,0 +1,19 @@
+{
+  "retrievalMs": 1739,
+  "overviewMs": 5882,
+  "text": "La hipoxia activa programas de adaptación celular cuya lectura por expresión génica orienta sobre agresividad y vulnerabilidad. Los estudios difieren: uno compara firmas génicas entre tumores para detectar hipoxia, otro muestra respuesta protectora atenuada en células respiratorias con trisomía, y otro asocia alteración hipóxica con imagen metabólica y peor evolución en cáncer hepático avanzado.",
+  "sources": [
+    {
+      "id": "39892389",
+      "title": "Defining hypoxia in cancer: A landmark evaluation of hypoxia gene expression signatures."
+    },
+    {
+      "id": "40469089",
+      "title": "Impaired airway epithelial miR-155/BACH1/NRF2 axis and hypoxia gene expression during RSV infection in children with down syndrome."
+    },
+    {
+      "id": "38520026",
+      "title": "Prognostic PET [<sup>11</sup>C]-acetate uptake is associated with hypoxia gene expression in patients with late-stage hepatocellular carcinoma - a bench to bed study."
+    }
+  ]
+}

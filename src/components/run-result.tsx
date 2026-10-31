@@ -1,10 +1,12 @@
 'use client';
 
 import { isComparisonRequest } from '@/lib/research-intent';
+import * as Tabs from '@radix-ui/react-tabs';
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import type { Claim } from '@/shared/domain';
 import { buildEvidenceMatrix } from '@/modules/07-map-matrix';
+import { ReviewAuditPanel } from '@/components/review-audit';
 import { EvidenceDrawer } from '@/components/evidence-drawer';
 import { EvidenceSkeleton } from '@/components/evidence-skeleton';
 import { EvidenceMatrix } from '@/components/evidence-matrix';
@@ -70,9 +72,14 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
   const reveal = reducedMotion ? false : { opacity: 0, y: 8 };
 
   return (
-    <div className="flex flex-col gap-5">
+    <Tabs.Root defaultValue="main" className="flex flex-col gap-5">
+      <Tabs.List aria-label="Research results" className="flex gap-4 border-b border-border pb-3">
+        <Tabs.Trigger value="main" className="text-sm text-muted data-[state=active]:text-fg focus-visible:outline focus-visible:outline-2">Main Answer</Tabs.Trigger>
+        <Tabs.Trigger value="evidence" className="text-sm text-muted data-[state=active]:text-fg focus-visible:outline focus-visible:outline-2">Evidence &amp; Sources</Tabs.Trigger>
+      </Tabs.List>
+      <Tabs.Content value="main" className="space-y-5">
       {substantiveOpening ? <motion.div key="overview" initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-        <p className="editorial-kicker">OVERVIEW · INITIAL SOURCE-SUPPORTED FINDINGS</p>
+        <p className="editorial-kicker">OVERVIEW</p>
         <p className="mt-3 max-w-2xl text-[16px] font-light leading-7 text-fg">{substantiveOpening}</p>
       </motion.div> : isStreaming && <div role="status" aria-label="Preparing overview" className="space-y-2 animate-pulse">
         <div className="h-3 w-4/5 rounded bg-border" /><div className="h-3 w-3/5 rounded bg-border" />
@@ -104,6 +111,19 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
         />
       )}
 
+      {visibleClaims && visibleClaims.length > 0 && <ul className="space-y-3" aria-label="Key findings">{visibleClaims.filter((claim) => claim.actionType !== 'method').slice(0, 3).map((claim) => <li key={claim.id}><button type="button" onClick={() => setSelectedClaim(claim)} className="text-left text-sm leading-6 underline decoration-border underline-offset-4">{claim.text}</button></li>)}</ul>}
+      {showComparison && relations.length > 0 && <p className="text-sm leading-6 text-muted">{relations[0]?.evidence}</p>}
+      <div className="flex flex-col gap-3">
+        {visibleClaims !== null && visibleClaims.length === 0 && (
+          <p className="text-sm text-muted">
+            The detailed verification did not retain a source-level claim for this run. The overview may still provide a qualified synthesis from the retrieved literature; inspect Evidence &amp; Sources to see what was reviewed and why findings were excluded.
+          </p>
+        )}
+      </div>
+
+      </Tabs.Content>
+      <Tabs.Content value="evidence" className="space-y-5">
+      <ReviewAuditPanel runId={runId} complete={!isStreaming} sources={sourceCatalog} />
       <details className="research-surface rounded-2xl p-4"><summary className="cursor-pointer text-sm">What the sources report</summary>
       <motion.div initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         {Object.keys(sourceCatalog).length > 0 || provisionalClaims.length > 0 || (visibleClaims?.length ?? 0) > 0
@@ -113,15 +133,7 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
 
       {showComparison && visibleClaims && new Set(visibleClaims.map((claim) => claim.sourceId)).size >= 2 && <EvidenceMatrix claims={visibleClaims} sourceCatalog={sourceCatalog} questions={questions} relations={relations} relationStatus={relationStatus} onOpenEvidence={setSelectedClaim} />}
 
-      <div className="flex flex-col gap-3">
-        {visibleClaims !== null && visibleClaims.length === 0 && (
-          <p className="text-sm text-muted">
-            No claims meet the current verification requirements. Older results may need a new run to check retraction status.
-          </p>
-        )}
-      </div>
-
-      <details className="rounded-[var(--radius-card)] border border-border bg-black/30 p-4 text-xs text-muted">
+      <details open className="rounded-[var(--radius-card)] border border-border bg-black/30 p-4 text-xs text-muted">
         <summary className="cursor-pointer text-sm text-fg">Sources, quotations and verification details</summary>
         {summary && <p className="mt-4">{summary}</p>}
         {Object.keys(sourceCatalog).length > 0 && <ul className="mt-4 space-y-2">{Object.values(sourceCatalog).map((source) => <li key={source.id}><a className="underline underline-offset-4" href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a>{source.year ? ` (${source.year})` : ''}</li>)}</ul>}
@@ -140,7 +152,8 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
         </footer>}
       </details>
 
+      </Tabs.Content>
       <EvidenceDrawer claim={selectedClaim} source={selectedClaim ? sourceCatalog[selectedClaim.sourceId] : undefined} sourceScore={selectedClaim ? (sourceScores?.[selectedClaim.sourceId] ?? null) : null} onClose={() => setSelectedClaim(null)} />
-    </div>
+    </Tabs.Root>
   );
 }

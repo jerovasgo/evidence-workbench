@@ -37,6 +37,18 @@ Return: {
  'mustFind': [string]|omit        // named standards/landmark studies you expect the pool to contain
 }
 Rules:
+- Reformulate concepts into standard literature terminology rather than repeating
+  the user's wording literally. Translate non-English scientific concepts when
+  the target index is primarily English, while preserving named genes, variants,
+  organisms, studies and identifiers exactly.
+- Match query families to the request shape: association/ranking questions should
+  include association, replication and synthesis queries; mechanism questions
+  should include functional/pathway evidence; comparisons should seek sources
+  that expose shared variables. A requested final ranking need not appear verbatim
+  in any one paper.
+- This planner may be invoked as a rescue after an initial search returned thin or
+  off-topic results. In that case, produce complementary reformulations rather
+  than cosmetic reorderings of the same terms.
 - When the question names studies, prioritize a separate targeted Europe PMC query for each named author and publication year, before broad searches. Preserve author and year constraints. Do not replace landmark studies with recent literature.
 - At most 12 queries total, each with a distinct 'purpose'.
 - Search for the available evidence without assuming agreement or disagreement.

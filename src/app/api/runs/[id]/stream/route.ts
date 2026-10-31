@@ -1,4 +1,4 @@
-import { synthesizeEvidenceOverview } from '@/modules/01-orchestrator';
+import { synthesizeEvidenceOverview, synthesizeRetrievedOverview } from '@/modules/01-orchestrator';
 import { isComparisonRequest } from '@/lib/research-intent';
 import { getOrCreateSessionId } from '@/lib/session-cookie';
 import {
@@ -268,12 +268,14 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         }
       }
 
+      let overviewPublished = false;
       let overviewPromise: Promise<void> | undefined;
       const startOverview = (claims: Claim[], final = false) => {
-        if (overviewPromise || !claims.length) return;
+        if (overviewPublished || overviewPromise || !claims.length) return;
         if (!final && isComparisonRequest(pending?.freeText ?? '') && new Set(claims.map((claim) => claim.sourceId)).size < 2) return;
         overviewPromise = synthesizeEvidenceOverview(run.id, pending?.freeText ?? '', claims, runtime).then(async (text) => {
           const overview = text ?? `${claims[0]!.text} ${new Set(claims.map((claim) => claim.sourceId)).size < 2 ? 'Only one study currently has verified findings; a cross-study conclusion is not supported yet.' : 'Experimental context must be considered before comparing these findings.'}`;
+          overviewPublished = true;
           send({ type: 'opening_ready', runId: run.id, text: overview });
           try { await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'overview', status: 'ok', value: overview, metrics: { ms: 0, costUsd: 0 } }); } catch { /* Live text remains available. */ }
         }).catch(() => undefined);
@@ -307,6 +309,28 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
                   JSON.stringify({ type: 'stage_latency', runId: run.id, stage: event.stage, status: event.status, ms: event.metrics.ms, resumed: event.resumed, elapsedMs: Date.now() - streamStarted }),
                 );
               } else if (event.type === 'sources_retrieved') {
+                if (!overviewPublished && !overviewPromise && runtime.europePmc.fetchAbstract) {
+                  const started = Date.now();
+                  overviewPromise = (async () => {
+                    const abstracts = await Promise.all(event.sources.slice(0, 3).map(async (source) => {
+                      const parts = source.tempId.split(':');
+                      const id = source.pmid ?? (source.family === 'europe_pmc' ? parts[2] : undefined);
+                      if (!id) return null;
+                      const timeout = AbortSignal.timeout(2500);
+                      const abstract = await Promise.race([
+                        runtime.europePmc.fetchAbstract!(source.pmid ? 'MED' : parts[1]!, id).catch(() => null),
+                        new Promise<null>((resolve) => timeout.addEventListener('abort', () => resolve(null), { once: true })),
+                      ]);
+                      return abstract ? { id: source.tempId, title: source.title, abstract: abstract.slice(0, 6000) } : null;
+                    }));
+                    const text = await synthesizeRetrievedOverview(run.id, pending?.freeText ?? '', abstracts.filter((source) => source !== null), runtime);
+                    if (!text) { overviewPromise = undefined; return; }
+                    const overview = `${text}\n\n${/[¿áéíóú]|\b(compara|qué|gen|estudios)\b/i.test(pending?.freeText ?? '') ? 'Síntesis inicial basada en resúmenes recuperados; la verificación detallada sigue en curso.' : 'Initial overview based on retrieved abstracts; detailed verification is still in progress.'}`;
+                    overviewPublished = true;
+          send({ type: 'opening_ready', runId: run.id, text: overview });
+                    await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'overview', status: 'ok', value: overview, metrics: { ms: Date.now() - started, costUsd: 0 } });
+                  })().catch(() => { overviewPromise = undefined; });
+                }
                 send({ type: 'overview_ready', runId: run.id, sources: event.sources.slice(0, 5).map(({ title, year, url }) => ({ title, year, url })) });
                 send({ type: 'source_catalog_ready', runId: run.id, sources: event.sources.map(({ tempId, title, url, doi, pmid, year }) => ({ id: tempId, status: 'candidate', title, url, doi, pmid, year })) });
                 console.log(JSON.stringify({ type: 'overview_latency', runId: run.id, elapsedMs: Date.now() - streamStarted }));
@@ -349,6 +373,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         const receipt = buildReceipt(result);
         send({ type: 'receipt_ready', runId: run.id, receipt });
 
+        startOverview(result.extraction.value ?? [], true);
         // On the critical path, before `done` — see `synthesizeAlgorithmForRun`'s own
         // comment. A no-op (returns null) for any intent other than `algorithm`.
         const algorithmResult = await synthesizeAlgorithmForRun(
@@ -362,6 +387,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
         startOverview(result.extraction.value ?? [], true);
         await overviewPromise;
+        if (!overviewPublished) { startOverview(result.extraction.value ?? [], true); await overviewPromise; }
         const finalStatus = computeFinalStatus(result);
         await runtime.runsRepository.updateRunStatus(run.id, finalStatus);
         send({ type: 'done', runId: run.id, status: finalStatus });

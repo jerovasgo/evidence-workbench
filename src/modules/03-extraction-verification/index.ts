@@ -13,3 +13,5 @@ export * from './agents/support-judge';
 export * from './pipeline/verify-claim';
 export * from './pipeline/support-context';
 export * from './pipeline/extract-and-verify-source';
+
+export type { SectionAudit } from './passages/prioritize-sections';

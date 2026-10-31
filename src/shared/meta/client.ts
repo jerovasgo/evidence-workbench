@@ -29,6 +29,8 @@ export interface RespondRequest {
   tools?: 'web_search'[];
   includeWebSearchResults?: boolean;
   maxOutputTokens?: number;
+  /** Cancels the underlying HTTP request when an agent exceeds its stage deadline. */
+  signal?: AbortSignal;
 }
 
 export interface WebSearchResult {
@@ -123,6 +125,7 @@ export function createMetaClient(config: MetaClientConfig): MetaClient {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
+      signal: request.signal,
     });
 
     const json = await res.json();

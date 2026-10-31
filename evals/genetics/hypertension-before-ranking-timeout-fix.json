@@ -1,0 +1,1859 @@
+{
+  "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+  "query": "¿Cuáles son los cinco genes más asociados con hipertensión primaria?",
+  "events": [
+    {
+      "ms": 1222,
+      "type": "stage_started",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "stage": "plan"
+    },
+    {
+      "ms": 1384,
+      "type": "stage_progress",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "stage": "plan",
+      "detail": "ok (1ms)"
+    },
+    {
+      "ms": 1385,
+      "type": "stage_started",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "stage": "retrieve"
+    },
+    {
+      "ms": 1385,
+      "type": "stage_started",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "stage": "structure"
+    },
+    {
+      "ms": 2514,
+      "type": "overview_ready",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "sources": [
+        {
+          "title": "Identifying susceptibility genes for essential hypertension by transcriptome-wide association study.",
+          "year": 2022,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/36438602/"
+        },
+        {
+          "title": "Current concepts and molecular mechanisms in pharmacogenetics of essential hypertension.",
+          "year": 2021,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/34414909/"
+        },
+        {
+          "title": "Natural Selection of ATP2B1 Underlies Susceptibility to Essential Hypertension.",
+          "year": 2021,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/33777100/"
+        },
+        {
+          "title": "Novel methylation mark and essential hypertension.",
+          "year": 2022,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/35061109/"
+        },
+        {
+          "title": "Identification of Novel Proteins Mediating Causal Association Between Smoking and Essential Hypertension: A Mendelian Randomization Study.",
+          "year": 2024,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/39604029/"
+        }
+      ]
+    },
+    {
+      "ms": 2514,
+      "type": "source_catalog_ready",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "sources": [
+        {
+          "id": "pubmed:36438602",
+          "status": "candidate",
+          "title": "Identifying susceptibility genes for essential hypertension by transcriptome-wide association study.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/36438602/",
+          "doi": "10.1016/j.bbrep.2022.101387",
+          "pmid": "36438602",
+          "year": 2022
+        },
+        {
+          "id": "pubmed:34414909",
+          "status": "candidate",
+          "title": "Current concepts and molecular mechanisms in pharmacogenetics of essential hypertension.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/34414909/",
+          "doi": "10.4103/ijp.IJP_593_19",
+          "pmid": "34414909",
+          "year": 2021
+        },
+        {
+          "id": "pubmed:33777100",
+          "status": "candidate",
+          "title": "Natural Selection of ATP2B1 Underlies Susceptibility to Essential Hypertension.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/33777100/",
+          "doi": "10.3389/fgene.2021.628516",
+          "pmid": "33777100",
+          "year": 2021
+        },
+        {
+          "id": "pubmed:35061109",
+          "status": "candidate",
+          "title": "Novel methylation mark and essential hypertension.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/35061109/",
+          "doi": "10.1186/s43141-022-00301-y",
+          "pmid": "35061109",
+          "year": 2022
+        },
+        {
+          "id": "pubmed:39604029",
+          "status": "candidate",
+          "title": "Identification of Novel Proteins Mediating Causal Association Between Smoking and Essential Hypertension: A Mendelian Randomization Study.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/39604029/",
+          "doi": "10.1161/JAHA.124.036202",
+          "pmid": "39604029",
+          "year": 2024
+        },
+        {
+          "id": "pubmed:28682143",
+          "status": "candidate",
+          "title": "Replication of a genome-wide association study on essential hypertension in Mongolians.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/28682143/",
+          "doi": "10.1080/10641963.2017.1334796",
+          "pmid": "28682143",
+          "year": 2018
+        },
+        {
+          "id": "pubmed:40726397",
+          "status": "candidate",
+          "title": "Perirenal Adipose Tissue and Hypertension: Observational and Genetic Analyses.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/40726397/",
+          "doi": "10.1161/HYPERTENSIONAHA.125.24995",
+          "pmid": "40726397",
+          "year": 2025
+        },
+        {
+          "id": "europe_pmc:MED:42919376",
+          "status": "candidate",
+          "title": "Genetic polymorphisms and hypertension in Indian populations: a systematic review and integrative bioinformatics approach.",
+          "url": "https://europepmc.org/article/MED/42919376",
+          "doi": "10.1186/s12920-026-02437-z",
+          "pmid": "42919376",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:29650769",
+          "status": "candidate",
+          "title": "Is Plasma Renin Activity Genetically Determined and How Much Does It Matter for Treating Hypertension?",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/29650769/",
+          "doi": "10.1161/CIRCGEN.118.002139",
+          "pmid": "29650769",
+          "year": 2018
+        },
+        {
+          "id": "pubmed:36802911",
+          "status": "candidate",
+          "title": "Genetic Risk of Primary Aldosteronism and Its Contribution to Hypertension: A Cross-Ancestry Meta-Analysis of Genome-Wide Association Studies.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/36802911/",
+          "doi": "10.1161/CIRCULATIONAHA.122.062349",
+          "pmid": "36802911",
+          "year": 2023
+        },
+        {
+          "id": "europe_pmc:MED:42792799",
+          "status": "candidate",
+          "title": "Irritable Bowel Syndrome and Incident Hypertension: Epidemiologic and Genetic Insights.",
+          "url": "https://europepmc.org/article/MED/42792799",
+          "doi": "10.3390/biomedicines14092057",
+          "pmid": "42792799",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:34166551",
+          "status": "candidate",
+          "title": "Hypertension genetics past, present and future applications.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/34166551/",
+          "doi": "10.1111/joim.13352",
+          "pmid": "34166551",
+          "year": 2021
+        },
+        {
+          "id": "europe_pmc:MED:41898884",
+          "status": "candidate",
+          "title": "A Pooled Blood Genome-Wide Association Study of Hypertension in Sindhi Families: Results from the DISFIN Study.",
+          "url": "https://europepmc.org/article/MED/41898884",
+          "doi": "10.3390/genes17030351",
+          "pmid": "41898884",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:25511780",
+          "status": "candidate",
+          "title": "Progress and issues of the genome-wide association study for hypertension.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/25511780/",
+          "doi": "10.2174/0929867321666141216124537",
+          "pmid": "25511780",
+          "year": 2015
+        },
+        {
+          "id": "pubmed:33390048",
+          "status": "candidate",
+          "title": "An Academic Clinician's Road Map to Hypertension Genomics: Recent Advances and Future Directions MMXX.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/33390048/",
+          "doi": "10.1161/HYPERTENSIONAHA.120.14535",
+          "pmid": "33390048",
+          "year": 2021
+        },
+        {
+          "id": "europe_pmc:MED:42596011",
+          "status": "candidate",
+          "title": "Cross-trait genetic analysis maps shared polygenic architecture between primary aldosteronism and blood pressure to adrenal cell states.",
+          "url": "https://europepmc.org/article/MED/42596011",
+          "doi": "10.1186/s12967-026-08819-2",
+          "pmid": "42596011",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42893988",
+          "status": "candidate",
+          "title": "Genetic architecture of MRI-derived cervical spinal cord morphology reveals sensory-motor axis and systemic disease associations.",
+          "url": "https://europepmc.org/article/MED/42893988",
+          "doi": "10.1038/s41467-026-77419-x",
+          "pmid": "42893988",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42527560",
+          "status": "candidate",
+          "title": "Multi-ancestry genome-wide association analyses provide insights into the genetic basis of Hashimoto's thyroiditis.",
+          "url": "https://europepmc.org/article/MED/42527560",
+          "doi": "10.1038/s41588-026-02704-w",
+          "pmid": "42527560",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42411037",
+          "status": "candidate",
+          "title": "The Use of Population Isolates to Identify Metabolic Syndrome's Genetic Aetiology.",
+          "url": "https://europepmc.org/article/MED/42411037",
+          "doi": "10.1002/mgg3.70262",
+          "pmid": "42411037",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42454014",
+          "status": "candidate",
+          "title": "SMR Analysis Integrating GWAS and eQTL Data Reveals UHRF1BP1 and SNRPC as Potential Drug Targets for Low Back Pain.",
+          "url": "https://europepmc.org/article/MED/42454014",
+          "doi": "10.2147/jpr.s593304",
+          "pmid": "42454014",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:31044621",
+          "status": "candidate",
+          "title": "Genome-wide association study of white-coat effect in hypertensive patients.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/31044621/",
+          "doi": "10.1080/08037051.2019.1604066",
+          "pmid": "31044621",
+          "year": 2019
+        },
+        {
+          "id": "europe_pmc:MED:42230780",
+          "status": "candidate",
+          "title": "GFPT1 as a cross-ancestry validated target for degenerative spinal disease: genetic association in a Chinese cohort and functional characterization in zebrafish.",
+          "url": "https://europepmc.org/article/MED/42230780",
+          "doi": "10.1038/s42003-026-10320-x",
+          "pmid": "42230780",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42707253",
+          "status": "candidate",
+          "title": "Evaluation of population-specific polygenic risk scores for blood lipids: insights from Taiwanese cohorts and multiancestry meta-analysis.",
+          "url": "https://europepmc.org/article/MED/42707253",
+          "doi": "10.3389/fbinf.2026.1823599",
+          "pmid": "42707253",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:39286647",
+          "status": "candidate",
+          "title": "Causal relationship between modifiable risk factors and knee osteoarthritis: a Mendelian randomization study.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/39286647/",
+          "doi": "10.3389/fmed.2024.1405188",
+          "pmid": "39286647",
+          "year": 2024
+        },
+        {
+          "id": "europe_pmc:MED:42432750",
+          "status": "candidate",
+          "title": "Genome-wide association and polygenic risk score analyses of MASLD-related hepatic steatosis severity in a Taiwanese Han population.",
+          "url": "https://europepmc.org/article/MED/42432750",
+          "doi": "10.1186/s13578-026-01619-7",
+          "pmid": "42432750",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:41627341",
+          "status": "candidate",
+          "title": "PheCode-guided multi-modal topic modeling of electronic health records improves disease incidence prediction and GWAS discovery from UK Biobank.",
+          "url": "https://europepmc.org/article/MED/41627341",
+          "doi": "10.1093/bib/bbag030",
+          "pmid": "41627341",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:29973135",
+          "status": "candidate",
+          "title": "Genome-wide association study of nocturnal blood pressure dipping in hypertensive patients.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/29973135/",
+          "doi": "10.1186/s12881-018-0624-7",
+          "pmid": "29973135",
+          "year": 2018
+        },
+        {
+          "id": "europe_pmc:MED:42020658",
+          "status": "candidate",
+          "title": "Multi ancestry genome wide association meta analysis of urinary aMT6s levels.",
+          "url": "https://europepmc.org/article/MED/42020658",
+          "doi": "10.1038/s41598-026-49491-2",
+          "pmid": "42020658",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:PPR:PPR1265072",
+          "status": "candidate",
+          "title": "Hypertrophic cardiomyopathy: a genome wide association meta-analysis and polygenic risk score",
+          "url": "https://europepmc.org/article/PPR/PPR1265072",
+          "doi": "10.64898/2026.05.05.26352435",
+          "year": 2026
+        },
+        {
+          "id": "europe_pmc:MED:42749890",
+          "status": "candidate",
+          "title": "Sex-specific biological aging clocks across organs and omics.",
+          "url": "https://europepmc.org/article/MED/42749890",
+          "doi": "10.1038/s41591-026-04662-6",
+          "pmid": "42749890",
+          "year": 2026
+        }
+      ]
+    },
+    {
+      "ms": 5036,
+      "type": "stage_progress",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "stage": "structure",
+      "detail": "ok (3325ms)"
+    },
+    {
+      "ms": 5356,
+      "type": "stage_progress",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "stage": "retrieve",
+      "detail": "partial (3666ms)"
+    },
+    {
+      "ms": 5358,
+      "type": "stage_started",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "stage": "classify"
+    },
+    {
+      "ms": 5519,
+      "type": "stage_progress",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "stage": "classify",
+      "detail": "ok (0ms)"
+    },
+    {
+      "ms": 5519,
+      "type": "stage_started",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "stage": "extract"
+    },
+    {
+      "ms": 5903,
+      "type": "opening_ready",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "text": "Los resúmenes no ofrecen un ranking autorizado de los cinco genes más asociados con hipertensión primaria. Un estudio identificó 1.010 genes no superpuestos asociados significativamente tras corrección FDR en 452.264 personas. Como inferencia provisional, no como orden definitivo, los candidatos mencionados son RBM6, HLA-DRB5, UHRF1BP1, LYZ y TMEM116, descritos como relacionados con el sistema autoinmune.\n\nSíntesis inicial basada en resúmenes recuperados; la verificación detallada sigue en curso."
+    },
+    {
+      "ms": 16836,
+      "type": "provisional_claims_ready",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "sourceId": "pubmed:36438602",
+      "claims": [
+        {
+          "id": "aeac8c21-cc6f-4689-974f-f9f9b440fd5f",
+          "text": "Assess five genes RBM6, HLA-DRB5, UHRF1BP1, LYZ and TMEM116 reported as autoimmune-related hypertension-susceptible genes.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116",
+            "effect": "associated with autoimmune system"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:0",
+          "quote": "five of the genes ( RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116 ) were associated with autoimmune system",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "1ad05bf6-fbfe-49dc-b095-238d74621a46",
+          "text": "Consider 1010 genes with expression significantly associated with hypertension after FDR correction in four tissues.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "measurement": "expression were significantly associated with hypertension"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:0",
+          "quote": "1010 non-overlapping genes expression were significantly associated with hypertension after FDR correction (PFDR <0.05) in four tissues",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "de57fc0c-afce-4807-ba69-98721baf9530",
+          "text": "Assess 15 novel hypertension-susceptible genes identified across all examined tissues.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {},
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:0",
+          "quote": "15 novel hypertension-susceptible genes were identified in all tissues",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "58599814-11db-4d00-a251-440ba449bb80",
+          "text": "Consider TWAS of hypertension performed with FUSION integrating GWAS and eQTL weights.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 2,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:1",
+          "quote": "We used the FUnctional Summary-based ImputatiON (FUSION) method ( http://gusevlab.org/projects/fusion/ ) for TWAS analysis of hypertension",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "374f64b7-0b5d-4a48-a810-cf0b7b4d6bd5",
+          "text": "Assess UK Biobank sample of 452,264 white British individuals including 84,640 essential hypertension patients.",
+          "basis": "primary",
+          "actionType": "measurement",
+          "conditions": [
+            {
+              "variable": "individuals",
+              "op": "=",
+              "value": "452,264"
+            },
+            {
+              "variable": "patients",
+              "op": "=",
+              "value": "84,640"
+            }
+          ],
+          "geneticContext": {
+            "organism": "white British individuals",
+            "measurement": "essential hypertension"
+          },
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:1",
+          "quote": "which included a total of 452,264 white British individuals, including 84,640 patients with essential hypertension",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "19d55930-a61a-4f82-9bde-a8c5bc631805",
+          "text": "Consider Mendelian randomization supporting significant association between autoimmunity and hypertension.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "measurement": "Mendelian randomization analysis",
+            "effect": "significant association"
+          },
+          "subQuestionIndex": 2,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:0",
+          "quote": "We further performed Mendelian randomization analysis, and the results supported a significant association between autoimmunity and hypertension.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "1e159a4e-5852-4486-bc62-84685c6bb85a",
+          "text": "Considere 15 genes susceptibles a hipertension primaria identificados por TWAS en cuatro tejidos, incluidos GFPT1 y RBM6.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "GFPT1"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:2",
+          "quote": "Finally, 15 novel hypertension-susceptible genes were identified by TWAS in all tissues, and they were Glutamine-Fructose-6-Phosphate Transaminase 1 (GFPT1), RNA-binding motif protein 6 (RBM6)",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "2093b6f6-7b63-4a77-b22c-dce9a90d3df6",
+          "text": "Evalue el locus rs6785549 en cromosoma 3 como mejor variante GWAS reportada para RBM6.",
+          "basis": "primary",
+          "actionType": "measurement",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "RBM6"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:3",
+          "quote": "RBM6 3 rs6785549 1.32E-03 2.23E-03 6.30E-03 3.00E-03 Yes",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "3a40b2b5-1f11-42de-a700-675e7bc50268",
+          "text": "Evalue cinco genes TWAS de hipertension, RBM6, HLA-DRB5, UHRF1BP1, LYZ y TMEM116, asociados con autoinmunidad.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "HLA-DRB5"
+          },
+          "subQuestionIndex": 2,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:2",
+          "quote": "Five TWAS-identified genes ( RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116 ) were identified to associate with autoimmunity by the combined search",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "d3487de1-259f-44a5-895b-ff2767c0ee54",
+          "text": "Considere la asociacion causal por MR entre enfermedades autoinmunes e hipertension con OR 1.1134 y P 2.48E-05.",
+          "basis": "primary",
+          "actionType": "measurement",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:2",
+          "quote": "We also identified causal relationships between autoimmune diseases and hypertension using MR (odds ratio (OR) = 1.1134, 95% confidence interval (CI) = (1.059, 1.171), P value = 2.48E-05)",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "9b618e71-8223-43ae-abad-c85bd29f975b",
+          "text": "Considere que los datos GWAS predominantemente del UK Biobank con ascendencia europea limitan la generalizacion e impiden un ranking universal.",
+          "basis": "primary",
+          "actionType": "limitation",
+          "conditions": [],
+          "subQuestionIndex": 5,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:3",
+          "quote": "the GWAS data in this study are predominantly from the UK Biobank cohort with European ancestry, therefore, limiting the generalisability of the findings.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "c379c465-90d1-413a-bc1e-97d2614b77b7",
+          "text": "Considere que la evidencia proviene de integrar GWAS de hipertensión de UK Biobank con expresión de ARNm en TWAS de cuatro tejidos.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 2,
+          "sourceId": "pubmed:36438602",
+          "passageId": "pubmed:36438602:4",
+          "quote": "we integrated the GWAS datasets of hypertension from the UK Biobank and mRNA expression profiling together to complete a TWAS in four tissues",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        }
+      ]
+    },
+    {
+      "ms": 19618,
+      "type": "provisional_claims_ready",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "sourceId": "pubmed:34414909",
+      "claims": [
+        {
+          "id": "91785e7c-8100-412f-b5ba-cf23eabaf305",
+          "text": "Consider NEDD4L and ADD1 as regulators of renal tubular sodium balance relevant to thiazide response.",
+          "basis": "background",
+          "actionType": "mechanism",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "NEDD4 L gene"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:5",
+          "quote": "The NEDD4 L gene and ADD1 gene regulate homeostasis of sodium balance in the renal tubule.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "9d753918-6d5a-49ed-b47e-01ad2c11db51",
+          "text": "Assess AGT or ACE overexpression as correlated with increased angiotensinogen and vasoconstriction.",
+          "basis": "background",
+          "actionType": "mechanism",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "AGT gene",
+            "perturbation": "Overexpression",
+            "measurement": "circulating angiotensinogen",
+            "effect": "increase in circulating angiotensinogen and vasoconstriction"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:5",
+          "quote": "Overexpression of the AGT gene or ACE gene correlates with an increase in circulating angiotensinogen and vasoconstriction.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "3506ccd1-3405-4350-ac81-d9be98deffca",
+          "text": "Consider ADRB1 variant-mediated beta1 downregulation as increasing hypertension risk and treatment implications.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "ADRB1 gene",
+            "perturbation": "ADRB1 gene variant",
+            "measurement": "risk of hypertension",
+            "effect": "increases the risk of hypertension"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:5",
+          "quote": "Downregulation of the β 1 receptor by the ADRB1 gene variant increases the risk of hypertension, while GKR4 gene variation leads to therapeutic failure.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "d991a1a8-ce62-4e8f-8fdd-da19018afb2b",
+          "text": "Assess KCNH2 CC versus CT/TT genotypes for differential response to beta-blockers versus calcium-channel blockers.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "KCNH2 gene",
+            "perturbation": "CC genotypes",
+            "measurement": "BP-lowering effect",
+            "effect": "better BP-lowering effect"
+          },
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:5",
+          "quote": "KCNH2 gene variation with CC genotypes showed a better BP-lowering effect with β 1 blockers, and adrenergic blocker and CT/TT genotypes respond well with CCBs.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "b0e50a23-57cf-4115-85db-8e065c85b46f",
+          "text": "Consider reported drug-metabolism shares for CYP3A4/5, CYP2D6 and CYP2C9 when interpreting pharmacokinetic variability.",
+          "basis": "primary",
+          "actionType": "measurement",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "CYP genes",
+            "effect": "metabolize 30.2%, 20%, and 12.8% of the drug, respectively"
+          },
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:5",
+          "quote": "Pharmacogenetic studies of CYP genes such as CYP3A4/5, CYP2D6, and CYP2C9 metabolize 30.2%, 20%, and 12.8% of the drug, respectively.[ 55 ]",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "7e032990-fef0-4e98-a95f-6a3b38f3dbd1",
+          "text": "Account for conflicting and inconsistent pharmacogenetic results as limiting any universal gene ranking.",
+          "basis": "background",
+          "actionType": "limitation",
+          "conditions": [],
+          "subQuestionIndex": 5,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:5",
+          "quote": "hypertension pharmacogenetics often generates conflicting and inconsistent results with regard to genetic polymorphisms, BP response, and use of antihypertensive drugs.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "398469f9-a73f-4362-8160-112e9f03aa2f",
+          "text": "Consider that many blood pressure and hypertension loci are reported by genome-wide association studies.",
+          "basis": "background",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:0",
+          "quote": "Many loci associated with blood pressure and hypertension have been reported by genome-wide association studies",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "6ec35ad1-fe96-4d30-a437-782a78cfd30e",
+          "text": "Assess inherited blood pressure contribution reported as ranging from 30% to 50%.",
+          "basis": "background",
+          "actionType": "measurement",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:0",
+          "quote": "For years, it has been debated that hypertension is inherited, and the genetic contribution of BP ranges from 30% to 50%.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "ea8500f6-f71c-4eb7-9dde-b3dd7aa2c397",
+          "text": "Consider that pharmacogenetic studies of blood pressure response to medication are reported as sparse.",
+          "basis": "primary",
+          "actionType": "limitation",
+          "conditions": [],
+          "subQuestionIndex": 5,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:0",
+          "quote": "studies on pharmacogenetics regarding BP response to antihypertensive medication are sparse.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "7f6dc15e-1214-409b-a35f-7d78c0f7ac65",
+          "text": "Consider ethnic, diet, age, gender, environment and geography as complexity factors in hypertension.",
+          "basis": "primary",
+          "actionType": "limitation",
+          "conditions": [],
+          "subQuestionIndex": 5,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:6",
+          "quote": "Ethnic variability, diet, age, gender, environment, and geographical factors are indicators responsible for the complexity of hypertension disease.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "a65c3de9-e5a0-41c9-bf0e-d68c117897bf",
+          "text": "Assess that several variations in results are seen across pharmacogenetic hypertension studies.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:6",
+          "quote": "Several variations in results can be seen in pharmacogenetics hypertension studies.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "711d4422-9b85-4f35-9659-f405d007444f",
+          "text": "Consider AGT as a significant renin-angiotensin pathway gene associated with hypertension pathophysiology.",
+          "basis": "background",
+          "actionType": "theory",
+          "conditions": [],
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:2",
+          "quote": "In the renin-angiotensin pathway, AGT gene is one of the significant genes which has association with pathophysiology of hypertension.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "42667133-aeba-4381-991d-5e9c6935d24e",
+          "text": "Assess ACE insertion/deletion polymorphism as the most widely studied gene associated with hypertension.",
+          "basis": "background",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:2",
+          "quote": "Genetic polymorphism of ACE gene, insertion/deletion (I/D) is the most widely studied gene associated with hypertension.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "7c89c0d5-51fb-4cb6-b500-505bd3c5db16",
+          "text": "Assess NEDD4L rs4149601 variants for better hydrochlorothiazide response in 768 patients in prospective multicenter randomized study.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 2,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:2",
+          "quote": "A prospective, multicenter, randomized, open-level study done on 768 hypertensive patients suggested that NEDD4 L gene polymorphisms (rs4149601, rs4149601-rs292449) had a better response with hydrochlorothiazide",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "507a5643-f091-4622-9dfc-b10a3fcc68f8",
+          "text": "Assess ADD1 rs4961 for fall in blood pressure with HCTZ therapy in hypertensive patients.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:2",
+          "quote": "Hypertensive patients with ADD1 gene polymorphism rs4961 were evaluated for BP response to HCTZ therapy, and it was observed that there was a fall in BP in these patients.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "a5aee439-654d-4a3b-8d69-a36c44fd28c3",
+          "text": "Assess AGT rs7079 CC genotype for lowering DBP with benazepril in Chinese population randomized trial.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:2",
+          "quote": "Randomized clinical trial of the Chinese population showed a correlation of AGT SNP rs7079 CC genotype in lowering DBP.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "e296ddf3-5398-47ff-a080-6e8b2371e548",
+          "text": "Assess ACE DD genotype for better blood pressure lowering with enalapril and lisinopril in Malay hypertensive population.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:34414909",
+          "passageId": "pubmed:34414909:2",
+          "quote": "a study was done on Malay hypertensive population with ACE I/D polymorphism ( ACE genotype DD) which was found to have a better BP-lowering response when treated with ACEIs, enalapril, and lisinopril.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        }
+      ]
+    },
+    {
+      "ms": 93043,
+      "type": "stage_progress",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "stage": "extract",
+      "detail": "pubmed:34414909: ok, 0 claim(s)"
+    },
+    {
+      "ms": 93043,
+      "type": "source_reviewed",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "sourceId": "pubmed:34414909",
+      "acceptedClaimIds": [],
+      "withdrawnCount": 17,
+      "reason": "source support could not be confirmed"
+    },
+    {
+      "ms": 93096,
+      "type": "stage_progress",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "stage": "extract",
+      "detail": "pubmed:36438602: ok, 3 claim(s)"
+    },
+    {
+      "ms": 93096,
+      "type": "band_ready",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "payload": {
+        "claims": [
+          {
+            "id": "aeac8c21-cc6f-4689-974f-f9f9b440fd5f",
+            "text": "Assess five genes RBM6, HLA-DRB5, UHRF1BP1, LYZ and TMEM116 reported as autoimmune-related hypertension-susceptible genes.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "gene": "RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116",
+              "effect": "associated with autoimmune system"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "five of the genes ( RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116 ) were associated with autoimmune system",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "aeac8c21-cc6f-4689-974f-f9f9b440fd5f",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "1ad05bf6-fbfe-49dc-b095-238d74621a46",
+            "text": "Consider 1010 genes with expression significantly associated with hypertension after FDR correction in four tissues.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {
+              "measurement": "expression were significantly associated with hypertension"
+            },
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "1010 non-overlapping genes expression were significantly associated with hypertension after FDR correction (PFDR <0.05) in four tissues",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "1ad05bf6-fbfe-49dc-b095-238d74621a46",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "de57fc0c-afce-4807-ba69-98721baf9530",
+            "text": "Assess 15 novel hypertension-susceptible genes identified across all examined tissues.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "geneticContext": {},
+            "subQuestionIndex": 0,
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "15 novel hypertension-susceptible genes were identified in all tissues",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "de57fc0c-afce-4807-ba69-98721baf9530",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ms": 93096,
+      "type": "source_reviewed",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "sourceId": "pubmed:36438602",
+      "acceptedClaimIds": [
+        "aeac8c21-cc6f-4689-974f-f9f9b440fd5f",
+        "1ad05bf6-fbfe-49dc-b095-238d74621a46",
+        "de57fc0c-afce-4807-ba69-98721baf9530"
+      ],
+      "withdrawnCount": 9,
+      "reason": "source support could not be confirmed"
+    },
+    {
+      "ms": 93907,
+      "type": "stage_progress",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "stage": "extract",
+      "detail": "partial (87594ms)"
+    },
+    {
+      "ms": 93908,
+      "type": "band_ready",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "payload": {
+        "claims": [
+          {
+            "id": "aeac8c21-cc6f-4689-974f-f9f9b440fd5f",
+            "text": "Assess five genes RBM6, HLA-DRB5, UHRF1BP1, LYZ and TMEM116 reported as autoimmune-related hypertension-susceptible genes.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "geneticContext": {
+              "gene": "RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116",
+              "effect": "associated with autoimmune system"
+            },
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "five of the genes ( RBM6, HLA-DRB5, UHRF1BP1, LYZ, and TMEM116 ) were associated with autoimmune system",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "aeac8c21-cc6f-4689-974f-f9f9b440fd5f",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "1ad05bf6-fbfe-49dc-b095-238d74621a46",
+            "text": "Consider 1010 genes with expression significantly associated with hypertension after FDR correction in four tissues.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "geneticContext": {
+              "measurement": "expression were significantly associated with hypertension"
+            },
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "1010 non-overlapping genes expression were significantly associated with hypertension after FDR correction (PFDR <0.05) in four tissues",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "1ad05bf6-fbfe-49dc-b095-238d74621a46",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "de57fc0c-afce-4807-ba69-98721baf9530",
+            "text": "Assess 15 novel hypertension-susceptible genes identified across all examined tissues.",
+            "basis": "primary",
+            "actionType": "finding",
+            "conditions": [],
+            "subQuestionIndex": 0,
+            "geneticContext": {},
+            "sourceId": "pubmed:36438602",
+            "passageId": "pubmed:36438602:0",
+            "quote": "15 novel hypertension-susceptible genes were identified in all tissues",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "de57fc0c-afce-4807-ba69-98721baf9530",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          }
+        ],
+        "sourceScores": {
+          "pubmed:36438602": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.9285714285714286,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.14857142857142858
+          },
+          "pubmed:34414909": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.8571428571428572,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.13714285714285718
+          },
+          "pubmed:33777100": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.8571428571428572,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.13714285714285718
+          },
+          "pubmed:35061109": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.9285714285714286,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.14857142857142858
+          },
+          "pubmed:39604029": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:28682143": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.6428571428571428,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.10285714285714286
+          },
+          "pubmed:40726397": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42919376": {
+            "relevance": 1,
+            "level": 0.85,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.68
+          },
+          "pubmed:29650769": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.6428571428571428,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.10285714285714286
+          },
+          "pubmed:36802911": {
+            "relevance": 1,
+            "level": 1,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.8
+          },
+          "europe_pmc:MED:42792799": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:34166551": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.8571428571428572,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.13714285714285718
+          },
+          "europe_pmc:MED:41898884": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:25511780": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.5,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.08000000000000002
+          },
+          "pubmed:33390048": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.8571428571428572,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.13714285714285718
+          },
+          "europe_pmc:MED:42596011": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42893988": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42527560": {
+            "relevance": 1,
+            "level": 1,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.8
+          },
+          "europe_pmc:MED:42411037": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42454014": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:31044621": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.7142857142857143,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.11428571428571431
+          },
+          "europe_pmc:MED:42230780": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42707253": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:39286647": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42432750": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:41627341": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:29973135": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.6428571428571428,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.10285714285714286
+          },
+          "europe_pmc:MED:42020658": {
+            "relevance": 1,
+            "level": 1,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.8
+          },
+          "europe_pmc:PPR:PPR1265072": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42749890": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          }
+        }
+      }
+    },
+    {
+      "ms": 93908,
+      "type": "receipt_ready",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "receipt": {
+        "claimsTotal": 30,
+        "citationsExist": 3,
+        "quotesFound": 3,
+        "retracted": 0,
+        "supported": 3,
+        "partial": 0,
+        "dropReasons": {
+          "support": 26,
+          "number": 1
+        },
+        "abstained": 5,
+        "sourcesByKind": {
+          "other": 26,
+          "systematic_review": 1,
+          "meta_analysis": 3
+        },
+        "oldestSourceYear": 2015,
+        "generatedAt": "2026-10-31T21:57:03.414Z"
+      }
+    },
+    {
+      "ms": 94179,
+      "type": "done",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "status": "partial"
+    },
+    {
+      "ms": 94340,
+      "type": "relations_ready",
+      "runId": "9b2bcd8f-5bf6-4ddd-85fa-7631a8e0ef15",
+      "questions": [
+        "¿Qué genes se reportan asociados con hipertensión primaria en humanos?",
+        "¿Qué variantes o loci específicos sustentan cada asociación génica reportada?",
+        "¿Qué tipo de evidencia apoya cada asociación (estudios de asociación, replicación, metaanálisis, estudios funcionales)?",
+        "¿En qué poblaciones o muestras se observó cada asociación?",
+        "¿Qué magnitud o consistencia de asociación se reporta para cada gen?",
+        "¿Qué limitaciones impiden establecer un ranking universal de los cinco genes más asociados?"
+      ],
+      "relations": [],
+      "status": "ok"
+    }
+  ]
+}

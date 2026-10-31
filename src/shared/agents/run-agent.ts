@@ -112,7 +112,7 @@ export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<Agen
     { role: 'user', content: params.prompt },
   ];
 
-  const call = (messages: typeof baseMessages, attempt: 1 | 2) => {
+  const call = (messages: typeof baseMessages, attempt: 1 | 2, signal: AbortSignal) => {
     ctx.onTrace?.({ type: 'agent_call', name: params.name, promptVersion: params.promptVersion, tier: params.tier, attempt });
     return ctx.metaClient.respond({
       model: DEFAULT_AGENT_MODEL,
@@ -120,12 +120,19 @@ export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<Agen
       input: messages,
       outputFormat,
       maxOutputTokens: limits.maxOutputTokens,
+      signal,
     });
+  };
+
+  const timedCall = (messages: typeof baseMessages, attempt: 1 | 2) => {
+    const controller = new AbortController();
+    return withTimeout(call(messages, attempt, controller.signal), limits.timeoutMs)
+      .finally(() => controller.abort());
   };
 
   let first: RespondResult;
   try {
-    first = await withTimeout(call(baseMessages, 1), limits.timeoutMs);
+    first = await timedCall(baseMessages, 1);
   } catch (err) {
     return finish(toFailure(err));
   }
@@ -149,7 +156,7 @@ export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<Agen
 
   let repair: RespondResult;
   try {
-    repair = await withTimeout(call(repairMessages, 2), limits.timeoutMs);
+    repair = await timedCall(repairMessages, 2);
   } catch (err) {
     return finish(toFailure(err, first.costUsd));
   }

@@ -40,6 +40,11 @@ Return: {
 }
 Rules:
 - For comparisons, produce shared scientific sub-questions that every study can answer. Do not create separate author-specific questions. Preserve named studies in scope.
+- For requests asking for the "top", "best" or a fixed number of genes/loci,
+  do not assume a universal ranking exists. Decompose the request into which
+  entities are repeatedly associated, what evidence supports each association,
+  and what limits cross-study ranking. Individual sources need only contribute
+  relevant associations; they need not state the requested final list verbatim.
 - Do not infer values that are not present or clearly implied; omit the field instead
   of guessing.
 - Reject any identifiers of a specific, real, identifiable person (a code

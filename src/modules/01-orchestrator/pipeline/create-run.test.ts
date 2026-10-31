@@ -55,6 +55,25 @@ function baseDeps(metaClient: MetaClient, runsRepository: RunsRepository): Creat
 }
 
 describe('createRun', () => {
+  it('routes disease-genetics research deterministically instead of rejecting it as clinical', async () => {
+    const respond = vi.fn();
+    const deps = baseDeps({ respond, listModels: vi.fn() }, fakeRunsRepository());
+    const result = await createRun({ freeText: '¿Cuáles son los cinco genes más asociados con hipertensión primaria?', userId: null }, deps);
+    expect(result.status).toBe('routed');
+    if (result.status !== 'routed') throw new Error('unreachable');
+    expect(result.run.status).toBe('routing');
+    expect(result.routerOutput.intent).toBe('fact_lookup');
+    expect(respond).not.toHaveBeenCalled();
+  });
+  it('routes an explicit comparison deterministically without a model call', async () => {
+    const respond = vi.fn();
+    const deps = baseDeps({ respond, listModels: vi.fn() }, fakeRunsRepository());
+    const result = await createRun({ freeText: 'Compara estudios de expresión génica bajo hipoxia', userId: null }, deps);
+    expect(result.status).toBe('routed');
+    if (result.status !== 'routed') throw new Error('unreachable');
+    expect(result.routerOutput.intent).toBe('comparison');
+    expect(respond).not.toHaveBeenCalled();
+  });
   it('rejects a request with a patient identifier before calling the model at all', async () => {
     const respond = vi.fn();
     const metaClient: MetaClient = { respond, listModels: vi.fn() };

@@ -1,0 +1,1885 @@
+{
+  "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+  "events": [
+    {
+      "ms": 10170,
+      "type": "stage_started",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "stage": "plan"
+    },
+    {
+      "ms": 10318,
+      "type": "stage_progress",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "stage": "plan",
+      "detail": "ok (2ms)"
+    },
+    {
+      "ms": 10320,
+      "type": "stage_started",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "stage": "retrieve"
+    },
+    {
+      "ms": 10320,
+      "type": "stage_started",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "stage": "structure"
+    },
+    {
+      "ms": 11202,
+      "type": "overview_ready",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "sources": [
+        {
+          "title": "Single-cell transcriptomics of vascularized human brain organoids decipher lineage-specific stress adaptation in fetal hypoxia-reoxygenation injury.",
+          "year": 2025,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/40585969/"
+        },
+        {
+          "title": "Development and External Evaluation of Hypoxia-Related Prognostic Signatures in Head and Neck Squamous Cell Carcinoma.",
+          "year": 2026,
+          "url": "https://europepmc.org/article/MED/42938372"
+        },
+        {
+          "title": "Transcriptomics of the Carotid Body.",
+          "year": 2023,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/37322330/"
+        },
+        {
+          "title": "Hypoxia reduces induced LRIG1 protein despite sustained mRNA induction in colorectal cancer organoids",
+          "year": 2026,
+          "url": "https://europepmc.org/article/PPR/PPR1346278"
+        },
+        {
+          "title": "Spatial Transcriptomic Analysis of a Diverse Patient Cohort Reveals a Conserved Architecture in Triple-Negative Breast Cancer.",
+          "year": 2023,
+          "url": "https://pubmed.ncbi.nlm.nih.gov/36283023/"
+        }
+      ]
+    },
+    {
+      "ms": 11202,
+      "type": "source_catalog_ready",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "sources": [
+        {
+          "id": "pubmed:40585969",
+          "status": "candidate",
+          "title": "Single-cell transcriptomics of vascularized human brain organoids decipher lineage-specific stress adaptation in fetal hypoxia-reoxygenation injury.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/40585969/",
+          "doi": "10.7150/thno.117001",
+          "pmid": "40585969",
+          "year": 2025
+        },
+        {
+          "id": "europe_pmc:MED:42938372",
+          "status": "candidate",
+          "title": "Development and External Evaluation of Hypoxia-Related Prognostic Signatures in Head and Neck Squamous Cell Carcinoma.",
+          "url": "https://europepmc.org/article/MED/42938372",
+          "doi": "10.3390/genes17101256",
+          "pmid": "42938372",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:37322330",
+          "status": "candidate",
+          "title": "Transcriptomics of the Carotid Body.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/37322330/",
+          "doi": "10.1007/978-3-031-32371-3_1",
+          "pmid": "37322330",
+          "year": 2023
+        },
+        {
+          "id": "europe_pmc:PPR:PPR1346278",
+          "status": "candidate",
+          "title": "Hypoxia reduces induced LRIG1 protein despite sustained mRNA induction in colorectal cancer organoids",
+          "url": "https://europepmc.org/article/PPR/PPR1346278",
+          "doi": "10.64898/2026.10.19.760078",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:36283023",
+          "status": "candidate",
+          "title": "Spatial Transcriptomic Analysis of a Diverse Patient Cohort Reveals a Conserved Architecture in Triple-Negative Breast Cancer.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/36283023/",
+          "doi": "10.1158/0008-5472.CAN-22-2682",
+          "pmid": "36283023",
+          "year": 2023
+        },
+        {
+          "id": "europe_pmc:MED:42945612",
+          "status": "candidate",
+          "title": "Transcriptomic and biochemical analyses reveal the regulatory mechanisms of pikeperch (Sander lucioperca) under acute hypoxia and reoxygenation stress.",
+          "url": "https://europepmc.org/article/MED/42945612",
+          "doi": "10.1016/j.cbd.2026.102063",
+          "pmid": "42945612",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:39167456",
+          "status": "candidate",
+          "title": "Integrative Multiomics in the Lung Reveals a Protective Role of Asporin in Pulmonary Arterial Hypertension.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/39167456/",
+          "doi": "10.1161/CIRCULATIONAHA.124.069864",
+          "pmid": "39167456",
+          "year": 2024
+        },
+        {
+          "id": "europe_pmc:MED:42953106",
+          "status": "candidate",
+          "title": "STK39 is associated with endothelial dysfunction and inflammatory activation under hypoxic conditions in moyamoya disease.",
+          "url": "https://europepmc.org/article/MED/42953106",
+          "doi": "10.3389/fnhum.2026.1854099",
+          "pmid": "42953106",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:38806057",
+          "status": "candidate",
+          "title": "Distinctive multicellular immunosuppressive hubs confer different intervention strategies for left- and right-sided colon cancers.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/38806057/",
+          "doi": "10.1016/j.xcrm.2024.101589",
+          "pmid": "38806057",
+          "year": 2024
+        },
+        {
+          "id": "europe_pmc:MED:42759407",
+          "status": "candidate",
+          "title": "Exploratory single-nucleus transcriptomic analysis of endothelial heterogeneity and ferroptosis-related gene patterns in a human hepatocellular carcinoma sample.",
+          "url": "https://europepmc.org/article/MED/42759407",
+          "doi": "10.1016/j.tranon.2026.103047",
+          "pmid": "42759407",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:38781959",
+          "status": "candidate",
+          "title": "Single-cell multiomics profiling reveals heterogeneous transcriptional programs and microenvironment in DSRCTs.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/38781959/",
+          "doi": "10.1016/j.xcrm.2024.101582",
+          "pmid": "38781959",
+          "year": 2024
+        },
+        {
+          "id": "europe_pmc:PPR:PPR1351635",
+          "status": "candidate",
+          "title": "Tetrahydrobiopterin restores oligodendrocyte maturation after hypoxic white matter injury by reprogramming translational output",
+          "url": "https://europepmc.org/article/PPR/PPR1351635",
+          "doi": "10.64898/2026.10.23.761441",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:40855036",
+          "status": "candidate",
+          "title": "Integrating multi-modal transcriptomics identifies cellular subtypes with distinct roles in PDAC progression.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/40855036/",
+          "doi": "10.1007/s13402-025-01100-6",
+          "pmid": "40855036",
+          "year": 2025
+        },
+        {
+          "id": "europe_pmc:PMC:PMC13661358",
+          "status": "candidate",
+          "title": "Ceramidase is involved in metabolic reprogramming of fibroblasts under hypoxia conditions",
+          "url": "https://europepmc.org/article/PMC/PMC13661358"
+        },
+        {
+          "id": "pubmed:32403966",
+          "status": "candidate",
+          "title": "Long term hypoxia during gestation alters perirenal adipose tissue gene expression in the lamb.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/32403966/",
+          "doi": "10.1080/21623945.2020.1763726",
+          "pmid": "32403966",
+          "year": 2020
+        },
+        {
+          "id": "europe_pmc:PPR:PPR1346282",
+          "status": "candidate",
+          "title": "Distinct viability and oxygen-sensing responses to hypoxia and reoxygenation in pancreatic islets",
+          "url": "https://europepmc.org/article/PPR/PPR1346282",
+          "doi": "10.64898/2026.10.18.759980",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:40849425",
+          "status": "candidate",
+          "title": "Molecular landscape, subtypes, and therapeutic vulnerabilities of central nervous system solitary fibrous tumors.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/40849425/",
+          "doi": "10.1038/s41467-025-63039-4",
+          "pmid": "40849425",
+          "year": 2025
+        },
+        {
+          "id": "europe_pmc:MED:42726733",
+          "status": "candidate",
+          "title": "Sustained hypoxia induces divergent response patterns in cardiac metabolic-immune adaptation and circadian rhythm regulation.",
+          "url": "https://europepmc.org/article/MED/42726733",
+          "doi": "10.1371/journal.pone.0357966",
+          "pmid": "42726733",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:35641902",
+          "status": "candidate",
+          "title": "Hypoxia classifier for transcriptome datasets.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/35641902/",
+          "doi": "10.1186/s12859-022-04741-8",
+          "pmid": "35641902",
+          "year": 2022
+        },
+        {
+          "id": "europe_pmc:MED:42896440",
+          "status": "candidate",
+          "title": "Hypoxia-induced SATB homeobox 2 increases hypoxia-inducible factor-1-dependent tumorigenesis and drives bevacizumab resistance in lung adenocarcinoma.",
+          "url": "https://europepmc.org/article/MED/42896440",
+          "doi": "10.1016/j.tranon.2026.103069",
+          "pmid": "42896440",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:39137781",
+          "status": "candidate",
+          "title": "Transcriptome- and proteome-wide association studies identify genes associated with renal cell carcinoma.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/39137781/",
+          "doi": "10.1016/j.ajhg.2024.07.012",
+          "pmid": "39137781",
+          "year": 2024
+        },
+        {
+          "id": "europe_pmc:MED:42801171",
+          "status": "candidate",
+          "title": "A Hypoxia Associated STC2 High Endothelial Subpopulation is Linked to Lipid Metabolic Reprogramming, Pathological Angiogenesis, and Immune Remodeling in Head and Neck Squamous Cell Carcinoma.",
+          "url": "https://europepmc.org/article/MED/42801171",
+          "doi": "10.2147/ijgm.s619908",
+          "pmid": "42801171",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:28819234",
+          "status": "candidate",
+          "title": "Transcriptome of neonatal preBötzinger complex neurones in Dbx1 reporter mice.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/28819234/",
+          "doi": "10.1038/s41598-017-09418-4",
+          "pmid": "28819234",
+          "year": 2017
+        },
+        {
+          "id": "europe_pmc:MED:42950042",
+          "status": "candidate",
+          "title": "The nonsense-mediated decay RNA-surveillance pathway facilitates the hypoxia response by &lt;i&gt;C. elegans&lt;/i&gt;.",
+          "url": "https://europepmc.org/article/MED/42950042",
+          "doi": "10.1126/sciadv.aej4259",
+          "pmid": "42950042",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:38579562",
+          "status": "candidate",
+          "title": "Integrative analyses of whole-transcriptome sequencing reveals CeRNA regulatory network in pulmonary hypertension treated with FGF21.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/38579562/",
+          "doi": "10.1016/j.intimp.2024.111925",
+          "pmid": "38579562",
+          "year": 2024
+        },
+        {
+          "id": "europe_pmc:MED:42819788",
+          "status": "candidate",
+          "title": "High confidence HIF-1 target genes for quantifying the activation of the HIF-1-mediated hypoxia response.",
+          "url": "https://europepmc.org/article/MED/42819788",
+          "doi": "10.17912/micropub.biology.002304",
+          "pmid": "42819788",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:41092315",
+          "status": "candidate",
+          "title": "Spatial transcriptomics reveals unique inflammatory signatures across all anatomic locations in postoperative Crohn's disease.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/41092315/",
+          "doi": "10.1093/ecco-jcc/jjaf180",
+          "pmid": "41092315",
+          "year": 2025
+        },
+        {
+          "id": "europe_pmc:MED:42377256",
+          "status": "candidate",
+          "title": "MAPK-driven glioma progression and reprogramming of the tumor-associated immune response.",
+          "url": "https://europepmc.org/article/MED/42377256",
+          "doi": "10.1093/neuonc/noag147",
+          "pmid": "42377256",
+          "year": 2026
+        },
+        {
+          "id": "pubmed:41287009",
+          "status": "candidate",
+          "title": "Integrative transcriptomic profiling and machine learning reveal hypoxia-associated molecular signatures for precision diagnosis in thyroid eye disease.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/41287009/",
+          "doi": "10.1186/s40246-025-00860-4",
+          "pmid": "41287009",
+          "year": 2025
+        },
+        {
+          "id": "europe_pmc:MED:42703908",
+          "status": "candidate",
+          "title": "KDM2B controls HIF levels and activity through its JmjC and CxxC domains.",
+          "url": "https://europepmc.org/article/MED/42703908",
+          "doi": "10.1042/bcj20260212",
+          "pmid": "42703908",
+          "year": 2026
+        }
+      ]
+    },
+    {
+      "ms": 13863,
+      "type": "stage_progress",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "stage": "structure",
+      "detail": "ok (3397ms)"
+    },
+    {
+      "ms": 14010,
+      "type": "stage_progress",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "stage": "retrieve",
+      "detail": "ok (3554ms)"
+    },
+    {
+      "ms": 14011,
+      "type": "stage_started",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "stage": "classify"
+    },
+    {
+      "ms": 14175,
+      "type": "stage_progress",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "stage": "classify",
+      "detail": "ok (0ms)"
+    },
+    {
+      "ms": 14176,
+      "type": "stage_started",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "stage": "extract"
+    },
+    {
+      "ms": 16087,
+      "type": "opening_ready",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "text": "Los estudios muestran que la hipoxia activa programas distintos según el tejido. En cerebro en desarrollo altera linajes neurales y vasculares y la comunicación entre células; en tumores de cabeza y cuello se exploran firmas de genes con valor pronóstico limitado; en cuerpo carotídeo se revisa la detección multimodal de oxígeno. La comparabilidad directa es escasa.\n\nSíntesis inicial basada en resúmenes recuperados; la verificación detallada sigue en curso."
+    },
+    {
+      "ms": 30234,
+      "type": "provisional_claims_ready",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "sourceId": "pubmed:40585969",
+      "claims": [
+        {
+          "id": "499b5399-f71b-4958-adb4-82d5ebbb7e49",
+          "text": "Considere que experimentos de hipoxia-reoxigenación en vhCO se perfilaron por transcriptómica de célula única para diseccionar respuestas celulares.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 1,
+          "sourceId": "pubmed:40585969",
+          "passageId": "pubmed:40585969:0",
+          "quote": "Hypoxia-reoxygenation experiments were conducted on vhCOs, followed by single-cell transcriptomic profiling to dissect cellular responses.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "8e7f3af3-764b-4f46-a8a3-16a95df17670",
+          "text": "Considere vhCO que integran organoides corticales y vasculares y recapitulan neurodesarrollo medio-tardío con progenitores, neuronas, microglía y vasculatura con barrera hematoencefálica.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:40585969",
+          "passageId": "pubmed:40585969:0",
+          "quote": "We developed vhCOs by integrating cortical and vascular organoids, recapitulating mid-to-late gestational neurodevelopment with diverse lineages—neural progenitors, neurons, microglia, and functional vasculature with blood-brain barrier properties.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "195f65ac-b614-4527-901b-d94b168d6b19",
+          "text": "Evalúe vulnerabilidad linaje-específica: precursores de astrocitos con arresto del desarrollo y neuronas GABAérgicas inmaduras subtipo I con colapso neurogénico.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 3,
+          "sourceId": "pubmed:40585969",
+          "passageId": "pubmed:40585969:0",
+          "quote": "astrocyte precursors exhibited developmental arrest, while immature GABAergic neurons (Subtype I) underwent neurogenic collapse.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "a12e6c0f-5e05-4028-a038-7685f0d816a5",
+          "text": "Observe en microglía respuesta inflamatoria bifásica, suprimida inicialmente y luego hiperactivada tras reoxigenación, divergente de modelos animales.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:40585969",
+          "passageId": "pubmed:40585969:0",
+          "quote": "Microglia displayed a biphasic inflammatory response—initially suppressed, then hyperactivated post-reoxygenation, diverging from animal models;",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "6c34b8ef-dda6-4518-a5fc-8e4b4769c72c",
+          "text": "Considere memoria de hipoxia persistente en pericitos y fibroblastos que impulsa remodelación vascular vía señalización Notch y depósito de colágeno.",
+          "basis": "primary",
+          "actionType": "mechanism",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "pubmed:40585969",
+          "passageId": "pubmed:40585969:0",
+          "quote": "Hypoxia memory persisted in non-neural cells (pericytes, fibroblasts), driving compartment-specific vascular remodeling via Notch signaling and collagen deposition;",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "63e765a7-fc1b-4947-9841-2095144a3710",
+          "text": "Evalúe comunicación neurona-no neurona recableada con IGF2-IGF2R, LGALS3-MERTK y Wnts-SFRP2 como dianas de reparación.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "IGF2-IGF2R"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "pubmed:40585969",
+          "passageId": "pubmed:40585969:0",
+          "quote": "Rewired neural-non-neural crosstalk networks (e.g., IGF2-IGF2R, LGALS3-MERTK, Wnts-SFRP2) revealed novel repair targets inaccessible to conventional models.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        }
+      ]
+    },
+    {
+      "ms": 32937,
+      "type": "provisional_claims_ready",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "sourceId": "europe_pmc:MED:42938372",
+      "claims": [
+        {
+          "id": "9b36ef54-f3eb-4931-af13-de6c8d2fe581",
+          "text": "Considere que la expresion tumoral de TCGA HNSC se midio por secuenciacion de ARN para evaluar y desarrollar firmas.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 1,
+          "sourceId": "europe_pmc:MED:42938372",
+          "passageId": "europe_pmc:MED:42938372:1",
+          "quote": "RNA sequencing data from The Cancer Genome Atlas HNSC project (TCGA HNSC) were used for signature evaluation and model development [ 8 ].",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "803db50b-e085-4ea3-a382-bc24cb5a36d6",
+          "text": "Considere que la expresion tumoral de GSE65858 se midio con Illumina HumanHT-12 v4.0 Expression BeadChip.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 1,
+          "sourceId": "europe_pmc:MED:42938372",
+          "passageId": "europe_pmc:MED:42938372:1",
+          "quote": "Tumour gene expression was measured using the Illumina HumanHT-12 v4.0 Expression BeadChip ( GPL10558 ).",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "e172f1a2-ab5a-4b3e-90a0-cfad2c85775d",
+          "text": "Considere que el ensayo publicado del panel usa PCR cuantitativa normalizada a GNB2L1, B2M y RPL11.",
+          "basis": "background",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 1,
+          "sourceId": "europe_pmc:MED:42938372",
+          "passageId": "europe_pmc:MED:42938372:2",
+          "quote": "The published assay uses quantitative PCR to calculate the median panel expression normalised to the geometric mean of three reference genes, GNB2L1 , B2M and RPL11 [ 3 ].",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "00bc0d5d-d868-46b5-b20c-3c5e225f0429",
+          "text": "Considere que la cohorte GSE65858 incluyo tumores de cavidad oral, orofaringe, laringe e hipofaringe.",
+          "basis": "primary",
+          "actionType": "measurement",
+          "conditions": [],
+          "subQuestionIndex": 3,
+          "sourceId": "europe_pmc:MED:42938372",
+          "passageId": "europe_pmc:MED:42938372:1",
+          "quote": "The cohort included patients with tumours of the oral cavity, oropharynx, larynx and hypopharynx.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "0379bb09-a0d3-43c6-ae95-3e76e1d89b9d",
+          "text": "Considere que la firma de hipoxia derivada de cancer de mama incluia CP, GPC3 y STC1.",
+          "basis": "background",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "CP , GPC3 and STC1",
+            "model": "breast cancer",
+            "perturbation": "hypoxia"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "europe_pmc:MED:42938372",
+          "passageId": "europe_pmc:MED:42938372:1",
+          "quote": "The previously derived breast cancer hypoxia signature comprised CP , GPC3 and STC1 .",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "b4b1d4f5-efd4-4306-9bb2-a2d1a9c8fd67",
+          "text": "Considere que los candidatos provinieron de ocho listas, incluidos Hallmark hypoxia, Winter, Buffa, Elvidge y Fardin.",
+          "basis": "background",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 4,
+          "sourceId": "europe_pmc:MED:42938372",
+          "passageId": "europe_pmc:MED:42938372:2",
+          "quote": "Candidate genes were assembled from eight source lists. The Hallmark hypoxia set and the Winter, Buffa, Elvidge and Fardin lists were obtained from MSigDB.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "0988f834-988e-4fc4-80bc-35607c738c1a",
+          "text": "Considere que se reunieron 493 genes candidatos únicos de ocho listas de hipoxia.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 0,
+          "sourceId": "europe_pmc:MED:42938372",
+          "passageId": "europe_pmc:MED:42938372:6",
+          "quote": "Combining the eight source lists produced 493 unique candidate genes.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "18afb7a1-57fe-4de0-8095-6898d15faeda",
+          "text": "Observe que 414 genes comunes formaron el conjunto fijo usado para desarrollar modelos.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "subQuestionIndex": 0,
+          "sourceId": "europe_pmc:MED:42938372",
+          "passageId": "europe_pmc:MED:42938372:6",
+          "quote": "The intersection comprised 414 genes, representing 84.0% of the candidate pool, and these genes formed the frozen set used for model development.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "6e1a1d3f-3629-426b-bcc6-c92dee5a0797",
+          "text": "Considere que PGK1 y HK1 fueron los genes retenidos con mayor frecuencia en remuestreos.",
+          "basis": "primary",
+          "actionType": "finding",
+          "conditions": [],
+          "geneticContext": {
+            "gene": "PGK1"
+          },
+          "subQuestionIndex": 0,
+          "sourceId": "europe_pmc:MED:42938372",
+          "passageId": "europe_pmc:MED:42938372:6",
+          "quote": "PGK1 was selected in 91.0% and 84.5% of resamples, and HK1 in 82.5% and 69.5%, respectively.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "b6f6d053-9635-4c13-a893-da900f8e34bc",
+          "text": "Observe que la comparación exploratoria usó adaptación a microarreglos en vez del ensayo original de PCR cuantitativa.",
+          "basis": "primary",
+          "actionType": "method",
+          "conditions": [],
+          "subQuestionIndex": 1,
+          "sourceId": "europe_pmc:MED:42938372",
+          "passageId": "europe_pmc:MED:42938372:6",
+          "quote": "This exploratory comparison concerns the microarray adaptation described in the Methods, rather than the original quantitative PCR assay.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "05f52bf0-58e1-4d57-897e-f2347b703fa6",
+          "text": "Considere que la cohorte de desarrollo fue carcinoma escamoso de cabeza y cuello con 514 pacientes.",
+          "basis": "primary",
+          "actionType": "measurement",
+          "conditions": [],
+          "subQuestionIndex": 3,
+          "sourceId": "europe_pmc:MED:42938372",
+          "passageId": "europe_pmc:MED:42938372:4",
+          "quote": "The TCGA HNSC development cohort comprised 514 patients, with 217 deaths (42.2%) during the available follow-up.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        },
+        {
+          "id": "3ed90122-b6ce-4c7f-acd2-535440f43b66",
+          "text": "Observe los subtipos estudiados: orofaríngeos, cavidad oral, laríngeos e hipofaríngeos en 266 pacientes.",
+          "basis": "primary",
+          "actionType": "measurement",
+          "conditions": [],
+          "subQuestionIndex": 3,
+          "sourceId": "europe_pmc:MED:42938372",
+          "passageId": "europe_pmc:MED:42938372:5",
+          "quote": "Tumour subsite was recorded for 266 patients: 102 had oropharyngeal tumours, 83 oral cavity tumours, 48 laryngeal tumours and 33 hypopharyngeal tumours.",
+          "grade": {
+            "certainty": "ungraded",
+            "origin": "ai_estimated"
+          },
+          "verification": {
+            "exists": false,
+            "quoteFound": true,
+            "quoteMatch": "normalized_exact",
+            "retracted": false,
+            "support": "unknown"
+          },
+          "safetyCritical": false
+        }
+      ]
+    },
+    {
+      "ms": 34278,
+      "type": "stage_progress",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "stage": "extract",
+      "detail": "pubmed:40585969: ok, 2 claim(s)"
+    },
+    {
+      "ms": 34278,
+      "type": "band_ready",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "payload": {
+        "claims": [
+          {
+            "id": "499b5399-f71b-4958-adb4-82d5ebbb7e49",
+            "text": "Considere que experimentos de hipoxia-reoxigenación en vhCO se perfilaron por transcriptómica de célula única para diseccionar respuestas celulares.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "sourceId": "pubmed:40585969",
+            "passageId": "pubmed:40585969:0",
+            "quote": "Hypoxia-reoxygenation experiments were conducted on vhCOs, followed by single-cell transcriptomic profiling to dissect cellular responses.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "499b5399-f71b-4958-adb4-82d5ebbb7e49",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "8e7f3af3-764b-4f46-a8a3-16a95df17670",
+            "text": "Considere vhCO que integran organoides corticales y vasculares y recapitulan neurodesarrollo medio-tardío con progenitores, neuronas, microglía y vasculatura con barrera hematoencefálica.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 3,
+            "sourceId": "pubmed:40585969",
+            "passageId": "pubmed:40585969:0",
+            "quote": "We developed vhCOs by integrating cortical and vascular organoids, recapitulating mid-to-late gestational neurodevelopment with diverse lineages—neural progenitors, neurons, microglia, and functional vasculature with blood-brain barrier properties.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "8e7f3af3-764b-4f46-a8a3-16a95df17670",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ms": 34278,
+      "type": "source_reviewed",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "sourceId": "pubmed:40585969",
+      "acceptedClaimIds": [
+        "499b5399-f71b-4958-adb4-82d5ebbb7e49",
+        "8e7f3af3-764b-4f46-a8a3-16a95df17670"
+      ],
+      "withdrawnCount": 4,
+      "reason": "source support could not be confirmed"
+    },
+    {
+      "ms": 38170,
+      "type": "stage_progress",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "stage": "extract",
+      "detail": "europe_pmc:MED:42938372: ok, 3 claim(s)"
+    },
+    {
+      "ms": 38170,
+      "type": "band_ready",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "payload": {
+        "claims": [
+          {
+            "id": "499b5399-f71b-4958-adb4-82d5ebbb7e49",
+            "text": "Considere que experimentos de hipoxia-reoxigenación en vhCO se perfilaron por transcriptómica de célula única para diseccionar respuestas celulares.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "sourceId": "pubmed:40585969",
+            "passageId": "pubmed:40585969:0",
+            "quote": "Hypoxia-reoxygenation experiments were conducted on vhCOs, followed by single-cell transcriptomic profiling to dissect cellular responses.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "499b5399-f71b-4958-adb4-82d5ebbb7e49",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "8e7f3af3-764b-4f46-a8a3-16a95df17670",
+            "text": "Considere vhCO que integran organoides corticales y vasculares y recapitulan neurodesarrollo medio-tardío con progenitores, neuronas, microglía y vasculatura con barrera hematoencefálica.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 3,
+            "sourceId": "pubmed:40585969",
+            "passageId": "pubmed:40585969:0",
+            "quote": "We developed vhCOs by integrating cortical and vascular organoids, recapitulating mid-to-late gestational neurodevelopment with diverse lineages—neural progenitors, neurons, microglia, and functional vasculature with blood-brain barrier properties.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "8e7f3af3-764b-4f46-a8a3-16a95df17670",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "9b36ef54-f3eb-4931-af13-de6c8d2fe581",
+            "text": "Considere que la expresion tumoral de TCGA HNSC se midio por secuenciacion de ARN para evaluar y desarrollar firmas.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "sourceId": "europe_pmc:MED:42938372",
+            "passageId": "europe_pmc:MED:42938372:1",
+            "quote": "RNA sequencing data from The Cancer Genome Atlas HNSC project (TCGA HNSC) were used for signature evaluation and model development [ 8 ].",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "9b36ef54-f3eb-4931-af13-de6c8d2fe581",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "803db50b-e085-4ea3-a382-bc24cb5a36d6",
+            "text": "Considere que la expresion tumoral de GSE65858 se midio con Illumina HumanHT-12 v4.0 Expression BeadChip.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "sourceId": "europe_pmc:MED:42938372",
+            "passageId": "europe_pmc:MED:42938372:1",
+            "quote": "Tumour gene expression was measured using the Illumina HumanHT-12 v4.0 Expression BeadChip ( GPL10558 ).",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "803db50b-e085-4ea3-a382-bc24cb5a36d6",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          },
+          {
+            "id": "e172f1a2-ab5a-4b3e-90a0-cfad2c85775d",
+            "text": "Considere que el ensayo publicado del panel usa PCR cuantitativa normalizada a GNB2L1, B2M y RPL11.",
+            "basis": "background",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "sourceId": "europe_pmc:MED:42938372",
+            "passageId": "europe_pmc:MED:42938372:2",
+            "quote": "The published assay uses quantitative PCR to calculate the median panel expression normalised to the geometric mean of three reference genes, GNB2L1 , B2M and RPL11 [ 3 ].",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "safetyCritical": false,
+            "verificationReport": {
+              "claimId": "e172f1a2-ab5a-4b3e-90a0-cfad2c85775d",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ms": 38170,
+      "type": "source_reviewed",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "sourceId": "europe_pmc:MED:42938372",
+      "acceptedClaimIds": [
+        "9b36ef54-f3eb-4931-af13-de6c8d2fe581",
+        "803db50b-e085-4ea3-a382-bc24cb5a36d6",
+        "e172f1a2-ab5a-4b3e-90a0-cfad2c85775d"
+      ],
+      "withdrawnCount": 9,
+      "reason": "source support could not be confirmed"
+    },
+    {
+      "ms": 38637,
+      "type": "stage_progress",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "stage": "extract",
+      "detail": "partial (23997ms)"
+    },
+    {
+      "ms": 38639,
+      "type": "band_ready",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "payload": {
+        "claims": [
+          {
+            "id": "499b5399-f71b-4958-adb4-82d5ebbb7e49",
+            "text": "Considere que experimentos de hipoxia-reoxigenación en vhCO se perfilaron por transcriptómica de célula única para diseccionar respuestas celulares.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "sourceId": "pubmed:40585969",
+            "passageId": "pubmed:40585969:0",
+            "quote": "Hypoxia-reoxygenation experiments were conducted on vhCOs, followed by single-cell transcriptomic profiling to dissect cellular responses.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "499b5399-f71b-4958-adb4-82d5ebbb7e49",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "8e7f3af3-764b-4f46-a8a3-16a95df17670",
+            "text": "Considere vhCO que integran organoides corticales y vasculares y recapitulan neurodesarrollo medio-tardío con progenitores, neuronas, microglía y vasculatura con barrera hematoencefálica.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 3,
+            "sourceId": "pubmed:40585969",
+            "passageId": "pubmed:40585969:0",
+            "quote": "We developed vhCOs by integrating cortical and vascular organoids, recapitulating mid-to-late gestational neurodevelopment with diverse lineages—neural progenitors, neurons, microglia, and functional vasculature with blood-brain barrier properties.",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "8e7f3af3-764b-4f46-a8a3-16a95df17670",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "9b36ef54-f3eb-4931-af13-de6c8d2fe581",
+            "text": "Considere que la expresion tumoral de TCGA HNSC se midio por secuenciacion de ARN para evaluar y desarrollar firmas.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "sourceId": "europe_pmc:MED:42938372",
+            "passageId": "europe_pmc:MED:42938372:1",
+            "quote": "RNA sequencing data from The Cancer Genome Atlas HNSC project (TCGA HNSC) were used for signature evaluation and model development [ 8 ].",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "9b36ef54-f3eb-4931-af13-de6c8d2fe581",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "803db50b-e085-4ea3-a382-bc24cb5a36d6",
+            "text": "Considere que la expresion tumoral de GSE65858 se midio con Illumina HumanHT-12 v4.0 Expression BeadChip.",
+            "basis": "primary",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "sourceId": "europe_pmc:MED:42938372",
+            "passageId": "europe_pmc:MED:42938372:1",
+            "quote": "Tumour gene expression was measured using the Illumina HumanHT-12 v4.0 Expression BeadChip ( GPL10558 ).",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "803db50b-e085-4ea3-a382-bc24cb5a36d6",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          },
+          {
+            "id": "e172f1a2-ab5a-4b3e-90a0-cfad2c85775d",
+            "text": "Considere que el ensayo publicado del panel usa PCR cuantitativa normalizada a GNB2L1, B2M y RPL11.",
+            "basis": "background",
+            "actionType": "method",
+            "conditions": [],
+            "subQuestionIndex": 1,
+            "sourceId": "europe_pmc:MED:42938372",
+            "passageId": "europe_pmc:MED:42938372:2",
+            "quote": "The published assay uses quantitative PCR to calculate the median panel expression normalised to the geometric mean of three reference genes, GNB2L1 , B2M and RPL11 [ 3 ].",
+            "grade": {
+              "certainty": "ungraded",
+              "origin": "ai_estimated"
+            },
+            "verification": {
+              "exists": true,
+              "quoteFound": true,
+              "quoteMatch": "normalized_exact",
+              "retracted": false,
+              "support": "supports",
+              "retractionCheck": "crossref_no_signal"
+            },
+            "verificationReport": {
+              "claimId": "e172f1a2-ab5a-4b3e-90a0-cfad2c85775d",
+              "checks": [
+                {
+                  "name": "source_exists",
+                  "ok": true
+                },
+                {
+                  "name": "quote_in_passage",
+                  "ok": true,
+                  "detail": "normalized_exact"
+                },
+                {
+                  "name": "locator_valid",
+                  "ok": true
+                },
+                {
+                  "name": "numbers_preserved",
+                  "ok": true
+                },
+                {
+                  "name": "not_retracted",
+                  "ok": true,
+                  "detail": "crossref_no_signal"
+                },
+                {
+                  "name": "source_support",
+                  "ok": true,
+                  "detail": "supports"
+                }
+              ],
+              "final": "verified"
+            },
+            "safetyCritical": false
+          }
+        ],
+        "sourceScores": {
+          "pubmed:40585969": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42938372": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:37322330": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:PPR:PPR1346278": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:36283023": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42945612": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:39167456": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42953106": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:38806057": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42759407": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:38781959": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:PPR:PPR1351635": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:40855036": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:PMC:PMC13661358": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.7,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.11199999999999999
+          },
+          "pubmed:32403966": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.7857142857142857,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.12571428571428572
+          },
+          "europe_pmc:PPR:PPR1346282": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:40849425": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42726733": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:35641902": {
+            "relevance": 1,
+            "level": 1,
+            "quality": 1,
+            "currency": 0.9285714285714286,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.7428571428571429
+          },
+          "europe_pmc:MED:42896440": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:39137781": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42801171": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:28819234": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 0.5714285714285714,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.09142857142857143
+          },
+          "europe_pmc:MED:42950042": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:38579562": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42819788": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:41092315": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42377256": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "pubmed:41287009": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          },
+          "europe_pmc:MED:42703908": {
+            "relevance": 1,
+            "level": 0.2,
+            "quality": 1,
+            "currency": 1,
+            "applicability": 0.8,
+            "applicabilityLabel": "partial",
+            "total": 0.16000000000000003
+          }
+        }
+      }
+    },
+    {
+      "ms": 38639,
+      "type": "receipt_ready",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "receipt": {
+        "claimsTotal": 18,
+        "citationsExist": 5,
+        "quotesFound": 5,
+        "retracted": 0,
+        "supported": 5,
+        "partial": 0,
+        "dropReasons": {
+          "support": 13
+        },
+        "abstained": 3,
+        "sourcesByKind": {
+          "other": 29,
+          "meta_analysis": 1
+        },
+        "oldestSourceYear": 2017,
+        "generatedAt": "2026-10-31T19:58:37.048Z"
+      }
+    },
+    {
+      "ms": 38777,
+      "type": "done",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "status": "partial"
+    },
+    {
+      "ms": 40688,
+      "type": "relations_ready",
+      "runId": "240d0a22-a950-4f30-a5b6-dbbac0d2afc2",
+      "questions": [
+        "¿Qué genes presentan expresión diferencial bajo hipoxia?",
+        "¿Qué métodos se utilizaron para medir la expresión génica?",
+        "¿Qué niveles o duraciones de hipoxia se aplicaron?",
+        "¿Qué sistemas biológicos o tipos celulares se estudiaron?",
+        "¿Qué vías funcionales se asocian a los cambios de expresión?"
+      ],
+      "relations": [],
+      "status": "ok"
+    }
+  ]
+}

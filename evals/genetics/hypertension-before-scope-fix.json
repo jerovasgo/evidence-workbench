@@ -1,0 +1,20 @@
+{
+  "runId": "27842b53-efb1-4993-abb1-d94663db3fe8",
+  "query": "¿Cuáles son los cinco genes más asociados con hipertensión primaria?",
+  "events": [
+    {
+      "ms": 11468,
+      "type": "done",
+      "runId": "27842b53-efb1-4993-abb1-d94663db3fe8",
+      "status": "abstained"
+    },
+    {
+      "ms": 11468,
+      "type": "relations_ready",
+      "runId": "27842b53-efb1-4993-abb1-d94663db3fe8",
+      "questions": [],
+      "relations": [],
+      "status": "partial"
+    }
+  ]
+}

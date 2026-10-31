@@ -41,7 +41,7 @@ export async function planSearch(
 
   return runAgent({
     name: 'search-planner',
-    promptVersion: 'P3@0.1',
+    promptVersion: 'P3@0.3',
     tier: 'T0',
     systemPreamble: deps.p0Preamble,
     prompt,

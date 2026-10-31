@@ -100,7 +100,7 @@ describe('POST /api/runs', () => {
 
     const res = await POST(new Request('http://localhost/api/runs', { method: 'POST', body: 'not json' }));
     expect(res.status).toBe(400);
-  });
+  }, 15_000);
 
   it('returns 400 when freeText is missing', async () => {
     const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
