@@ -1,14 +1,20 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { ReactFlow, ReactFlowProvider, Background, Controls, MarkerType, type Edge, type Node } from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import type { Claim } from '@/shared/domain';
-import { findStartNodeId, flattenAlgorithmGraph, type AlgorithmGraph, type AlgorithmNode } from '@/modules/06-algorithm';
+import { layoutAlgorithmGraph, type AlgorithmGraph, type AlgorithmNode } from '@/modules/06-algorithm';
 import { Chip } from '@/components/ui/chip';
+import { algorithmNodeTypes, type AlgorithmFlowNodeData, type AlgorithmFlowNodeType } from '@/components/algorithm-flow-nodes';
 
-// Module 06 V1 renderer (docs/DECISIONS.md "V1 scope decisions"): a deterministic
-// vertical step list computed from `flattenAlgorithmGraph`/`findStartNodeId`
-// (`@/modules/06-algorithm`), not a 2D graph canvas — mirrors `evidence-matrix.tsx`'s
-// shape (plain markup driven by a pure, tested transform, every claim reference
-// opens the same evidence drawer as every other view).
+// Module 06 V1.1 renderer (docs/DECISIONS.md, 2026-10-31): a real flowchart canvas
+// (React Flow + elkjs layout, `@/modules/06-algorithm`'s `layoutAlgorithmGraph`),
+// replacing V1's indented step list after direct user feedback that the step list
+// didn't read as an actual algorithm. The "Read first" band summary above the
+// canvas is unchanged from V1 — it's the <10s scan path; the canvas is for reading
+// the full structure. Every node with cited claims opens the same evidence drawer
+// as every other view (`onOpenEvidence`).
 
 const NODE_LABEL: Record<AlgorithmNode['type'], string> = {
   critical_check: 'Critical check',
@@ -40,6 +46,68 @@ export function AlgorithmView({
   onOpenEvidence: (claim: Claim) => void;
   abstainReason?: string | null;
 }) {
+  const [flowNodes, setFlowNodes] = useState<Node<AlgorithmFlowNodeData>[]>([]);
+  const [flowEdges, setFlowEdges] = useState<Edge[]>([]);
+  const [isLayingOut, setIsLayingOut] = useState(false);
+
+  useEffect(() => {
+    if (!graph) {
+      setFlowNodes([]);
+      setFlowEdges([]);
+      return;
+    }
+    const claimsById = new Map(claims.map((claim) => [claim.id, claim]));
+    const bandNodeIds = new Set([...(band?.criticalChecks ?? []), ...(band?.firstAction ? [band.firstAction] : [])]);
+    let cancelled = false;
+    setIsLayingOut(true);
+
+    layoutAlgorithmGraph(graph).then((layout) => {
+      if (cancelled) return;
+      setFlowNodes(
+        layout.nodes.map((flowNode): AlgorithmFlowNodeType => {
+          const nodeClaims = flowNode.data.node.claimIds.map((id) => claimsById.get(id)).filter((claim): claim is Claim => !!claim);
+          return {
+            id: flowNode.id,
+            type: flowNode.type,
+            position: flowNode.position,
+            width: flowNode.width,
+            height: flowNode.height,
+            draggable: false,
+            selectable: false,
+            data: {
+              node: flowNode.data.node,
+              primaryClaim: nodeClaims[0],
+              extraClaimsCount: Math.max(0, nodeClaims.length - 1),
+              onOpenEvidence,
+              isBandHighlighted: bandNodeIds.has(flowNode.id),
+            },
+          };
+        }),
+      );
+      setFlowEdges(
+        layout.edges.map((edge): Edge => ({
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          label: edge.label,
+          type: 'smoothstep',
+          markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+          style: edge.data.isLoopBack ? { strokeDasharray: '6 4', opacity: 0.6 } : undefined,
+          labelStyle: { fill: 'var(--color-muted)', fontSize: 10 },
+          labelBgStyle: { fill: 'var(--color-bg)', fillOpacity: 0.85 },
+        })),
+      );
+      setIsLayingOut(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // `claims`/`band`/`onOpenEvidence` only ever change together with a new `graph`
+    // (a new SSE `algorithm_ready` event) — depending on `graph` alone avoids
+    // relaying out on every unrelated render.
+  }, [graph]);
+
   if (abstainReason) {
     return (
       <section className="rounded-[var(--radius-card)] border border-warning/40 p-4" aria-label="Algorithm">
@@ -52,22 +120,15 @@ export function AlgorithmView({
   }
   if (!graph) return null;
 
-  const claimsById = new Map(claims.map((claim) => [claim.id, claim]));
-  const startId = findStartNodeId(graph);
-  const flat = startId ? flattenAlgorithmGraph(graph, startId) : [];
   const bandNodeIds = new Set([...(band?.criticalChecks ?? []), ...(band?.firstAction ? [band.firstAction] : [])]);
   const bandNodes = graph.nodes.filter((node) => bandNodeIds.has(node.id));
-
-  function claimsFor(node: AlgorithmNode): Claim[] {
-    return node.claimIds.map((id) => claimsById.get(id)).filter((claim): claim is Claim => !!claim);
-  }
 
   return (
     <section className="rounded-[var(--radius-card)] border border-border p-4" aria-label="Algorithm">
       <h3 className="text-sm font-semibold">Decision path</h3>
       <p className="mt-2 text-xs leading-relaxed text-muted">
-        A verified step-by-step path built only from the findings above. An "if" line is the
-        structured condition that selects that branch.
+        A verified flowchart built only from the findings above. Diamonds are decision points; an edge
+        label is the structured condition that selects that branch. Click a step for its source quote.
       </p>
 
       {bandNodes.length > 0 && (
@@ -84,34 +145,31 @@ export function AlgorithmView({
         </div>
       )}
 
-      <ol className="mt-4 space-y-3">
-        {flat.map((entry, index) => (
-          <li key={`${entry.node.id}-${index}`} style={{ marginLeft: `${entry.depth * 16}px` }} className="text-xs">
-            {entry.edgeLabel && <p className="text-muted-2">if {entry.edgeLabel}</p>}
-            <div className="flex flex-wrap items-center gap-2">
-              <Chip tone={chipTone(entry.node.type)}>{NODE_LABEL[entry.node.type]}</Chip>
-              <span className="text-fg">{entry.node.label}</span>
-              {entry.isBackReference && <span className="text-muted-2">(returns here)</span>}
-            </div>
-            {entry.node.detail && <p className="mt-1 text-muted">{entry.node.detail}</p>}
-            {!entry.isBackReference && claimsFor(entry.node).length > 0 && (
-              <ul className="mt-1 space-y-1">
-                {claimsFor(entry.node).map((claim) => (
-                  <li key={claim.id}>
-                    <button
-                      type="button"
-                      onClick={() => onOpenEvidence(claim)}
-                      className="text-left leading-relaxed text-muted underline decoration-border-strong underline-offset-4 hover:text-fg hover:decoration-fg"
-                    >
-                      {claim.text}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </li>
-        ))}
-      </ol>
+      <div className="relative mt-4 h-[480px] w-full overflow-hidden rounded-lg border border-border bg-black/20">
+        {isLayingOut && flowNodes.length === 0 ? (
+          <div role="status" aria-label="Computing layout" className="flex h-full items-center justify-center text-xs text-muted">
+            Laying out the decision path…
+          </div>
+        ) : (
+          <ReactFlowProvider>
+            <ReactFlow
+              nodes={flowNodes}
+              edges={flowEdges}
+              nodeTypes={algorithmNodeTypes}
+              nodesDraggable={false}
+              nodesConnectable={false}
+              elementsSelectable={false}
+              fitView
+              fitViewOptions={{ padding: 0.15 }}
+              proOptions={{ hideAttribution: false }}
+              minZoom={0.2}
+            >
+              <Background gap={24} className="opacity-40" />
+              <Controls showInteractive={false} />
+            </ReactFlow>
+          </ReactFlowProvider>
+        )}
+      </div>
     </section>
   );
 }

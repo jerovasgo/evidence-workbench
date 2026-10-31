@@ -7,3 +7,4 @@ export * from './validators/algorithm';
 export * from './agents/algorithm-synthesizer';
 export * from './pipeline/synthesize-algorithm';
 export * from './pipeline/flatten-algorithm';
+export * from './pipeline/layout-algorithm';

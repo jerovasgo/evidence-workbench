@@ -94,12 +94,27 @@ with verified quotes; abstention visible where evidence is insufficient.
 ## V1 built (2026-10-31)
 The agent (`src/modules/06-algorithm/agents/algorithm-synthesizer.ts`, P9), invariant-repair
 orchestration (`pipeline/synthesize-algorithm.ts`) and renderer (`src/components/algorithm-view.tsx`)
-exist and are wired into the live SSE pipeline. Five scope cuts from the design above, logged in
-`docs/DECISIONS.md` (2026-10-31): single-call synthesis (no 2-pass streaming); a deterministic
-vertical step list (`pipeline/flatten-algorithm.ts`, DFS order) instead of the ELK 2D canvas — still
-code-computed layout, just not spatial; no "walk the path" mode; exactly one manual invariant-repair
-call, then abstain (never a partially-wrong graph); `provenance` is always `'external'` (no local
-documents exist yet, and relation-labelling's `contradicts` data runs after `done`, too late for this).
+exist and are wired into the live SSE pipeline. Scope cuts from the design above, logged in
+`docs/DECISIONS.md` (2026-10-31): single-call synthesis (no 2-pass streaming); no "walk the path"
+mode; exactly one manual invariant-repair call, then abstain (never a partially-wrong graph);
+`provenance` is always `'external'` (no local documents exist yet, and relation-labelling's
+`contradicts` data runs after `done`, too late for this).
 Also: this module's prompt and worked examples are genetics-specific, not generic "any science" — the
 product's actual current domain, per the user's 2026-10-30 correction, even though the rest of this
 file and CLAUDE.md/SPEC.md still use the broader framing from the 2026-10-29 pivot.
+
+## V1.1 built (2026-10-31): real flowchart canvas
+V1's renderer was a deterministic indented step list (`pipeline/flatten-algorithm.ts`, DFS order) —
+cut from the design's React Flow/ELK canvas to save build time. After seeing V1 live, the user said it
+didn't read as an actual algorithm and asked for the originally-designed real flowchart visual
+(reference image: rounded boxes, decision diamonds, labeled arrows). Built as originally designed:
+`pipeline/layout-algorithm.ts` computes a top-to-bottom layered layout via elkjs (still 100%
+code-computed, never model-positioned — same rule, a real layout algorithm instead of a hand-rolled
+indent); a true DFS back-edge (not every edge out of an `iterate` node, so a forward "continue" edge
+from an `iterate` node isn't miscategorized) is excluded from layering and redrawn as a separate dashed
+loop-back edge. `src/components/algorithm-flow-nodes.tsx` renders one shape per node type (diamond for
+`decision`, rounded rect otherwise) with a lucide icon, dual-coding type instead of relying on a literal
+saturated hue — SPEC §11's "no color-only meaning" and the existing dark/monochrome design tokens
+(`--color-warning`/`--color-conflict` are themselves a muted gray, not a true hue) stay intact; the
+reference image's colors were a shape/arrows reference, not adopted literally. The "Read first" band
+box above the canvas, the abstain state, and every other V1 scope cut are unchanged.
