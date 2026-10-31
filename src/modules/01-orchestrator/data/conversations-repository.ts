@@ -55,6 +55,17 @@ export interface ConversationsRepository {
   getWithTurns(conversationId: string, sessionId: string): Promise<{ conversation: ConversationSummary; turns: ConversationTurn[] } | null>;
   rename(conversationId: string, sessionId: string, title: string): Promise<boolean>;
   remove(conversationId: string, sessionId: string): Promise<boolean>;
+  /**
+   * Cross-process recovery fallback for `GET /api/runs/:id/stream`'s in-memory
+   * `pendingRunContext` handoff (`src/modules/01-orchestrator/server/pending-run-context.ts`):
+   * on Vercel, the POST that creates a run and the very next GET that streams it
+   * are not guaranteed to land on the same serverless instance, so that in-memory
+   * map can miss even on a genuine first connection, not just a real reconnect.
+   * Reads the free text back from the one place CLAUDE.md rule 3's scoped
+   * exception already persists it (field-encrypted) — no new storage location.
+   * Returns null if no turn references this run, or it belongs to a different session.
+   */
+  getTurnByRunId(runId: string, sessionId: string): Promise<{ freeText: string } | null>;
 }
 
 interface ConversationRow {
@@ -195,6 +206,27 @@ export function createSupabaseConversationsRepository(client: SupabaseClient, ke
         .select('id');
       if (error) throw new Error(`conversations delete failed: ${error.message}`);
       return (data ?? []).length > 0;
+    },
+
+    async getTurnByRunId(runId, sessionId) {
+      const { data: turnRow, error: turnError } = await client
+        .from('conversation_turns')
+        .select('id, conversation_id, encrypted_free_text')
+        .eq('run_id', runId)
+        .maybeSingle();
+      if (turnError) throw new Error(`conversation_turns select failed: ${turnError.message}`);
+      if (!turnRow) return null;
+      const turn = turnRow as { id: string; conversation_id: string; encrypted_free_text: EncryptedBlob };
+
+      const { data: conversationRow, error: conversationError } = await client
+        .from('conversations')
+        .select('session_id')
+        .eq('id', turn.conversation_id)
+        .maybeSingle();
+      if (conversationError) throw new Error(`conversations select failed: ${conversationError.message}`);
+      if (!conversationRow || (conversationRow as { session_id: string }).session_id !== sessionId) return null;
+
+      return { freeText: decryptField(turn.encrypted_free_text, buildAad(sessionId, turn.id), keyring) };
     },
   };
 }

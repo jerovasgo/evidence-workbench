@@ -24,6 +24,7 @@ function fakeConversationsRepository() {
     getWithTurns: vi.fn(async () => null),
     rename: vi.fn(async () => true),
     remove: vi.fn(async () => true),
+    getTurnByRunId: vi.fn(async () => null),
   };
 }
 

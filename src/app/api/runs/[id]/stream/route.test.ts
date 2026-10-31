@@ -3,6 +3,33 @@ import { createPendingRunContextStore, type RunRecord, type RunsRepository } fro
 import type { MetaClient, RespondResult } from '@/shared/meta';
 import { createInMemoryBudgetGuard } from '@/shared/security';
 
+// getOrCreateSessionId() (src/lib/session-cookie.ts) calls next/headers' cookies(),
+// which only works inside Next's own request-scoped context — not when a test
+// invokes the route handler directly. Fake it with a tiny in-memory cookie jar,
+// same as src/app/api/runs/route.test.ts.
+vi.mock('next/headers', () => {
+  const store = new Map<string, string>();
+  return {
+    cookies: vi.fn(async () => ({
+      get: (name: string) => (store.has(name) ? { name, value: store.get(name)! } : undefined),
+      set: (name: string, value: string) => store.set(name, value),
+    })),
+  };
+});
+
+function fakeConversationsRepository(overrides: { getTurnByRunId?: ReturnType<typeof vi.fn> } = {}) {
+  return {
+    create: vi.fn(),
+    addTurn: vi.fn(),
+    listForSession: vi.fn(),
+    getWithTurns: vi.fn(),
+    rename: vi.fn(),
+    remove: vi.fn(),
+    getTurnByRunId: vi.fn(async () => null),
+    ...overrides,
+  };
+}
+
 function fakeRespondResult(parsed: unknown): RespondResult {
   return {
     id: 'resp_x',
@@ -37,10 +64,12 @@ function mockRuntime(
   runsRepository: RunsRepository,
   pendingRunContext = createPendingRunContextStore(),
   stageOutputsRepository = { insert: vi.fn(), getLatestPerStage: vi.fn().mockResolvedValue(new Map()) },
+  conversationsRepository = fakeConversationsRepository(),
 ) {
   return {
     runsRepository,
     stageOutputsRepository,
+    conversationsRepository,
     metaClient,
     budgetGuard: createInMemoryBudgetGuard({ runCostCapUsd: 1, dailyBudgetUsd: 20 }),
     crossref: { lookup: vi.fn().mockResolvedValue(null) },
@@ -133,6 +162,27 @@ describe('GET /api/runs/[id]/stream', () => {
 
     expect(events[0]).toMatchObject({ type: 'error', runId: 'run_1' });
     expect(events[1]).toEqual({ type: 'done', runId: 'run_1', status: 'failed' });
+  });
+
+  it('recovers free text from the persisted conversation turn when pendingRunContext misses (cross-process handoff, e.g. Vercel serverless)', async () => {
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult({ setting: 'bogus' })); // invalid for every stage's schema — only the recovery path itself is under test
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const runsRepository = fakeRunsRepository({ getRun: vi.fn(async () => routingRun) });
+    const conversationsRepository = fakeConversationsRepository({
+      getTurnByRunId: vi.fn(async () => ({ freeText: 'What is the role of BRCA1 in DNA repair?' })),
+    });
+
+    const GET = await loadGetWithRuntime(
+      mockRuntime(metaClient, runsRepository, createPendingRunContextStore(), undefined, conversationsRepository), // empty pending store
+    );
+    const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
+    const events = await readAllEvents(res);
+
+    expect(conversationsRepository.getTurnByRunId).toHaveBeenCalledWith('run_1', expect.any(String));
+    // The pipeline actually ran with the recovered free text, instead of the
+    // "Retrieval context is no longer available" short-circuit.
+    expect(events.some((event) => event.type === 'error')).toBe(false);
+    expect(events[0]).toMatchObject({ type: 'stage_started', runId: 'run_1' });
   });
 
   it('streams stage events, a band_ready, a receipt_ready and a final done for a routing run with pending context', async () => {

@@ -1,5 +1,6 @@
 import { synthesizeEvidenceOverview } from '@/modules/01-orchestrator';
 import { isComparisonRequest } from '@/lib/research-intent';
+import { getOrCreateSessionId } from '@/lib/session-cookie';
 import {
   buildReceipt,
   getRunForViewer,
@@ -224,17 +225,35 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         return;
       }
 
-      const pending = runtime.pendingRunContext.take(run.id);
+      let pending = runtime.pendingRunContext.take(run.id);
+
+      // Vercel serverless functions give no guarantee that the POST which created
+      // this run and this immediately-following GET land on the same process —
+      // the in-memory handoff documented on `pendingRunContext` itself ("if the
+      // stream never comes... or hits a different instance") can miss even on a
+      // genuine first connection, not only a real reconnect. Recover the free text
+      // from the one place it's already durably stored (field-encrypted) for this
+      // exact run — CLAUDE.md rule 3's scoped exception (docs/DECISIONS.md) — rather
+      // than failing a run that never actually got a chance to stream. Only
+      // freeText is recoverable this way; routerCondition/routerSetting/opening
+      // are optional enrichment the structurer already tolerates missing (see
+      // run-retrieval.ts's own `freeText || routerCondition || '...'` fallback).
+      if (!pending) {
+        const sessionId = await getOrCreateSessionId();
+        const recovered = await runtime.conversationsRepository.getTurnByRunId(run.id, sessionId).catch(() => null);
+        if (recovered) pending = { freeText: recovered.freeText };
+      }
+
       // Reference lookups run beside the literature pipeline. They may enrich the
       // overview, but cannot delay retrieval or turn a gene record into a study.
       void (pending ? lookupGeneContext(pending.freeText).then((genes) => {
         if (genes.length && !closed) send({ type: 'gene_context_ready', runId: run.id, genes });
       }).catch(() => undefined) : Promise.resolve());
 
-      // No in-memory context: only an actual blocker if nothing was persisted
-      // either — otherwise this is exactly the resumable-reconnect case stage
-      // persistence exists for, and the pipeline's own resume logic picks up from
-      // whichever stage last completed.
+      // Still nothing (no in-memory context, nothing recoverable): only an actual
+      // blocker if nothing was persisted either — otherwise this is exactly the
+      // resumable-reconnect case stage persistence exists for, and the pipeline's
+      // own resume logic picks up from whichever stage last completed.
       if (!pending) {
         const alreadyPersisted = await runtime.stageOutputsRepository.getLatestPerStage(run.id).catch(() => new Map());
         if (alreadyPersisted.size === 0) {

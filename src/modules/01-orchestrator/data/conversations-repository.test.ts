@@ -116,4 +116,30 @@ describe('createSupabaseConversationsRepository', () => {
     expect(await repo.rename(conversationId, 'session_1', 'renamed')).toBe(true);
     expect(await repo.remove(conversationId, 'session_1')).toBe(true);
   });
+
+  describe('getTurnByRunId', () => {
+    it('recovers the free text for the owning session (cross-process pendingRunContext fallback)', async () => {
+      const { client } = fakeClient();
+      const repo = createSupabaseConversationsRepository(client, keyring);
+      await repo.create({ sessionId: 'session_1', title: 'x', mode: 'auto', freeText: 'What is the role of BRCA1?', runId: 'run_1' });
+
+      const result = await repo.getTurnByRunId('run_1', 'session_1');
+      expect(result).toEqual({ freeText: 'What is the role of BRCA1?' });
+    });
+
+    it('returns null for a different session (never decrypts under the wrong owner)', async () => {
+      const { client } = fakeClient();
+      const repo = createSupabaseConversationsRepository(client, keyring);
+      await repo.create({ sessionId: 'session_1', title: 'x', mode: 'auto', freeText: 'x', runId: 'run_1' });
+
+      expect(await repo.getTurnByRunId('run_1', 'session_2')).toBeNull();
+    });
+
+    it('returns null when no turn references this run id', async () => {
+      const { client } = fakeClient();
+      const repo = createSupabaseConversationsRepository(client, keyring);
+
+      expect(await repo.getTurnByRunId('run_missing', 'session_1')).toBeNull();
+    });
+  });
 });
