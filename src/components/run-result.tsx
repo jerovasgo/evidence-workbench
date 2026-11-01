@@ -40,6 +40,50 @@ const INTENT_LABEL: Partial<Record<Intent, string>> = { algorithm: 'an Algorithm
  * (P1) identified something other than plain evidence lookup — `fact_lookup`/
  * `comparison` already IS the Evidence list shown below, nothing to explain.
  */
+/**
+ * Prefers one claim per distinct source before a second claim from any
+ * already-represented source, so a short "Key findings" list actually spans the
+ * evidence (the "development" beat of the narrative) instead of risking all 3 slots
+ * going to the same single source just because it happened to stream in first.
+ */
+function selectDiverseFindings(claims: Claim[], limit: number): Claim[] {
+  const seenSources = new Set<string>();
+  const picked: Claim[] = [];
+  const leftover: Claim[] = [];
+  for (const claim of claims) {
+    if (picked.length >= limit) break;
+    if (seenSources.has(claim.sourceId)) {
+      leftover.push(claim);
+    } else {
+      seenSources.add(claim.sourceId);
+      picked.push(claim);
+    }
+  }
+  for (const claim of leftover) {
+    if (picked.length >= limit) break;
+    picked.push(claim);
+  }
+  return picked;
+}
+
+/**
+ * "Select the format the data actually supports" (2026-10-31, docs/DECISIONS.md):
+ * true when at least one sub-question has verified claims from ≥2 distinct sources —
+ * genuinely comparable evidence — regardless of whether the request was phrased as
+ * a literal comparison. Pure client-side check over data already streamed, no new
+ * model call or SSE event.
+ */
+function hasComparableEvidence(claims: Claim[]): boolean {
+  const sourcesBySubQuestion = new Map<number, Set<string>>();
+  for (const claim of claims) {
+    if (claim.subQuestionIndex === undefined) continue;
+    const sources = sourcesBySubQuestion.get(claim.subQuestionIndex) ?? new Set<string>();
+    sources.add(claim.sourceId);
+    sourcesBySubQuestion.set(claim.subQuestionIndex, sources);
+  }
+  return [...sourcesBySubQuestion.values()].some((sources) => sources.size >= 2);
+}
+
 function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefined): string | null {
   const explicitLabel = mode && mode !== 'auto' ? MODE_LABEL[mode] : undefined;
   if (explicitLabel) return `The full ${explicitLabel} view is still in development. The live provenance graph shows the evidence available so far.`;
@@ -66,7 +110,9 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
   const summary = buildResultSummary(status, receipt, visibleClaims);
   const reducedMotion = useReducedMotion();
   const requestedComparison = intent === 'comparison' || isComparisonRequest(query ?? '');
-  const showComparison = requestedComparison || relations.some((relation) => relation.kind === 'contradicts' || relation.divergence?.kind === 'scientific_contradiction');
+  const showComparison = requestedComparison
+    || relations.some((relation) => relation.kind === 'contradicts' || relation.divergence?.kind === 'scientific_contradiction')
+    || hasComparableEvidence(visibleClaims ?? []);
   const displayClaims = [...provisionalClaims, ...qualifiedClaims, ...(visibleClaims ?? [])];
   const substantiveOpening = opening;
   const reveal = reducedMotion ? false : { opacity: 0, y: 8 };
@@ -111,7 +157,7 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
         />
       )}
 
-      {visibleClaims && visibleClaims.length > 0 && <ul className="space-y-3" aria-label="Key findings">{visibleClaims.filter((claim) => claim.actionType !== 'method').slice(0, 3).map((claim) => <li key={claim.id}><button type="button" onClick={() => setSelectedClaim(claim)} className="text-left text-sm leading-6 underline decoration-border underline-offset-4">{claim.text}</button></li>)}</ul>}
+      {visibleClaims && visibleClaims.length > 0 && <ul className="space-y-3" aria-label="Key findings">{selectDiverseFindings(visibleClaims.filter((claim) => claim.actionType !== 'method'), 3).map((claim) => <li key={claim.id}><button type="button" onClick={() => setSelectedClaim(claim)} className="text-left text-sm leading-6 underline decoration-border underline-offset-4">{claim.text}</button></li>)}</ul>}
       {showComparison && relations.length > 0 && <p className="text-sm leading-6 text-muted">{relations[0]?.evidence}</p>}
       <div className="flex flex-col gap-3">
         {visibleClaims !== null && visibleClaims.length === 0 && (
