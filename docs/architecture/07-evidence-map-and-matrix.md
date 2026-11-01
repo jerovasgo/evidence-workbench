@@ -91,3 +91,42 @@ planted-divergence protocol. React Flow only renders; it never owns data. Dark-f
 ## Acceptance
 Map and matrix render from the same graph for ≥3 topics; every node/cell opens the evidence
 drawer; disagreements are filterable; layout tests green.
+
+## V1 built (2026-11-01): the radial map
+
+The Matrix half (`buildEvidenceMatrix`, `evidence-matrix.tsx`) was already live. The map half is
+now built too: `src/modules/07-map-matrix/pipeline/evidence-map.ts` (`buildMapTree`, pure, no
+model call), `pipeline/layout-map.ts` (elkjs `radial` layout), `src/components/evidence-map-nodes.tsx`
++ `evidence-map-view.tsx` (React Flow canvas + an accessible list fallback), wired into
+`run-result.tsx` for `intent === 'evidence_map'` (`evidence_map` was already a selectable `Mode`).
+Scope decisions, logged in `docs/DECISIONS.md` (2026-11-01):
+- **No model call anywhere in the map's path.** The optional `map-labeller` (T0) above is cut —
+  branch labels come straight from the sub-question text already streamed (`relations_ready`), and
+  claim "labels" are just claim text. Stronger than "the model never emits coordinates, shapes, or
+  edges": there's no model call for the map at all.
+- **No backend/SSE/runtime wiring.** `buildMapTree` is a pure function called directly from
+  `run-result.tsx` over data already in `RunStreamState` (`claims`, `questions`) — no new SSE event,
+  no `runtime.ts`/`route.ts` change. A direct fit for "projections are pure functions of the verified
+  graph," not a shortcut.
+- **Layout: elkjs's own `radial` algorithm**, not d3-hierarchy — already a dependency (modules
+  06/08); d3-hierarchy was never installed. A fixed `elk.radial.radius` was tried first and produced
+  real node overlaps at the root (caught by the layout test) — left unset so elk sizes each ring from
+  the nodes' own dimensions instead. A second, live-verification-only bug: `RootNode` had no React
+  Flow `Handle` at all, so every root→branch edge silently failed to attach — fixed by adding one.
+- **Secondary relation edges (agrees/differs/contradicts, dashed, toggled) deferred to V1.1** — not
+  in this module's Acceptance line for the map itself; `relations` are confirmed present and ready
+  (`relations_ready`) for a later pass.
+- **No map→Algorithm/Matrix cross-navigation.** SPEC calls the map "the navigator of the product,"
+  but Algorithm/Mechanism/Matrix are each still separate, standalone views with no shared
+  sub-question-scoped routing between them — V1's map is a standalone view like the other two:
+  clicking a claim node opens its evidence drawer; clicking a branch only collapses/expands it.
+- **Action-type fallback grouping uses the pivoted taxonomy**
+  (`finding/method/measurement/theory/mechanism/limitation`), not this doc's own pre-pivot example
+  list above.
+- **Truncation metadata lives beside `MapNode`, not on it** — `buildMapTree` returns
+  `{ tree, truncatedBranches, truncatedByBranch }` so the schema stays identical to what a future
+  `map-labeller` call would also produce/consume. A branch's "+N more" reveal is client-only state
+  (no re-fetch), via `buildMapTree`'s `revealedBranchIds` option.
+- **The screen-reader/list fallback was built, not deferred** — cheap (same `tree` data, a nested
+  `<ul>`), and both this module's Acceptance line and its own failure-modes table call for it
+  explicitly.

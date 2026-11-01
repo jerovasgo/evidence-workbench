@@ -6,16 +6,18 @@ import type { Mode } from '@/lib/modes';
 // A plain template keyed by `mode` alone — known instantly, client-side, the moment
 // a turn is sent, no round trip. Never claims a source was verified or a task
 // finished (that would be the kind of premature-completion claim CLAUDE.md rule 5
-// forbids) — only describes what is about to happen. Algorithm/Evidence Map are
-// worded as "gather and verify the evidence", not "build the algorithm/map", since
-// neither view is built yet (the "single mode" note elsewhere says so once the
-// router's real intent is known).
+// forbids) — only describes what is about to happen.
+//
+// 2026-11-01: algorithm/mechanism/evidence_map all ship real views now (modules
+// 06/08/07) — these three messages originally said "isn't built yet, so you'll see
+// it as a verified evidence list" (true when only Evidence was built), a claim that
+// went stale as each view shipped and was never updated. Reworded to describe the
+// real view each mode now produces.
 
 const MESSAGE: Partial<Record<Mode, string>> = {
-  algorithm:
-    'Understood — I’ll search, verify, and bring back the evidence behind this. The Algorithm view isn’t built yet, so you’ll see it as a verified evidence list.',
-  evidence_map:
-    'Got it — I’ll search, verify, and bring back the evidence behind this. The Evidence Map view isn’t built yet, so you’ll see it as a verified evidence list.',
+  algorithm: 'Understood — I’ll search, verify, and lay out the evidence as a flowchart.',
+  mechanism: 'Understood — I’ll search, verify, and diagram the mechanism from the evidence.',
+  evidence_map: 'Got it — I’ll search, verify, and map the evidence by sub-question.',
 };
 
 const DEFAULT_MESSAGE = 'On it — I’ll search, verify, and bring back the evidence that answers this.';
