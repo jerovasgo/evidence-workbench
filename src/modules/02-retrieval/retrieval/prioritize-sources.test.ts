@@ -20,6 +20,20 @@ it('distinguishes empty, off-topic, thin and sufficient retrieval for complex qu
  ]).status).toBe('sufficient');
 });
 
+it('2026-11-01 regression: the garbled "mo" term must not match as a substring inside "Hemoterapia" (docs/DECISIONS.md)', () => {
+ // Reproduces the exact production failure: a broken tokenizer upstream once
+ // produced "mo" as a query term for "¿Cómo funciona la PCR?"; a substring
+ // check then matched it inside unrelated hematology-congress titles and
+ // disguised an off-topic retrieval as "sufficient," so the real semantic
+ // rescue (P3) never triggered. The upstream tokenizer is fixed (see
+ // `seed-search-plan.test.ts`), but this is the second, independent half of
+ // the fix: matching must be whole-word even if a bad term ever reaches here.
+ const sources = [{ tempId: 'x', family: 'europe_pmc' as const, title: 'Congreso Nacional de Hematología y Hemoterapia', url: 'https://example.org/x' }];
+ const result = prioritizeSources('mo funciona PCR', sources);
+ expect(result[0]?.matched).toEqual([]);
+ expect(assessRetrievalSufficiency('mo funciona PCR', sources).status).toBe('off_topic');
+});
+
 it('prioritizes association studies and reviews for a gene-ranking question without excluding other results', () => {
  const sources = [
   { tempId: 'generic', family: 'pubmed' as const, title: 'Essential hypertension overview', url: 'https://example.org/1' },

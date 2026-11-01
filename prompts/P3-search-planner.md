@@ -1,8 +1,20 @@
 # P3 — Search planner
 
-Version: `P3@0.2`
+Version: `P3@0.4`
 Agent: `search-planner` (module 02, tier T0, 1 step, ~1,200 output tokens)
 Shares the common preamble `P0`.
+
+**2026-11-01 fix (docs/DECISIONS.md):** live-diagnosed a real production bug, not a missing-
+feature gap — for "¿Cómo funciona la PCR?" this planner emitted the query text `"mo funciona
+PCR"` (dropped `"¿Có"` and `"la"`); for the English control "How does PCR work?" it emitted
+`"PCR work"` (dropped `"How does"`). Same pattern both languages: the model was collapsing the
+question into a bare 2–3-word fragment and specifically dropping the interrogative/explanatory
+cue, so a mechanism question's query lost the one thing that made it a mechanism query. Token
+budget was not the cause (2,000-token limit, 3 short strings). Added an explicit rule + worked
+examples below rather than a separate MeSH-decomposition step: PubMed's own `esearch` already
+does Automatic Term Mapping to MeSH headings for free given a clean phrase, so decomposition would
+have been redundant for PubMed and wouldn't have touched the Europe PMC side of the same failure —
+the real defect was the query text itself arriving broken.
 
 **2026-10-29 pivot (docs/DECISIONS.md):** "clinical question" -> "question";
 `'guideline'` family -> `'standards_body'` (IUPAC/NIST/ISO-style publications);
@@ -41,6 +53,17 @@ Rules:
   the user's wording literally. Translate non-English scientific concepts when
   the target index is primarily English, while preserving named genes, variants,
   organisms, studies and identifiers exactly.
+- Never collapse the question into a bare 2-3 word keyword fragment that drops its
+  interrogative or explanatory framing. A "how/why does X work" or mechanism
+  question's query text must keep a mechanism-indicating term (e.g. "mechanism",
+  "pathway", "process") alongside the full name of the topic, not the topic noun
+  alone — the query should read as a real question about process, not a title
+  search. Example: for "¿Cómo funciona la PCR?", do not write "mo funciona PCR" or
+  "PCR"; write "polymerase chain reaction mechanism" or "reacción en cadena de la
+  polimerasa, mecanismo" (full phrase, not a truncated fragment). Example: for "How
+  does PCR work?", do not write "PCR work"; write "polymerase chain reaction DNA
+  amplification mechanism". Every query string must be a complete, grammatical
+  phrase a person could read on its own.
 - Match query families to the request shape: association/ranking questions should
   include association, replication and synthesis queries; mechanism questions
   should include functional/pathway evidence; comparisons should seek sources

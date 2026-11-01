@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildSeedSearchPlan, detectQueryShape, extractSearchHints } from './seed-search-plan';
+import { buildSeedSearchPlan, detectQueryShape, extractSearchHints, tokenizeWords } from './seed-search-plan';
 
 
 
@@ -78,4 +78,24 @@ it.each([
   expect(plan.queries).toHaveLength(4);
   expect(plan.queries.some((query) => /GWAS/.test(query.text))).toBe(true);
   expect(plan.queries.some((query) => /review OR "meta-analysis" OR replication/.test(query.text))).toBe(true);
+});
+
+describe('2026-11-01 regression: accented words must not break mid-token (docs/DECISIONS.md)', () => {
+  it('tokenizes an accented Spanish word whole instead of splitting at the accent', () => {
+    expect(tokenizeWords('¿Cómo funciona la PCR?')).toEqual(['Cómo', 'funciona', 'la', 'PCR']);
+  });
+
+  it('never produces a bare 2-letter fragment like "mo" for "¿Cómo funciona la PCR?"', () => {
+    const plan = buildSeedSearchPlan('¿Cómo funciona la PCR?');
+    for (const query of plan.queries) {
+      expect(query.text).not.toMatch(/\bmo\b/);
+    }
+  });
+
+  it('strips the Spanish interrogative "cómo" the same way "how" is stripped in English', () => {
+    const esHints = extractSearchHints('¿Cómo funciona la PCR?');
+    expect(esHints.terms.map((t) => t.toLowerCase())).not.toContain('cómo');
+    const enHints = extractSearchHints('How does PCR work?');
+    expect(enHints.terms.map((t) => t.toLowerCase())).not.toContain('how');
+  });
 });

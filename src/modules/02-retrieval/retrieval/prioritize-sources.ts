@@ -1,5 +1,5 @@
 import type { CandidateSource } from '../schemas/retrieval';
-import { detectQueryShape, extractSearchHints } from './seed-search-plan';
+import { detectQueryShape, extractSearchHints, tokenizeWords } from './seed-search-plan';
 export interface RetrievalSufficiency {
   status: 'empty' | 'off_topic' | 'thin' | 'sufficient';
   reason: string;
@@ -13,7 +13,13 @@ export function prioritizeSources(query: string, sources: CandidateSource[]) {
   const associationRequest = /\b(associated|association|susceptibility|top|most|asociad[oa]s?|principales|m[aá]s)\b/i.test(query);
   return sources.map((source, index) => {
     const title = source.title.toLowerCase();
-    const matched = terms.filter((term) => title.includes(term));
+    // 2026-11-01 fix (docs/DECISIONS.md): whole-word set membership, not
+    // `title.includes(term)` — a raw substring check let a short garbled term
+    // (e.g. "mo") match inside an unrelated longer word (e.g. "hemoterapia"),
+    // which made an off-topic result look "relevant" and suppressed the
+    // semantic-rescue escalation below.
+    const titleWords = new Set(tokenizeWords(title).map((word) => word.toLowerCase()));
+    const matched = terms.filter((term) => titleWords.has(term));
     const evidenceFit = associationRequest
       ? [/(?:genome-wide association|gwas|transcriptome-wide association|twas)/, /(?:genetic|gene|genes|locus|loci|susceptibility)/, /(?:systematic review|meta-analysis|review)/]
           .reduce((score, pattern) => score + Number(pattern.test(title)), 0)
