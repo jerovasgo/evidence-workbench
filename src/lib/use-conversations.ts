@@ -38,6 +38,16 @@ export interface UseConversationsResult {
   sendMessage: (freeText: string, mode: Mode, depth?: ResearchDepth) => Promise<void>;
   retryTurn: (turnId: string) => void;
   newResearch: () => void;
+  /**
+   * 2026-11-01 (docs/DECISIONS.md): the hackathon-scoped precomputed-demo-runs
+   * shortcut — appends a turn with its `runId`/`intent` already known and skips
+   * `POST /api/runs` entirely, so `RunResult`'s `useRunStream` connects straight to
+   * `GET /api/runs/:id/stream`'s existing "already finished run" instant-replay
+   * path (no live retrieval, no model calls, no cost). Not a general cache: the
+   * caller (`EmptyState`) only ever passes the 3 known precomputed landing-page
+   * suggestions here.
+   */
+  loadPrecomputedTurn: (runId: string, freeText: string, mode: Mode, intent: Intent) => void;
 }
 
 /**
@@ -136,5 +146,9 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
     setTurns([]);
   }, []);
 
-  return { turns, sending, sendMessage, retryTurn, newResearch };
+  const loadPrecomputedTurn = useCallback((runId: string, freeText: string, mode: Mode, intent: Intent) => {
+    setTurns((prev) => [...prev, { id: runId, freeText, mode, runId, intent }]);
+  }, []);
+
+  return { turns, sending, sendMessage, retryTurn, newResearch, loadPrecomputedTurn };
 }

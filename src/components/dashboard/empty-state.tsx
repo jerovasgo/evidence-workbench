@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { SearchBar } from '@/components/search-bar';
 import { DEFAULT_MODE, type Mode } from '@/lib/modes';
 import { DEFAULT_RESEARCH_DEPTH, type ResearchDepth } from '@/lib/research-depth';
+import { PRECOMPUTED_DEMO_RUNS } from '@/lib/precomputed-demo-runs';
+import type { Intent } from '@/modules/01-orchestrator';
 
 const SUGGESTIONS = [
   'Does a polar aprotic solvent increase the rate of an SN2 reaction?',
@@ -11,13 +13,28 @@ const SUGGESTIONS = [
   'What does recent evidence say about horizontal gene transfer in antibiotic resistance?',
 ];
 
-export function EmptyState({ onSend }: { onSend: (text: string, mode: Mode, depth: ResearchDepth) => void }) {
+// 2026-11-01 (docs/DECISIONS.md): a suggestion with a precomputed entry skips the
+// live pipeline entirely via `onSelectPrecomputed` — instant for a demo. A
+// suggestion with no entry (or a stale one, if `SUGGESTIONS`'s text ever changes)
+// falls through to the normal `onSend` live path unchanged — never a broken state.
+export function EmptyState({
+  onSend,
+  onSelectPrecomputed,
+}: {
+  onSend: (text: string, mode: Mode, depth: ResearchDepth) => void;
+  onSelectPrecomputed: (runId: string, freeText: string, mode: Mode, intent: Intent) => void;
+}) {
   const [value, setValue] = useState('');
   const [mode, setMode] = useState<Mode>(DEFAULT_MODE);
   const [depth, setDepth] = useState<ResearchDepth>(DEFAULT_RESEARCH_DEPTH);
 
   function submit(text: string) {
     if (!text.trim()) return;
+    const precomputed = PRECOMPUTED_DEMO_RUNS[text];
+    if (precomputed) {
+      onSelectPrecomputed(precomputed.runId, text, mode, precomputed.intent);
+      return;
+    }
     onSend(text, mode, depth);
   }
 
