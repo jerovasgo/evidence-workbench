@@ -65,3 +65,30 @@ describe('algorithm_ready', () => {
     expect(state.algorithmAbstainReason).toBe('Not enough verified claims.');
   });
 });
+
+describe('mechanism_ready', () => {
+  const graph = {
+    scope: 'CRISPR-Cas9 cleavage',
+    entities: [
+      { id: 'e1', label: 'Cas9', kind: 'enzyme' as const },
+      { id: 'e2', label: 'Target DNA', kind: 'product' as const },
+    ],
+    interactions: [
+      { id: 'i1', from: 'e1', to: 'e2', type: 'degrades' as const, sign: '+' as const, order: 0, claimId: 'c1' },
+    ],
+  };
+
+  it('stores the graph on an ok result', () => {
+    const state = applyEvent(initialState(), { type: 'mechanism_ready', runId: 'r1', payload: { status: 'ok', graph } });
+    expect(state.mechanismStatus).toBe('ok');
+    expect(state.mechanism).toEqual({ graph });
+    expect(state.mechanismAbstainReason).toBeNull();
+  });
+
+  it('keeps no graph and records the reason on an abstained result', () => {
+    const state = applyEvent(initialState(), { type: 'mechanism_ready', runId: 'r1', payload: { status: 'abstained', reason: 'Not enough verified claims.' } });
+    expect(state.mechanismStatus).toBe('abstained');
+    expect(state.mechanism).toBeNull();
+    expect(state.mechanismAbstainReason).toBe('Not enough verified claims.');
+  });
+});

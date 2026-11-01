@@ -12,6 +12,7 @@ import { EvidenceSkeleton } from '@/components/evidence-skeleton';
 import { EvidenceMatrix } from '@/components/evidence-matrix';
 import { EvidenceLandscape } from '@/components/evidence-landscape';
 import { AlgorithmView } from '@/components/algorithm-view';
+import { MechanismView } from '@/components/mechanism-view';
 import { StageProgress } from '@/components/stage-progress';
 import { Chip } from '@/components/ui/chip';
 import { useRunStream } from '@/lib/use-run-stream';
@@ -23,10 +24,10 @@ import type { Intent } from '@/modules/01-orchestrator';
 // "Research progress" while streaming, then exactly one result — a short, receipt-
 // grounded summary followed by the evidence and its sources (2026-10-28
 // conversational-flow brief, Etapas B–D). Never a tab switcher with inert
-// placeholder tabs ("single mode per query" policy, docs/DECISIONS.md). Evidence is
-// the only real output today (modules 06/07/08 — Algorithm/Map/Matrix/Mechanism —
-// aren't built); a mode that asked for one of those says so in one line instead of
-// showing an empty tab. Shared between the standalone run page
+// placeholder tabs ("single mode per query" policy, docs/DECISIONS.md). Evidence,
+// Algorithm (module 06) and Mechanism (module 08) are real; the radial Evidence Map
+// (module 07's map half) isn't built yet — a mode that asked for that one says so in
+// one line instead of showing an empty tab. Shared between the standalone run page
 // (src/app/runs/[id]/run-view.tsx) and the dashboard's conversation thread
 // (src/components/dashboard/conversation-thread.tsx) — both need the exact same
 // SSE-driven rendering, not a re-implementation.
@@ -95,15 +96,17 @@ function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefin
 }
 
 export function RunResult({ runId, mode, intent, query }: { runId: string; mode?: Mode; intent?: Intent | null; query?: string }) {
-  const { opening, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, algorithm, algorithmStatus, algorithmAbstainReason, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
+  const { opening, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, algorithm, algorithmStatus, algorithmAbstainReason, mechanism, mechanismStatus, mechanismAbstainReason, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const isStreaming = status === 'streaming';
-  // Module 06 V1 (docs/DECISIONS.md): the algorithm view replaces the generic
-  // "not built yet" note for this one intent — it IS built now. Mechanism keeps
-  // the placeholder note untouched (module 08 still has no renderer).
+  // Module 06/08 V1 (docs/DECISIONS.md): the algorithm and mechanism views replace
+  // the generic "not built yet" note for these two intents — both are built now.
+  // Evidence Map keeps the placeholder note untouched (module 07's map half still
+  // has no renderer).
   const isAlgorithmRequested = mode === 'algorithm' || ((mode === undefined || mode === 'auto') && intent === 'algorithm');
-  const note = isAlgorithmRequested ? null : unbuiltViewNote(mode, intent);
+  const isMechanismRequested = mode === 'mechanism' || ((mode === undefined || mode === 'auto') && intent === 'mechanism');
+  const note = isAlgorithmRequested || isMechanismRequested ? null : unbuiltViewNote(mode, intent);
   const visibleClaims = claims === null ? null : buildEvidenceMatrix(claims).flatMap((source) => source.claims);
   const provisionalClaims = Object.values(provisionalBySource).flat();
   const qualifiedClaims = Object.values(qualifiedBySource).flat();
@@ -154,6 +157,15 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
           claims={visibleClaims ?? []}
           onOpenEvidence={setSelectedClaim}
           abstainReason={algorithmStatus === 'abstained' ? algorithmAbstainReason : null}
+        />
+      )}
+
+      {isMechanismRequested && mechanismStatus !== 'pending' && (
+        <MechanismView
+          graph={mechanism?.graph ?? null}
+          claims={visibleClaims ?? []}
+          onOpenEvidence={setSelectedClaim}
+          abstainReason={mechanismStatus === 'abstained' ? mechanismAbstainReason : null}
         />
       )}
 

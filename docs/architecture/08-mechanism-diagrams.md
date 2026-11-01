@@ -128,3 +128,30 @@ cut without touching the rest (SPEC §14 cut order).
 ## Acceptance
 One pathway rendered from a natural-language question with 100% quoted edges, ≥3 sandbox toggles,
 step-through animation, and honest labelling as qualitative.
+
+## V1 built (2026-10-31)
+The agent (`src/modules/08-mechanism/agents/mechanism-synthesizer.ts`, P16), invariant-repair
+orchestration (`pipeline/synthesize-mechanism.ts`), layout (`pipeline/layout-mechanism.ts`, elkjs
+layered) and renderer (`src/components/mechanism-view.tsx` + `mechanism-flow-nodes.tsx`) exist and
+are wired into the live SSE pipeline for `intent === 'mechanism'` (also selectable as an explicit
+`mode`, `src/lib/modes.ts`). Scope cuts from the design above, logged in `docs/DECISIONS.md`
+(2026-10-31):
+- **One single-call synthesis agent, not the P16/P17/P18 three-agent pipeline.** Scope-narrowing and
+  extraction collapse into one T2 call over claims the main pipeline already verified, the same move
+  module 06's P9 made; the coherence-judge (P18) is deferred — its job is covered for V1 by prompt
+  instructions against inventing edges and the same invariant-repair-then-abstain safety net.
+- **No cross-reference/corroboration lookups** (UniProt/ChEBI/PubChem/Reactome/Rhea) — no
+  `corroboratedBy` badges or "unresolved" styling in V1.
+- **No compartment lanes.** `Entity.compartment` renders as a small text badge, not a positioned
+  horizontal band; elkjs's plain layered algorithm positions nodes, same as module 06's canvas —
+  still 100% code-computed, never model-positioned.
+- **No sandbox (sign-propagation toggles) and no step-through animation** — the design's own last two
+  build stages; the static verified graph alone satisfies this module's Acceptance for a first version.
+- **Invariants kept deliberately minimal**, favoring "show a correct graph" over abstaining on a
+  technicality: claim-id-in-pool, every interaction's `from`/`to` entity exists, entity/interaction
+  budget (≤25/≤40), every entity participates in ≥1 interaction. Deliberately deferred (real biology
+  has too many legitimate exceptions to encode safely without the cross-ref data V1 doesn't have):
+  second-messenger producer/consumer requirement, compartment-consistency rules.
+- Claims live on **interactions (edges) only** — entities (nodes) carry no claim of their own. Evidence
+  is reached by clicking an edge (`onEdgeClick`), not a node, the one real interaction-model difference
+  from module 06's node-click pattern.

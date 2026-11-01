@@ -32,6 +32,7 @@ export interface ServerRuntime {
   p7PromptTemplate: string;
   p9PromptTemplate: string;
   p10PromptTemplate: string;
+  p16PromptTemplate: string;
   pubmed: PubmedClient;
   europePmc: EuropePmcClient;
   crossref: CrossrefClient;
@@ -103,6 +104,7 @@ export function buildServerRuntime(): ServerRuntime {
   const p7PromptTemplate = loadPrompt('P7-relation-labeller.md');
   const p9PromptTemplate = loadPrompt('P9-algorithm-synthesizer.md');
   const p10PromptTemplate = loadPrompt('P10-support-judge.md');
+  const p16PromptTemplate = loadPrompt('P16-mechanism-synthesizer.md');
 
   return {
     metaClient,
@@ -120,6 +122,7 @@ export function buildServerRuntime(): ServerRuntime {
     p7PromptTemplate,
     p9PromptTemplate,
     p10PromptTemplate,
+    p16PromptTemplate,
     pubmed,
     europePmc,
     crossref,

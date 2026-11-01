@@ -69,6 +69,7 @@ function mockRuntime(
     p7PromptTemplate: 'Relate: {{pairs_json}}',
     p9PromptTemplate: 'Synthesize: {{scope}} / {{sub_questions}} / {{claims_json}}',
     p10PromptTemplate: 'Judge: {{claim_text}} / {{conditions_json}} / {{quote}} / {{surrounding_context}}',
+    p16PromptTemplate: 'Synthesize mechanism: {{scope}} / {{sub_questions}} / {{claims_json}}',
     pubmed: { search: vi.fn().mockResolvedValue({ pmids: [] }), fetchSummaries: vi.fn().mockResolvedValue([]) },
     europePmc: { search: vi.fn().mockResolvedValue([]), fetchFullText: vi.fn().mockResolvedValue(null) },
     pendingRunContext,
@@ -301,6 +302,53 @@ describe('GET /api/runs/[id]/stream', () => {
     });
     expect(events.findIndex((event) => event.type === 'algorithm_ready')).toBeLessThan(events.findIndex((event) => event.type === 'done'));
     expect(stageOutputsRepository.insert).toHaveBeenCalledWith(expect.objectContaining({ runId: 'run_1', stage: 'algorithm', status: 'ok' }));
+  });
+
+  it('synthesizes and streams a mechanism_ready event before done for a mechanism-intent run with verified claims', async () => {
+    const graph = {
+      scope: 'CRISPR-Cas9 cleavage',
+      entities: [
+        { id: 'e1', label: 'Cas9', kind: 'enzyme' },
+        { id: 'e2', label: 'Target DNA', kind: 'product' },
+      ],
+      interactions: [{ id: 'i1', from: 'e1', to: 'e2', type: 'degrades', sign: '+', order: 0, claimId: 'claim_a' }],
+    };
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult(graph));
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const mechanismRun: RunRecord = { ...routingRun, intent: 'mechanism' };
+    const runsRepository = fakeRunsRepository({ getRun: vi.fn(async () => mechanismRun) });
+
+    const claimA = {
+      id: 'claim_a', text: 'Cas9 cleaves the target DNA strand.', basis: 'primary' as const,
+      actionType: 'mechanism' as const, conditions: [], sourceId: 's1', passageId: 'p1', quote: 'Cas9 cleaves the target DNA strand.',
+      grade: { certainty: 'ungraded' as const, origin: 'ai_estimated' as const },
+      verification: { exists: true, quoteFound: true, retracted: false, support: 'supports' as const, retractionCheck: 'crossref_no_signal' as const },
+      safetyCritical: false,
+    };
+    const metrics = { ms: 1, costUsd: 0 };
+    const stageOutputsRepository = {
+      insert: vi.fn(),
+      getLatestPerStage: vi.fn().mockResolvedValue(
+        new Map([
+          ['structure', { stage: 'structure', status: 'ok', value: { context: 'in_vitro', subQuestions: [], scopeParameters: {} }, metrics, createdAt: 'x' }],
+          ['plan', { stage: 'plan', status: 'ok', value: { queries: [] }, metrics, createdAt: 'x' }],
+          ['retrieve', { stage: 'retrieve', status: 'ok', value: [], metrics, createdAt: 'x' }],
+          ['classify', { stage: 'classify', status: 'ok', value: [], metrics, createdAt: 'x' }],
+          ['extract', { stage: 'extract', status: 'ok', value: [claimA], metrics, createdAt: 'x' }],
+        ]),
+      ),
+    };
+
+    const GET = await loadGetWithRuntime(mockRuntime(metaClient, runsRepository, createPendingRunContextStore(), stageOutputsRepository));
+    const { labelRelationsBatched } = await import('@/modules/05-governance');
+    vi.mocked(labelRelationsBatched).mockResolvedValue({ relations: [], failures: [], costUsd: 0 });
+
+    const res = await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) });
+    const events = await readAllEvents(res);
+
+    expect(events.find((event) => event.type === 'mechanism_ready')).toMatchObject({ payload: { status: 'ok', graph } });
+    expect(events.findIndex((event) => event.type === 'mechanism_ready')).toBeLessThan(events.findIndex((event) => event.type === 'done'));
+    expect(stageOutputsRepository.insert).toHaveBeenCalledWith(expect.objectContaining({ runId: 'run_1', stage: 'mechanism', status: 'ok' }));
   });
 
   it('never lets a relation-labelling failure surface as a stream error after done was already sent', async () => {

@@ -25,7 +25,7 @@ import { createRun, CreateRunRequestSchema, getServerRuntime, intentNeedsRetriev
 // when real auth exists, just unused by this handler until then.
 
 const RequestWithConversationSchema = CreateRunRequestSchema.extend({
-  mode: z.enum(['auto', 'algorithm', 'evidence_map']).optional(),
+  mode: z.enum(['auto', 'algorithm', 'mechanism', 'evidence_map']).optional(),
   depth: z.enum(['quick', 'balanced', 'deep']).optional(),
 });
 

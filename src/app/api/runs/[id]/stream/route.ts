@@ -15,6 +15,7 @@ import { CandidateSourceSchema } from '@/modules/02-retrieval';
 import { RESEARCH_DEPTH_CONCURRENCY, RESEARCH_DEPTH_TIME_MS } from '@/lib/research-depth';
 import { lookupGeneContext } from '@/modules/02-retrieval';
 import { synthesizeAlgorithm, AlgorithmGraphSchema, type AlgorithmInputClaim } from '@/modules/06-algorithm';
+import { synthesizeMechanism, MechanismGraphSchema, type MechanismInputClaim } from '@/modules/08-mechanism';
 import { z } from 'zod';
 
 // 2026-10-28 latency audit (docs/DECISIONS.md): `runAgent` (shared/agents) already
@@ -169,6 +170,58 @@ async function synthesizeAlgorithmForRun(
   return result;
 }
 
+// Module 08 V1 (docs/DECISIONS.md "V1 scope decisions", 2026-10-31): same critical-
+// path reasoning as `synthesizeAlgorithmForRun` above — for `intent === 'mechanism'`
+// the mechanism diagram IS the primary requested output, not background enrichment.
+// Sends exactly one `mechanism_ready` event. No `band` field (mechanism has no band
+// concept); the discriminated union otherwise mirrors Algorithm's shape exactly.
+const MechanismReadyPayloadSchema = z.discriminatedUnion('status', [
+  z.object({ status: z.literal('ok'), graph: MechanismGraphSchema }),
+  z.object({ status: z.literal('abstained'), reason: z.string() }),
+]);
+
+async function synthesizeMechanismForRun(
+  run: { id: string; intent?: string },
+  scope: string,
+  subQuestions: string[],
+  claims: Claim[],
+  runtime: ServerRuntime,
+): Promise<z.infer<typeof MechanismReadyPayloadSchema> | null> {
+  if (run.intent !== 'mechanism') return null;
+  const verified = claims.filter(isVerifiedClaim);
+  if (verified.length === 0) {
+    return { status: 'abstained', reason: 'No verified findings are available yet for this question.' };
+  }
+
+  const inputClaims: MechanismInputClaim[] = verified.map((claim) => ({
+    id: claim.id,
+    text: claim.text,
+    quote: claim.quote,
+    sourceId: claim.sourceId,
+  }));
+
+  const started = Date.now();
+  const result = await synthesizeMechanism(run.id, { scope, subQuestions, claims: inputClaims }, {
+    metaClient: runtime.metaClient,
+    budgetGuard: runtime.budgetGuard,
+    p0Preamble: runtime.p0Preamble,
+    p16PromptTemplate: runtime.p16PromptTemplate,
+    onTrace: (event) => logAgentTrace(run.id, event),
+  });
+  const ms = Date.now() - started;
+
+  await runtime.stageOutputsRepository.insert({
+    runId: run.id,
+    stage: 'mechanism',
+    status: result.status === 'ok' ? 'ok' : 'abstain',
+    value: result,
+    reasons: result.status === 'abstained' ? [result.reason] : undefined,
+    metrics: { ms, costUsd: 0 },
+  });
+  console.log(JSON.stringify({ type: 'stage_latency', runId: run.id, stage: 'mechanism', status: result.status, ms, resumed: false }));
+  return result;
+}
+
 function computeFinalStatus(result: RunRetrievalResult): 'done' | 'partial' | 'failed' {
   if (result.extraction.status === 'ok') return 'done';
   if ((result.extraction.value?.length ?? 0) > 0) return 'partial';
@@ -216,6 +269,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         }
         const savedAlgorithm = AlgorithmReadyPayloadSchema.safeParse(saved.get('algorithm')?.value);
         if (savedAlgorithm.success) send({ type: 'algorithm_ready', runId: run.id, payload: savedAlgorithm.data });
+        const savedMechanism = MechanismReadyPayloadSchema.safeParse(saved.get('mechanism')?.value);
+        if (savedMechanism.success) send({ type: 'mechanism_ready', runId: run.id, payload: savedMechanism.data });
         const receipt = ReceiptSchema.safeParse(saved.get('receipt')?.value);
         if (receipt.success) send({ type: 'receipt_ready', runId: run.id, receipt: receipt.data });
         send({ type: 'done', runId: run.id, status: run.status });
@@ -371,6 +426,16 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           runtime,
         );
         if (algorithmResult) send({ type: 'algorithm_ready', runId: run.id, payload: algorithmResult });
+
+        // Same critical-path reasoning, a no-op for any intent other than `mechanism`.
+        const mechanismResult = await synthesizeMechanismForRun(
+          run,
+          result.structure.value?.scope ?? pending?.freeText ?? '',
+          result.structure.value?.subQuestions ?? [],
+          result.extraction.value ?? [],
+          runtime,
+        );
+        if (mechanismResult) send({ type: 'mechanism_ready', runId: run.id, payload: mechanismResult });
 
         startOverview(result.extraction.value ?? [], true);
         await overviewPromise;

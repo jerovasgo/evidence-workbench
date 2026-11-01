@@ -56,6 +56,11 @@ export const RunEventSchema = z.discriminatedUnion('type', [
   // validated/typed only at the two places that actually read it — the SSE route
   // (which already has the typed value before sending) and `use-run-stream.ts`.
   z.object({ type: z.literal('algorithm_ready'), runId: z.string(), payload: z.unknown() }),
+  // Module 08 (docs/architecture/08-mechanism-diagrams.md). Same `payload: z.unknown()`
+  // convention as `algorithm_ready` above, for the same module-boundary reason — the
+  // real `{status, graph, reason}` shape (module 08's own `MechanismGraph`) is
+  // validated/typed only at the SSE route and `use-run-stream.ts`.
+  z.object({ type: z.literal('mechanism_ready'), runId: z.string(), payload: z.unknown() }),
   z.object({ type: z.literal('overview_ready'), runId: z.string(), sources: z.array(z.object({ title: z.string(), year: z.number().optional(), url: z.string().optional() })) }),
   z.object({ type: z.literal('gene_context_ready'), runId: z.string(), genes: z.array(z.object({ symbol: z.string(), name: z.string().optional(), geneId: z.string().optional(), hgncId: z.string().optional(), links: z.array(z.object({ label: z.string(), url: z.string() })) })) }),
   z.object({ type: z.literal('source_catalog_ready'), runId: z.string(), sources: z.array(z.object({ id: z.string(), status: z.literal('candidate'), title: z.string(), url: z.string().url(), doi: z.string().optional(), pmid: z.string().optional(), year: z.number().optional() })) }),
