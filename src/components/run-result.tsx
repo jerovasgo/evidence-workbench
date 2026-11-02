@@ -15,6 +15,7 @@ import { AlgorithmView } from '@/components/algorithm-view';
 import { MechanismView } from '@/components/mechanism-view';
 import { EvidenceMapView } from '@/components/evidence-map-view';
 import { StageProgress } from '@/components/stage-progress';
+import { CitationExportButtons } from '@/components/citation-export-buttons';
 import { Chip } from '@/components/ui/chip';
 import { useRunStream } from '@/lib/use-run-stream';
 import { buildResultSummary } from '@/lib/i18n/result-summary';
@@ -118,6 +119,8 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
     || relations.some((relation) => relation.kind === 'contradicts' || relation.divergence?.kind === 'scientific_contradiction')
     || hasComparableEvidence(visibleClaims ?? []);
   const displayClaims = [...provisionalClaims, ...qualifiedClaims, ...(visibleClaims ?? [])];
+  const citableSourceIds = new Set((visibleClaims ?? []).map((claim) => claim.sourceId));
+  const citableSources = Object.values(sourceCatalog).filter((source) => citableSourceIds.has(source.id));
   const substantiveOpening = opening;
   const reveal = reducedMotion ? false : { opacity: 0, y: 8 };
 
@@ -140,7 +143,7 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
       </div>}
 
       {(isStreaming || relationStatus === 'pending') && (
-        <StageProgress stages={stages} sourceProgress={sourceProgress} />
+        <StageProgress stages={stages} sourceProgress={sourceProgress} sourceCatalog={sourceCatalog} isStreaming={isStreaming} />
       )}
 
       {errorMessage && (
@@ -205,6 +208,7 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
         <summary className="cursor-pointer text-sm text-fg">Sources, quotations and verification details</summary>
         {summary && <p className="mt-4">{summary}</p>}
         {Object.keys(sourceCatalog).length > 0 && <ul className="mt-4 space-y-2">{Object.values(sourceCatalog).map((source) => <li key={source.id}><a className="underline underline-offset-4" href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a>{source.year ? ` (${source.year})` : ''}</li>)}</ul>}
+        <CitationExportButtons sources={citableSources} />
         {withdrawals.length > 0 && <div aria-live="polite" className="mt-4 space-y-1 text-warning">{withdrawals.map((entry, index) => <p key={`${entry.sourceId}-${index}`}>{entry.count} extracted {entry.count === 1 ? 'claim was' : 'claims were'} removed after verification ({sourceCatalog[entry.sourceId]?.title ?? entry.sourceId}). {entry.reason}</p>)}</div>}
         {displayClaims.length > 0 && <p className="mt-4">Use the information buttons beside findings to inspect quotations, study identifiers and verification status.</p>}
         {receipt && <footer className="mt-4 border-t border-border pt-3">

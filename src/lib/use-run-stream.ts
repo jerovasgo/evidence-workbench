@@ -21,7 +21,7 @@ export interface RunStreamState {
   opening: string | null;
   overviewSources: { title: string; year?: number; url?: string }[];
   geneContext: { symbol: string; name?: string; geneId?: string; hgncId?: string; links: { label: string; url: string }[] }[];
-  sourceCatalog: Record<string, { id: string; status: 'candidate'; title: string; url: string; doi?: string; pmid?: string; year?: number }>;
+  sourceCatalog: Record<string, { id: string; status: 'candidate'; title: string; url: string; doi?: string; pmid?: string; year?: number; issuer?: string; firstAuthor?: string }>;
   stages: Record<StageName, StageState>;
   sourceProgress: string[];
   claims: Claim[] | null;

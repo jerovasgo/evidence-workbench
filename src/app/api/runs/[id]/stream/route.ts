@@ -18,6 +18,14 @@ import { synthesizeAlgorithm, AlgorithmGraphSchema, type AlgorithmInputClaim } f
 import { synthesizeMechanism, MechanismGraphSchema, type MechanismInputClaim } from '@/modules/08-mechanism';
 import { z } from 'zod';
 
+// 2026-11-02 (docs/DECISIONS.md): Vercel's Hobby plan, with Fluid Compute (default on
+// new projects, confirmed for this project via `vercel teams ls`), has a function
+// duration default AND maximum of 300s (vercel.com/docs/functions/configuring-
+// functions/duration, checked 2026-11-02) — not the old 10s Hobby ceiling. Every run
+// observed this session (45-110s) is comfortably inside that; this makes the already-
+// sufficient ceiling explicit instead of leaving it as an unverified assumption.
+export const maxDuration = 300;
+
 // 2026-10-28 latency audit (docs/DECISIONS.md): `runAgent` (shared/agents) already
 // emits an `onTrace` event — {name, ms, costUsd, tokens} — for every single model
 // call in the pipeline, but nothing ever consumed it; every run's real per-agent
@@ -269,7 +277,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         const savedOverview = saved.get('overview')?.value;
         if (typeof savedOverview === 'string') send({ type: 'opening_ready', runId: run.id, text: savedOverview });
         const candidates = CandidateSourceSchema.array().safeParse(saved.get('retrieve')?.value);
-        if (candidates.success) send({ type: 'source_catalog_ready', runId: run.id, sources: candidates.data.map(({ tempId, title, url, doi, pmid, year }) => ({ id: tempId, status: 'candidate', title, url, doi, pmid, year })) });
+        if (candidates.success) send({ type: 'source_catalog_ready', runId: run.id, sources: candidates.data.map(({ tempId, title, url, doi, pmid, year, issuer, firstAuthor }) => ({ id: tempId, status: 'candidate', title, url, doi, pmid, year, issuer, firstAuthor })) });
         const claims = ClaimSchema.array().safeParse(saved.get('extract')?.value);
         if (claims.success) send({ type: 'band_ready', runId: run.id, payload: { claims: claims.data } });
         const qualified = ClaimSchema.array().safeParse(saved.get('qualified_claims')?.value);
@@ -385,7 +393,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
                   })().catch(() => { overviewPromise = undefined; });
                 }
                 send({ type: 'overview_ready', runId: run.id, sources: event.sources.slice(0, 5).map(({ title, year, url }) => ({ title, year, url })) });
-                send({ type: 'source_catalog_ready', runId: run.id, sources: event.sources.map(({ tempId, title, url, doi, pmid, year }) => ({ id: tempId, status: 'candidate', title, url, doi, pmid, year })) });
+                send({ type: 'source_catalog_ready', runId: run.id, sources: event.sources.map(({ tempId, title, url, doi, pmid, year, issuer, firstAuthor }) => ({ id: tempId, status: 'candidate', title, url, doi, pmid, year, issuer, firstAuthor })) });
                 console.log(JSON.stringify({ type: 'overview_latency', runId: run.id, elapsedMs: Date.now() - streamStarted }));
               } else if (event.type === 'provisional_claims') {
                 provisionalBySource.set(event.sourceId, event.claims.length);
