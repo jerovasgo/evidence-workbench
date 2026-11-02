@@ -1,4 +1,4 @@
-# Evidence Workbench — Documento madre v0.1
+# Genebark — Documento madre v0.1
 
 Oct 26, 2026 · @Jerome
 
@@ -23,7 +23,7 @@ Este documento es la fuente única para la herramienta de código: fija el produ
 
 ## 1. Visión
 
-Evidence Workbench (nombre provisional) es un banco de trabajo para que el clínico obtenga, evalúe, califique, compare y sintetice evidencia y conductas clínicas, con cada afirmación respaldada por una cita que el código verificó.
+Genebark es un banco de trabajo para obtener, evaluar, comparar y sintetizar evidencia científica genética, con cada afirmación respaldada por una cita que el código verificó.
 
 **Usuario objetivo:** médicos y residentes en guardia (principal) y comités de protocolos (secundario).
 

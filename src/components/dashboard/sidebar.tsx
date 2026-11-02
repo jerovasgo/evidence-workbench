@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Menu, Plus, Settings, X } from 'lucide-react';
+import { Brand } from '@/components/brand';
 
 // Mobile (<768px, Tailwind's `md`): the sidebar is off-canvas by default — a fixed
 // 288px drawer sliding in over a backdrop, opened via a fixed hamburger trigger,
@@ -44,7 +45,7 @@ export function Sidebar({ onNew }: { onNew: () => void }) {
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between px-4 py-4">
-            <span className="text-sm font-semibold text-fg">Evidence Workbench</span>
+            <Brand priority className="w-[126px]" />
             <button type="button" onClick={() => setMobileOpen(false)} aria-label="Close menu" className="text-muted hover:text-fg md:hidden">
               <X className="h-4 w-4" />
             </button>

@@ -1,4 +1,4 @@
-# Evidence Workbench (working name)
+# Genebark
 
 A workbench for researchers, engineers and students that navigates, compares, audits and verifies
 scientific evidence — any field of science, explicitly excluding clinical medicine — with a current

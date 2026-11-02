@@ -1,4 +1,4 @@
-# Evidence Workbench — SPEC v0.4
+# Genebark — SPEC v0.4
 
 Module-level architecture (agents, tools, evaluation) lives in `docs/architecture/00–12`.
 Those files refine this one; if they conflict, log it in `docs/DECISIONS.md`.
@@ -20,7 +20,7 @@ flagship components (§6) carry over almost unchanged; what changes is the domai
 and the two demo domains used to ground the build: chemistry (reactions/mechanisms) and
 non-clinical biology/genetics.
 
-Evidence Workbench is a workbench for researchers, engineers and students that turns scattered
+Genebark is a workbench for researchers, engineers and students that turns scattered
 scientific evidence into visuals that can be understood in seconds (decision algorithms, evidence
 maps, concordance matrices, mechanism diagrams). Every claim is tied to a verbatim quote that our
 code verifies (the source exists, says that, and was not retracted), graded for certainty, and
@@ -33,7 +33,7 @@ Tagline: *Evidence you can audit, in seconds.*
 
 ## 2. What it offers the reader
 
-| Need | Typical chatbot answer | Evidence Workbench |
+| Need | Typical chatbot answer | Genebark |
 | --- | --- | --- |
 | Read in seconds | Paragraphs of prose | 10-second band + visual (algorithm, map, matrix, diagram) |
 | Trust a citation | Citations that may not say what is claimed | Quote verified by code; receipt per result |

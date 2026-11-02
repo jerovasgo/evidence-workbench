@@ -1,4 +1,4 @@
-# CLAUDE.md — Evidence Workbench
+# CLAUDE.md — Genebark
 
 You are helping build a hackathon project (Meta Global AI Developer Hackathon, building period
 Oct 27 – Nov 4, 2026, submission due Nov 4, 9 PM EST). Read this file first, then `docs/SPEC.md`,

@@ -8,8 +8,14 @@ import './globals.css';
 const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' });
 
 export const metadata: Metadata = {
-  title: 'Evidence Workbench',
-  description: 'From evidence to clarity.',
+  title: {
+    default: 'Genebark',
+    template: '%s · Genebark',
+  },
+  description: 'Trace genetic evidence from source to insight.',
+  icons: {
+    icon: '/brand/genebark-mark-white.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
+import { Brand } from '@/components/brand';
 
 const NAV_LINKS = [
   { href: '#how-it-works', label: 'How it works' },
@@ -33,8 +34,8 @@ export function Navbar() {
       )}
     >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="text-sm font-semibold tracking-tight text-fg">
-          Evidence Workbench
+        <Link href="/" aria-label="Genebark home" className="flex items-center">
+          <Brand priority className="w-[118px] sm:w-[132px]" />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">

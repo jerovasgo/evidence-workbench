@@ -41,7 +41,7 @@ export interface ServerRuntime {
 
 // Next may bundle POST and SSE handlers independently. A process-global runtime
 // keeps their short-lived context store shared across those route modules.
-const runtimeKey = Symbol.for('evidence-workbench.server-runtime');
+const runtimeKey = Symbol.for('genebark.server-runtime');
 const runtimeGlobals = globalThis as typeof globalThis & { [runtimeKey]?: ServerRuntime };
 
 function readRequiredEnv(name: string): string {
