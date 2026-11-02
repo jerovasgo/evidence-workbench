@@ -2,6 +2,7 @@
 
 import type { Claim, GeneticContext, Relation } from '@/shared/domain';
 import { buildEvidenceMatrix } from '@/modules/07-map-matrix';
+import { AccordionSection } from '@/components/accordion-section';
 
 const FIELDS: [keyof GeneticContext, string][] = [
   ['gene', 'Gene / entity'], ['organism', 'Organism'], ['model', 'Experimental model'],
@@ -15,10 +16,12 @@ export function EvidenceMatrix({ claims, sourceCatalog = {}, questions, relation
   const sources = buildEvidenceMatrix(claims);
   const reference = (claim: Claim) => `[${claims.findIndex((item) => item.id === claim.id) + 1}]`;
   if (!sources.length) return null;
-  return <section className="rounded-[var(--radius-card)] border border-border p-4" aria-label="Evidence matrix">
-    <h3 className="text-sm font-semibold">Evidence comparison and concordance</h3>
-    <p className="mt-2 text-xs leading-relaxed text-muted">Compare source findings and quoted experimental context. Missing context is unknown; placement does not imply agreement or contradiction.</p>
-    <div className="mt-5 space-y-4" aria-live="polite">
+  return <AccordionSection
+    title="Evidence comparison & concordance"
+    description="Compare source findings and quoted experimental context. Missing context is unknown; placement does not imply agreement or contradiction."
+  >
+    <div aria-label="Evidence matrix">
+    <div className="space-y-4" aria-live="polite">
       {relationStatus === 'pending' && <p className="text-xs text-muted">Comparing claims across sources…</p>}
       {relationStatus === 'failed' && <p className="text-xs text-warning">Concordance could not be assessed. Source findings remain available below.</p>}
       {relationStatus === 'partial' && <p className="text-xs text-warning">Some comparisons could not be assessed.</p>}
@@ -42,13 +45,17 @@ export function EvidenceMatrix({ claims, sourceCatalog = {}, questions, relation
       {relationStatus !== 'pending' && !questions.some((_, i) => claims.some((claim) => claim.subQuestionIndex === i)) && <p className="text-xs text-muted">No findings have an assigned research question. No concordance can be inferred.</p>}
       <p className="text-xs text-muted">Relations are tentative AI assessments, not verified facts. Review the quotations and flagged context before drawing conclusions.</p>
     </div>
-    <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[640px] border-collapse text-left text-xs">
-      <caption className="sr-only">Findings grouped by source with experimental context</caption>
-      <thead><tr><th scope="col" className="border-b border-border p-3 text-muted">Evidence</th>{sources.map((source) => <th scope="col" key={source.sourceId} className="min-w-52 border-b border-border p-3 font-medium">{sourceCatalog[source.sourceId]?.title ?? source.sourceId}</th>)}</tr></thead>
-      <tbody>
-        <tr><th scope="row" className="border-b border-border p-3 align-top text-muted">Findings</th>{sources.map((source) => <td key={source.sourceId} className="border-b border-border p-3 align-top"><ul className="space-y-3">{source.claims.map((claim) => <li key={claim.id}><button type="button" onClick={() => onOpenEvidence(claim)} className="text-left leading-relaxed text-fg underline decoration-border-strong underline-offset-4 hover:decoration-fg">{reference(claim)} {claim.text}</button></li>)}</ul></td>)}</tr>
-        {FIELDS.filter(([key]) => claims.some((claim) => claim.geneticContext?.[key])).map(([key, label]) => <tr key={key}><th scope="row" className="border-b border-border p-3 align-top font-normal text-muted">{label}</th>{sources.map((source) => <td key={source.sourceId} className="border-b border-border p-3 align-top text-fg">{source.claims.map((claim) => <div key={claim.id} className="mb-2">{claim.geneticContext?.[key] || <span className="text-muted">Not stated in quote</span>}</div>)}</td>)}</tr>)}
-      </tbody>
-    </table></div>
-  </section>;
+    <details className="mt-4">
+      <summary className="cursor-pointer text-xs underline underline-offset-4">View full comparison table</summary>
+      <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[640px] border-collapse text-left text-xs">
+        <caption className="sr-only">Findings grouped by source with experimental context</caption>
+        <thead><tr><th scope="col" className="border-b border-border p-3 text-muted">Evidence</th>{sources.map((source) => <th scope="col" key={source.sourceId} className="min-w-52 border-b border-border p-3 font-medium">{sourceCatalog[source.sourceId]?.title ?? source.sourceId}</th>)}</tr></thead>
+        <tbody>
+          <tr><th scope="row" className="border-b border-border p-3 align-top text-muted">Findings</th>{sources.map((source) => <td key={source.sourceId} className="border-b border-border p-3 align-top"><ul className="space-y-3">{source.claims.map((claim) => <li key={claim.id}><button type="button" onClick={() => onOpenEvidence(claim)} className="text-left leading-relaxed text-fg underline decoration-border-strong underline-offset-4 hover:decoration-fg">{reference(claim)} {claim.text}</button></li>)}</ul></td>)}</tr>
+          {FIELDS.filter(([key]) => claims.some((claim) => claim.geneticContext?.[key])).map(([key, label]) => <tr key={key}><th scope="row" className="border-b border-border p-3 align-top font-normal text-muted">{label}</th>{sources.map((source) => <td key={source.sourceId} className="border-b border-border p-3 align-top text-fg">{source.claims.map((claim) => <div key={claim.id} className="mb-2">{claim.geneticContext?.[key] || <span className="text-muted">Not stated in quote</span>}</div>)}</td>)}</tr>)}
+        </tbody>
+      </table></div>
+    </details>
+    </div>
+  </AccordionSection>;
 }

@@ -16,9 +16,12 @@ import { MechanismView } from '@/components/mechanism-view';
 import { EvidenceMapView } from '@/components/evidence-map-view';
 import { StageProgress } from '@/components/stage-progress';
 import { CitationExportButtons } from '@/components/citation-export-buttons';
+import { AccordionSection } from '@/components/accordion-section';
+import { SourceRegistryList, SourceRegistrySummaryBar } from '@/components/source-registry';
 import { Chip } from '@/components/ui/chip';
 import { useRunStream } from '@/lib/use-run-stream';
 import { buildResultSummary } from '@/lib/i18n/result-summary';
+import { computeSourceRegistry } from '@/lib/source-status';
 import type { Mode } from '@/lib/modes';
 import type { Intent } from '@/modules/01-orchestrator';
 
@@ -97,7 +100,7 @@ function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefin
 }
 
 export function RunResult({ runId, mode, intent, query }: { runId: string; mode?: Mode; intent?: Intent | null; query?: string }) {
-  const { opening, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, algorithm, algorithmStatus, algorithmAbstainReason, mechanism, mechanismStatus, mechanismAbstainReason, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
+  const { opening, openingSections, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, algorithm, algorithmStatus, algorithmAbstainReason, mechanism, mechanismStatus, mechanismAbstainReason, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const isStreaming = status === 'streaming';
@@ -121,8 +124,15 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
   const displayClaims = [...provisionalClaims, ...qualifiedClaims, ...(visibleClaims ?? [])];
   const citableSourceIds = new Set((visibleClaims ?? []).map((claim) => claim.sourceId));
   const citableSources = Object.values(sourceCatalog).filter((source) => citableSourceIds.has(source.id));
+  const sourceRegistry = computeSourceRegistry(sourceCatalog, sourceProgress, visibleClaims ?? [], withdrawals, provisionalBySource, isStreaming);
   const substantiveOpening = opening;
   const reveal = reducedMotion ? false : { opacity: 0, y: 8 };
+  const claimsById = new Map((visibleClaims ?? []).map((claim) => [claim.id, claim] as const));
+  // The fixed "Key findings" bullet list is a fallback for when the final,
+  // sectioned overview isn't available yet (still streaming) or abstained —
+  // once real model-chosen sections exist, they supersede it rather than
+  // duplicating the same evidence in two places.
+  const hasOpeningSections = (openingSections?.length ?? 0) > 0;
 
   return (
     <Tabs.Root defaultValue="main" className="flex flex-col gap-5">
@@ -137,6 +147,32 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
       </motion.div> : isStreaming && <div role="status" aria-label="Preparing overview" className="space-y-2 animate-pulse">
         <div className="h-3 w-4/5 rounded bg-border" /><div className="h-3 w-3/5 rounded bg-border" />
       </div>}
+
+      {hasOpeningSections && openingSections!.map((section, index) => (
+        <motion.div key={`${section.heading}-${index}`} initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.05 * (index + 1) }}>
+          <p className="editorial-kicker">{section.heading.toUpperCase()}</p>
+          <p className="mt-3 max-w-2xl text-[15px] font-light leading-7 text-fg">{section.body}</p>
+          {section.claimIds.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Supporting evidence for this section">
+              {section.claimIds.map((claimId, claimIndex) => {
+                const claim = claimsById.get(claimId);
+                if (!claim) return null;
+                return (
+                  <button
+                    key={claimId}
+                    type="button"
+                    onClick={() => setSelectedClaim(claim)}
+                    aria-label={`Open evidence ${claimIndex + 1}: ${claim.text}`}
+                    className="rounded-[var(--radius-pill)] border border-border px-2 py-0.5 text-[11px] text-muted hover:border-fg hover:text-fg"
+                  >
+                    {claimIndex + 1}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </motion.div>
+      ))}
 
       {geneContext.length > 0 && <div className="flex flex-wrap gap-3 text-xs text-muted" aria-label="Gene reference context">
         {geneContext.map((gene) => <span key={gene.symbol}>{gene.symbol}{gene.name ? ` · ${gene.name}` : ''} <span className="mx-1">·</span>{gene.links.map((link, index) => <span key={link.label}>{index > 0 ? ' / ' : ''}<a className="underline underline-offset-4 hover:text-fg" href={link.url} target="_blank" rel="noopener noreferrer">{link.label}</a></span>)}</span>)}
@@ -182,7 +218,7 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
         />
       )}
 
-      {visibleClaims && visibleClaims.length > 0 && <ul className="space-y-3" aria-label="Key findings">{selectDiverseFindings(visibleClaims.filter((claim) => claim.actionType !== 'method'), 3).map((claim) => <li key={claim.id}><button type="button" onClick={() => setSelectedClaim(claim)} className="text-left text-sm leading-6 underline decoration-border underline-offset-4">{claim.text}</button></li>)}</ul>}
+      {!hasOpeningSections && visibleClaims && visibleClaims.length > 0 && <ul className="space-y-3" aria-label="Key findings">{selectDiverseFindings(visibleClaims.filter((claim) => claim.actionType !== 'method'), 3).map((claim) => <li key={claim.id}><button type="button" onClick={() => setSelectedClaim(claim)} className="text-left text-sm leading-6 underline decoration-border underline-offset-4">{claim.text}</button></li>)}</ul>}
       {showComparison && relations.length > 0 && <p className="text-sm leading-6 text-muted">{relations[0]?.evidence}</p>}
       <div className="flex flex-col gap-3">
         {visibleClaims !== null && visibleClaims.length === 0 && (
@@ -194,20 +230,21 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
 
       </Tabs.Content>
       <Tabs.Content value="evidence" className="space-y-5">
+      <SourceRegistrySummaryBar summary={sourceRegistry.summary} />
       <ReviewAuditPanel runId={runId} complete={!isStreaming} sources={sourceCatalog} />
-      <details className="research-surface rounded-2xl p-4"><summary className="cursor-pointer text-sm">What the sources report</summary>
+      <AccordionSection title="What the sources report" description="Every finding found so far, grouped by how confidently it's been verified.">
       <motion.div initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         {Object.keys(sourceCatalog).length > 0 || provisionalClaims.length > 0 || (visibleClaims?.length ?? 0) > 0
           ? <EvidenceLandscape sources={sourceCatalog} provisional={provisionalClaims} qualified={qualifiedClaims} verified={visibleClaims ?? []} onOpenEvidence={setSelectedClaim} />
           : isStreaming && <EvidenceSkeleton />}
-      </motion.div></details>
+      </motion.div></AccordionSection>
 
       {showComparison && visibleClaims && new Set(visibleClaims.map((claim) => claim.sourceId)).size >= 2 && <EvidenceMatrix claims={visibleClaims} sourceCatalog={sourceCatalog} questions={questions} relations={relations} relationStatus={relationStatus} onOpenEvidence={setSelectedClaim} />}
 
-      <details open className="rounded-[var(--radius-card)] border border-border bg-black/30 p-4 text-xs text-muted">
-        <summary className="cursor-pointer text-sm text-fg">Sources, quotations and verification details</summary>
-        {summary && <p className="mt-4">{summary}</p>}
-        {Object.keys(sourceCatalog).length > 0 && <ul className="mt-4 space-y-2">{Object.values(sourceCatalog).map((source) => <li key={source.id}><a className="underline underline-offset-4" href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a>{source.year ? ` (${source.year})` : ''}</li>)}</ul>}
+      <AccordionSection title="Sources, quotations & verification details" description="Every source identified for this run, its verification status, and why a source was or wasn't used.">
+        <div className="text-xs text-muted">
+        {summary && <p>{summary}</p>}
+        <div className="mt-4"><SourceRegistryList entries={sourceRegistry.entries} /></div>
         <CitationExportButtons sources={citableSources} />
         {withdrawals.length > 0 && <div aria-live="polite" className="mt-4 space-y-1 text-warning">{withdrawals.map((entry, index) => <p key={`${entry.sourceId}-${index}`}>{entry.count} extracted {entry.count === 1 ? 'claim was' : 'claims were'} removed after verification ({sourceCatalog[entry.sourceId]?.title ?? entry.sourceId}). {entry.reason}</p>)}</div>}
         {displayClaims.length > 0 && <p className="mt-4">Use the information buttons beside findings to inspect quotations, study identifiers and verification status.</p>}
@@ -222,7 +259,8 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
           {receipt.dropReasons && Object.keys(receipt.dropReasons).length > 0 && <p className="mt-2">Removed after checks: {Object.entries(receipt.dropReasons).map(([reason, count]) => `${count} ${reason}`).join(' · ')}</p>}
           <p className="mt-2">Generated {new Date(receipt.generatedAt).toLocaleString()}</p>
         </footer>}
-      </details>
+        </div>
+      </AccordionSection>
 
       </Tabs.Content>
       <EvidenceDrawer claim={selectedClaim} source={selectedClaim ? sourceCatalog[selectedClaim.sourceId] : undefined} sourceScore={selectedClaim ? (sourceScores?.[selectedClaim.sourceId] ?? null) : null} onClose={() => setSelectedClaim(null)} />

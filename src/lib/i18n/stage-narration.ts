@@ -49,21 +49,37 @@ export function narrateStageResult(stage: StageName, status: StageState['status'
 
 const SOURCE_OUTCOME_PATTERN = /^(.+): (ok|no_full_text|extraction_failed)(?:, (\d+) claim\(s\))?$/;
 
+export interface ParsedSourceOutcome {
+  sourceId: string;
+  status: 'ok' | 'no_full_text' | 'extraction_failed';
+  claimCount: number;
+}
+
 /**
  * Parses the one shape `extract-and-verify-pool.ts`'s per-source outcomes produce
- * (`"<sourceId>: ok|no_full_text|extraction_failed[, N claim(s)]"`) and resolves the
- * id to its real title via `sourceCatalog`. A line that doesn't match — a future
- * format change, or any other stage's progress line — is returned unchanged rather
- * than mangled or dropped, so this never hides real information behind a bad parse.
+ * (`"<sourceId>: ok|no_full_text|extraction_failed[, N claim(s)]"`). Returns `null`
+ * for anything that doesn't match (a future format change, or any other stage's
+ * progress line) rather than guessing — shared by `narrateSourceProgress` below and
+ * `source-status.ts`'s per-source registry, so both read the exact same real data.
+ */
+export function parseSourceOutcome(detail: string): ParsedSourceOutcome | null {
+  const match = detail.match(SOURCE_OUTCOME_PATTERN);
+  if (!match) return null;
+  const [, sourceId, status, claimCountRaw] = match;
+  return { sourceId: sourceId!, status: status as ParsedSourceOutcome['status'], claimCount: claimCountRaw ? Number(claimCountRaw) : 0 };
+}
+
+/**
+ * Resolves the parsed outcome's source id to its real title via `sourceCatalog`. A
+ * line that doesn't match the known shape is returned unchanged rather than mangled
+ * or dropped, so this never hides real information behind a bad parse.
  */
 export function narrateSourceProgress(detail: string, sourceCatalog: Record<string, { title: string }>): string {
-  const match = detail.match(SOURCE_OUTCOME_PATTERN);
-  if (!match) return detail;
-  const [, sourceId, status, claimCountRaw] = match;
-  const title = sourceCatalog[sourceId!]?.title ?? sourceId;
-  const claimCount = claimCountRaw ? Number(claimCountRaw) : 0;
-  if (status === 'ok' && claimCount > 0) return `Verified ${claimCount} finding${claimCount === 1 ? '' : 's'} in "${title}".`;
-  if (status === 'ok') return `Read "${title}" — no usable findings there.`;
-  if (status === 'no_full_text') return `Could not access the full text of "${title}".`;
+  const parsed = parseSourceOutcome(detail);
+  if (!parsed) return detail;
+  const title = sourceCatalog[parsed.sourceId]?.title ?? parsed.sourceId;
+  if (parsed.status === 'ok' && parsed.claimCount > 0) return `Verified ${parsed.claimCount} finding${parsed.claimCount === 1 ? '' : 's'} in "${title}".`;
+  if (parsed.status === 'ok') return `Read "${title}" — no usable findings there.`;
+  if (parsed.status === 'no_full_text') return `Could not access the full text of "${title}".`;
   return `Could not extract findings from "${title}".`;
 }
