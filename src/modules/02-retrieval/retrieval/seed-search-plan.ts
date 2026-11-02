@@ -26,6 +26,18 @@ export function tokenizeWords(text: string): string[] {
   return text.match(WORD_PATTERN) ?? [];
 }
 
+// 2026-11-02 fix (docs/DECISIONS.md): "How SP-A mutations produce respiratory
+// distress?" kept retrieval "sufficient" across every fix above, because titles
+// sharing only generic words ("respiratory", "distress", "mechanism") scored
+// exactly the same as a title that actually named the query's real subject —
+// none of the 27 retrieved titles ever contained "SP-A" itself. A term that
+// looks like a specific entity (gene/protein symbol, abbreviation) — contains a
+// digit, a hyphen, or an uppercase letter past its first character — is the
+// signal that actually distinguishes "on topic" from "shares a common word."
+export function isDistinctiveTerm(term: string): boolean {
+  return /\d/.test(term) || term.includes('-') || /[A-Z]/.test(term.slice(1));
+}
+
 const STOP_WORDS = new Set([
   'compara', 'comparar', 'estudios', 'estudio', 'sobre', 'bajo', 'entre', 'los', 'las', 'del', 'una', 'que', 'en', 'de', 'la', 'el', 'por', 'para', 'con',
   'cuáles', 'cuales', 'son', 'cinco', 'más', 'mas', 'asociado', 'asociados', 'asociada', 'asociadas',
@@ -45,7 +57,11 @@ export function detectQueryShape(question: string): QueryShape {
   if (/\b(top|best|most|principal(?:es)?|m[aá]s\s+(?:asociad|relevante)|\d+\s+(?:genes?|variants?|loci))\b/i.test(question)) return 'ranking';
   if (/\b(associated|association|susceptibility|correlat|linked|asociad|asociaci[oó]n|susceptibilidad|relacionad)\w*/i.test(question)) return 'association';
   if (/\b(compare|comparison|versus|vs\.?|comparar|compara|comparaci[oó]n|contrasta)\b/i.test(question)) return 'comparison';
-  if (/\b(mechanisms?|pathways?|how does|why does|mecanismos?|v[ií]as?|c[oó]mo|por qu[eé])\b/i.test(question)) return 'mechanism';
+  // 2026-11-02 fix (docs/DECISIONS.md): "how does X cause Y" was caught, but a
+  // plain "How X produce/cause/lead to Y" (no "does") fell through to 'general'
+  // — the weakest sufficiency bar (see prioritize-sources.ts) — reproduced live
+  // for "How SP-A mutations produce respiratory distress?".
+  if (/\b(mechanisms?|pathways?|how does|why does|how\b.*\b(produce|produces|cause|causes|lead to|leads to|result in|results in|trigger|triggers|drive|drives|contribute|contributes)|mecanismos?|v[ií]as?|c[oó]mo|por qu[eé])\b/i.test(question)) return 'mechanism';
   if (/\b(latest|recent|newest|current|reciente|recientes|actual|nuev[oa]s?)\b/i.test(question)) return 'recency';
   return 'general';
 }

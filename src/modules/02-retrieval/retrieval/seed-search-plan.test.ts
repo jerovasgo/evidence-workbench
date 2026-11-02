@@ -13,6 +13,10 @@ describe('deterministic seed search', () => {
     ['¿Qué mecanismos relacionan la autofagia con el envejecimiento muscular?', 'mechanism'],
     ['Recent studies about CRISPR delivery', 'recency'],
     ['What is TP53?', 'general'],
+    // 2026-11-02 regression (docs/DECISIONS.md): "how X produce/cause Y" without
+    // the literal word "does" used to fall through to 'general' — the weakest
+    // retrieval-sufficiency bar — reproduced live for this exact question.
+    ['How SP-A mutations produce respiratory distress?', 'mechanism'],
   ] as const)('classifies query shape: %s', (question, expected) => {
     expect(detectQueryShape(question)).toBe(expected);
   });

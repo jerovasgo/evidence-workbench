@@ -72,9 +72,15 @@ describe('runRetrievalPipeline', () => {
     const respond = vi.fn().mockResolvedValue(fakeRespondResult(STRUCTURE_OUTPUT));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
     const pubmed = fakePubmed({
-      search: vi.fn().mockResolvedValue({ pmids: ['111'] }),
+      // 2026-11-02 (docs/DECISIONS.md): a 'general'-shaped question now needs 2
+      // relevant candidates to be judged "sufficient" (was 1 — too easily
+      // satisfied by a single title sharing only common words), so this fixture
+      // needs a second, clearly on-topic candidate to avoid triggering a
+      // semantic rescue this test isn't about.
+      search: vi.fn().mockResolvedValue({ pmids: ['111', '222'] }),
       fetchSummaries: vi.fn().mockResolvedValue([
         { pmid: '111', title: 'SN2 reaction rate in polar aprotic solvents', pubTypes: ['Practice Guideline'] },
+        { pmid: '222', title: 'Aprotic solvent effects on SN2 reaction kinetics', pubTypes: ['Practice Guideline'] },
       ]),
     });
 
@@ -86,7 +92,7 @@ describe('runRetrievalPipeline', () => {
     expect(result.structure.status).toBe('ok');
     expect(result.plan.status).toBe('ok');
     expect(result.retrieval.status).toBe('ok');
-    expect(result.retrieval.value).toHaveLength(1);
+    expect(result.retrieval.value).toHaveLength(2);
     expect(result.classification.status).toBe('ok');
     // A decisive publication type is enough; no classifier model call is needed.
     expect(result.classification.value?.[0]).toMatchObject({ sourceId: 'pubmed:111', kind: 'standards_body' });

@@ -34,6 +34,33 @@ it('2026-11-01 regression: the garbled "mo" term must not match as a substring i
  expect(assessRetrievalSufficiency('mo funciona PCR', sources).status).toBe('off_topic');
 });
 
+it("2026-11-02 regression: a title that never names the query's distinctive entity must not count as relevant (docs/DECISIONS.md)", () => {
+ // Reproduces the exact production failure: "How SP-A mutations produce
+ // respiratory distress?" kept passing the fast relevance screen because
+ // titles sharing only the generic words "respiratory"/"distress" (never
+ // "SP-A" itself) scored the same as a genuinely on-topic title — none of 27
+ // retrieved candidates across two live attempts ever contained "SP-A," yet
+ // the screen called the retrieval "sufficient" every time.
+ const query = 'SP-A gene regulation and respiratory distress outcomes';
+ const relevant = (id: string, title: string) => ({ tempId: id, family: 'pubmed' as const, title, url: `https://example.org/${id}` });
+ // A title sharing only generic words, never the distinctive "SP-A" term: off-topic.
+ expect(assessRetrievalSufficiency(query, [
+  relevant('one', 'A narrative review of acute respiratory distress syndrome'),
+ ]).status).toBe('off_topic');
+ // One title that actually names "SP-A": relevant, but still only 1 — thin
+ // for a 'general'-shaped question (needs 2, the threshold fix above).
+ expect(assessRetrievalSufficiency(query, [
+  relevant('one', 'A narrative review of acute respiratory distress syndrome'),
+  relevant('two', 'SP-A regulation in alveolar macrophages'),
+ ]).status).toBe('thin');
+ // Two titles naming "SP-A": sufficient.
+ expect(assessRetrievalSufficiency(query, [
+  relevant('one', 'A narrative review of acute respiratory distress syndrome'),
+  relevant('two', 'SP-A regulation in alveolar macrophages'),
+  relevant('three', 'Genetic variants of SP-A and pulmonary fibrosis risk'),
+ ]).status).toBe('sufficient');
+});
+
 it('prioritizes association studies and reviews for a gene-ranking question without excluding other results', () => {
  const sources = [
   { tempId: 'generic', family: 'pubmed' as const, title: 'Essential hypertension overview', url: 'https://example.org/1' },
