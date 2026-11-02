@@ -13,7 +13,13 @@ export function ConversationThread({ turns, onRetryTurn }: { turns: Turn[]; onRe
           </div>
           <div className="message-enter flex min-w-0 items-start gap-3">
             <span aria-hidden="true" className="mt-1 grid size-7 shrink-0 place-items-center rounded-full border border-border bg-[#121212] text-[10px] font-medium text-fg">F</span>
-            <div className="research-surface min-w-0 flex-1 rounded-2xl rounded-tl-sm px-4 py-5 sm:px-6">
+            {/* 2026-11-02 (docs/DECISIONS.md): the response used to sit inside a
+                research-surface card; the content now renders directly on the
+                black background, matching the user-message bubble's own
+                "editorial, not boxed" reply. Sub-surfaces (the Evidence & Sources
+                accordions, the Algorithm/Mechanism/Map canvases) keep their own
+                framing — only this outer wrapper is frameless. */}
+            <div className="min-w-0 flex-1 pt-1">
               <TurnResult turn={turn} onRetry={onRetryTurn} />
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { RunResult } from '@/components/run-result';
-import { EvidenceSkeleton } from '@/components/evidence-skeleton';
+import { DnaLoader } from '@/components/dna-loader';
 import { initialProcessingMessage } from '@/lib/processing-messages';
 import type { Turn } from '@/lib/use-conversations';
 
@@ -30,14 +30,9 @@ export function TurnResult({ turn, onRetry }: { turn: Turn; onRetry: (turnId: st
 
   if (!turn.runId) {
     return (
-      <div className="flex flex-col gap-4">
-        <p className="text-xs uppercase tracking-wider text-muted">Preparing overview</p>
-        <div role="status" aria-label="Preparing research overview" className="space-y-2 animate-pulse">
-          <div className="h-3 w-4/5 rounded bg-border" />
-          <div className="h-3 w-3/5 rounded bg-border" />
-        </div>
-        <p className="sr-only">{initialProcessingMessage(turn.mode)}</p>
-        <EvidenceSkeleton />
+      <div className="flex flex-col items-start gap-4">
+        <p role="status" className="text-sm leading-6 text-fg">{initialProcessingMessage(turn.mode)}</p>
+        <DnaLoader />
       </div>
     );
   }

@@ -8,7 +8,7 @@ import type { Claim } from '@/shared/domain';
 import { buildEvidenceMatrix } from '@/modules/07-map-matrix';
 import { ReviewAuditPanel } from '@/components/review-audit';
 import { EvidenceDrawer } from '@/components/evidence-drawer';
-import { EvidenceSkeleton } from '@/components/evidence-skeleton';
+import { DnaLoader } from '@/components/dna-loader';
 import { EvidenceMatrix } from '@/components/evidence-matrix';
 import { EvidenceLandscape } from '@/components/evidence-landscape';
 import { AlgorithmView } from '@/components/algorithm-view';
@@ -22,6 +22,7 @@ import { Chip } from '@/components/ui/chip';
 import { useRunStream } from '@/lib/use-run-stream';
 import { buildResultSummary } from '@/lib/i18n/result-summary';
 import { computeSourceRegistry } from '@/lib/source-status';
+import { initialProcessingMessage } from '@/lib/processing-messages';
 import type { Mode } from '@/lib/modes';
 import type { Intent } from '@/modules/01-orchestrator';
 
@@ -144,8 +145,9 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
       {substantiveOpening ? <motion.div key="overview" initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
         <p className="editorial-kicker">OVERVIEW</p>
         <p className="mt-3 max-w-2xl text-[16px] font-light leading-7 text-fg">{substantiveOpening}</p>
-      </motion.div> : isStreaming && <div role="status" aria-label="Preparing overview" className="space-y-2 animate-pulse">
-        <div className="h-3 w-4/5 rounded bg-border" /><div className="h-3 w-3/5 rounded bg-border" />
+      </motion.div> : isStreaming && <div className="flex flex-col items-start gap-4">
+        <p role="status" className="text-sm leading-6 text-fg">{initialProcessingMessage(mode)}</p>
+        <DnaLoader />
       </div>}
 
       {hasOpeningSections && openingSections!.map((section, index) => (
@@ -236,7 +238,7 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
       <motion.div initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         {Object.keys(sourceCatalog).length > 0 || provisionalClaims.length > 0 || (visibleClaims?.length ?? 0) > 0
           ? <EvidenceLandscape sources={sourceCatalog} provisional={provisionalClaims} qualified={qualifiedClaims} verified={visibleClaims ?? []} onOpenEvidence={setSelectedClaim} />
-          : isStreaming && <EvidenceSkeleton />}
+          : isStreaming && <DnaLoader size="compact" caption="Building the evidence view as sources arrive…" />}
       </motion.div></AccordionSection>
 
       {showComparison && visibleClaims && new Set(visibleClaims.map((claim) => claim.sourceId)).size >= 2 && <EvidenceMatrix claims={visibleClaims} sourceCatalog={sourceCatalog} questions={questions} relations={relations} relationStatus={relationStatus} onOpenEvidence={setSelectedClaim} />}
