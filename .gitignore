@@ -12,3 +12,8 @@ evals/results/
 
 .vercel
 .env*
+
+# Supabase CLI local scratch state (`npx supabase start`) — never the migrations
+# themselves, which stay tracked in supabase/migrations/.
+supabase/.temp/
+supabase/.branches/
