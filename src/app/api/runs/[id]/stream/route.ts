@@ -1,5 +1,4 @@
-import { synthesizeEvidenceOverview, synthesizeRetrievedOverview } from '@/modules/01-orchestrator';
-import { isComparisonRequest } from '@/lib/research-intent';
+import { synthesizeEvidenceOverview, synthesizeRetrievedOverview, OverviewSectionSchema } from '@/modules/01-orchestrator';
 import {
   buildReceipt,
   getRunForViewer,
@@ -275,7 +274,14 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       if (run.status === 'done' || run.status === 'partial' || run.status === 'abstained' || run.status === 'failed') {
         const saved = await runtime.stageOutputsRepository.getLatestPerStage(run.id).catch(() => new Map());
         const savedOverview = saved.get('overview')?.value;
-        if (typeof savedOverview === 'string') send({ type: 'opening_ready', runId: run.id, text: savedOverview });
+        // Accepts both shapes: a plain string (rows persisted before 2026-11-02's
+        // sectioned-overview change) and the current `{text, sections}` object.
+        if (typeof savedOverview === 'string') {
+          send({ type: 'opening_ready', runId: run.id, text: savedOverview, final: true });
+        } else {
+          const parsedOverview = z.object({ text: z.string(), sections: z.array(OverviewSectionSchema).optional() }).safeParse(savedOverview);
+          if (parsedOverview.success) send({ type: 'opening_ready', runId: run.id, text: parsedOverview.data.text, final: true, sections: parsedOverview.data.sections ?? [] });
+        }
         const candidates = CandidateSourceSchema.array().safeParse(saved.get('retrieve')?.value);
         if (candidates.success) send({ type: 'source_catalog_ready', runId: run.id, sources: candidates.data.map(({ tempId, title, url, doi, pmid, year, issuer, firstAuthor }) => ({ id: tempId, status: 'candidate', title, url, doi, pmid, year, issuer, firstAuthor })) });
         const claims = ClaimSchema.array().safeParse(saved.get('extract')?.value);
@@ -329,16 +335,37 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         }
       }
 
-      let overviewPublished = false;
+      // 2026-11-02 (docs/DECISIONS.md): `overviewPublished` used to be a single flag
+      // shared by both the fast, abstract-only provisional overview and the real,
+      // claims-grounded one — whichever finished first permanently blocked the
+      // other, including the three explicit "final" calls at the end of the
+      // pipeline below. Since the provisional path only needs `retrieve` to finish
+      // (seconds) while the real one needs actual extraction+verification (much
+      // later), the provisional overview almost always won the race in practice,
+      // and `synthesizeEvidenceOverview` — the one with the mandatory-closing-clause
+      // prompt work — essentially never ran. Two separate flags fix this: the real
+      // overview now always runs once real claims exist and upgrades (replaces,
+      // once) whatever provisional text was already shown.
+      let provisionalOverviewSent = false;
+      let finalOverviewSent = false;
       let overviewPromise: Promise<void> | undefined;
       const startOverview = (claims: Claim[], final = false) => {
-        if (overviewPublished || overviewPromise || !claims.length) return;
-        if (!final && isComparisonRequest(pending?.freeText ?? '') && new Set(claims.map((claim) => claim.sourceId)).size < 2) return;
-        overviewPromise = synthesizeEvidenceOverview(run.id, pending?.freeText ?? '', claims, runtime).then(async (text) => {
-          const overview = text ?? `${claims[0]!.text} ${new Set(claims.map((claim) => claim.sourceId)).size < 2 ? 'Only one study currently has verified findings; a cross-study conclusion is not supported yet.' : 'Experimental context must be considered before comparing these findings.'}`;
-          overviewPublished = true;
-          send({ type: 'opening_ready', runId: run.id, text: overview });
-          try { await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'overview', status: 'ok', value: overview, metrics: { ms: 0, costUsd: 0 } }); } catch { /* Live text remains available. */ }
+        if (finalOverviewSent || overviewPromise || !claims.length) return;
+        // A non-final (mid-stream, per-source) call only finalizes once ≥2 sources
+        // have contributed verified claims — otherwise the very first source to
+        // finish extraction could lock in a single-source overview as permanently
+        // "final" moments before richer, multi-source evidence arrives, which is
+        // exactly the "reescribir continuamente"/premature-lock-in the provisional-
+        // to-final upgrade above is meant to avoid. The explicit final=true calls at
+        // the end of the pipeline bypass this and always finalize on whatever
+        // claims exist by then (including a genuinely single-source run).
+        if (!final && new Set(claims.map((claim) => claim.sourceId)).size < 2) return;
+        overviewPromise = synthesizeEvidenceOverview(run.id, pending?.freeText ?? '', claims, runtime).then(async (overviewResult) => {
+          const text = overviewResult?.text ?? `${claims[0]!.text} ${new Set(claims.map((claim) => claim.sourceId)).size < 2 ? 'Only one study currently has verified findings; a cross-study conclusion is not supported yet.' : 'Experimental context must be considered before comparing these findings.'}`;
+          const sections = overviewResult?.sections ?? [];
+          finalOverviewSent = true;
+          send({ type: 'opening_ready', runId: run.id, text, final: true, sections });
+          try { await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'overview', status: 'ok', value: { text, sections }, metrics: { ms: 0, costUsd: 0 } }); } catch { /* Live text remains available. */ }
         }).catch(() => undefined);
       };
       try {
@@ -370,7 +397,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
                   JSON.stringify({ type: 'stage_latency', runId: run.id, stage: event.stage, status: event.status, ms: event.metrics.ms, resumed: event.resumed, elapsedMs: Date.now() - streamStarted }),
                 );
               } else if (event.type === 'sources_retrieved') {
-                if (!overviewPublished && !overviewPromise && runtime.europePmc.fetchAbstract) {
+                if (!provisionalOverviewSent && !finalOverviewSent && !overviewPromise && runtime.europePmc.fetchAbstract) {
                   const started = Date.now();
                   overviewPromise = (async () => {
                     const abstracts = await Promise.all(event.sources.slice(0, 3).map(async (source) => {
@@ -387,9 +414,14 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
                     const text = await synthesizeRetrievedOverview(run.id, pending?.freeText ?? '', abstracts.filter((source) => source !== null), runtime);
                     if (!text) { overviewPromise = undefined; return; }
                     const overview = `${text}\n\n${/[¿áéíóú]|\b(compara|qué|gen|estudios)\b/i.test(pending?.freeText ?? '') ? 'Síntesis inicial basada en resúmenes recuperados; la verificación detallada sigue en curso.' : 'Initial overview based on retrieved abstracts; detailed verification is still in progress.'}`;
-                    overviewPublished = true;
-          send({ type: 'opening_ready', runId: run.id, text: overview });
-                    await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'overview', status: 'ok', value: overview, metrics: { ms: Date.now() - started, costUsd: 0 } });
+                    provisionalOverviewSent = true;
+          send({ type: 'opening_ready', runId: run.id, text: overview, final: false });
+                    await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'overview', status: 'ok', value: { text: overview, sections: [] }, metrics: { ms: Date.now() - started, costUsd: 0 } });
+                    // Clears the in-flight lock on success too, not just on failure —
+                    // otherwise the real, claims-grounded overview below could never
+                    // start once the provisional one succeeded (`overviewPromise`
+                    // would stay a resolved-but-truthy Promise forever).
+                    overviewPromise = undefined;
                   })().catch(() => { overviewPromise = undefined; });
                 }
                 send({ type: 'overview_ready', runId: run.id, sources: event.sources.slice(0, 5).map(({ title, year, url }) => ({ title, year, url })) });
@@ -458,7 +490,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
         startOverview(result.extraction.value ?? [], true);
         await overviewPromise;
-        if (!overviewPublished) { startOverview(result.extraction.value ?? [], true); await overviewPromise; }
+        if (!finalOverviewSent) { startOverview(result.extraction.value ?? [], true); await overviewPromise; }
         const finalStatus = computeFinalStatus(result);
         await runtime.runsRepository.updateRunStatus(run.id, finalStatus);
         send({ type: 'done', runId: run.id, status: finalStatus });

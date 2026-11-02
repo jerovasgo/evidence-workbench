@@ -1,8 +1,13 @@
 # P5 — Claim extractor
 
-Version: `P5@0.8`
-Agent: `claim-extractor` (module 03, tier T1, 1 step, ~3,000 output tokens, 25 s timeout)
+Version: `P5@0.9`
+Agent: `claim-extractor` (module 03, tier T1, 1 step, ~4,500 output tokens, 30 s timeout)
 Shares the common preamble `P0`.
+
+**2026-11-02 (docs/DECISIONS.md):** raised the per-source claim cap from 6 to 10 and the output
+token budget from 3,000 to 4,500 — a cap this tight was quietly limiting how much real evidence
+ever reached the overview/Evidence tab, compounding with a separate overview-pipeline bug fixed the
+same day. Everything else in this prompt is unchanged.
 
 **2026-10-29 pivot (docs/DECISIONS.md), heaviest rewrite in the prompt set:**
 `actionType` (the clinical workflow verbs assess/test/treat/threshold/
@@ -48,7 +53,7 @@ Return: {
  }]
 }
 Rules:
-- Return up to 6 distinct, question-relevant claims per source when the supplied
+- Return up to 10 distinct, question-relevant claims per source when the supplied
   passages support them. Cover separate experimental results, measurements,
   methods and important limitations; do not collapse materially different
   outcomes into one claim or create claims to reach a quota.

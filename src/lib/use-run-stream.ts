@@ -5,6 +5,7 @@ import type { Claim, Receipt, RunEvent, Relation } from '@/shared/domain';
 import type { ScoreBreakdown } from '@/modules/04-grading-scoring';
 import type { AlgorithmGraph } from '@/modules/06-algorithm';
 import type { MechanismGraph } from '@/modules/08-mechanism';
+import type { OverviewSection } from '@/modules/01-orchestrator';
 
 // Client-side consumer of GET /api/runs/:id/stream (SSE). EventSource already
 // parses the `data: <json>\n\n` framing; this hook just accumulates the typed
@@ -19,6 +20,13 @@ export interface StageState {
 
 export interface RunStreamState {
   opening: string | null;
+  // 2026-11-02 (docs/DECISIONS.md): the provisional, abstracts-only overview is
+  // shown immediately for a fast first paint, then upgraded exactly once when the
+  // real, claims-grounded overview arrives — never rewritten again after that.
+  openingFinal: boolean;
+  // Only ever populated alongside the final overview (never the provisional one);
+  // empty/null when the model found nothing beyond the lead paragraph worth adding.
+  openingSections: OverviewSection[] | null;
   overviewSources: { title: string; year?: number; url?: string }[];
   geneContext: { symbol: string; name?: string; geneId?: string; hgncId?: string; links: { label: string; url: string }[] }[];
   sourceCatalog: Record<string, { id: string; status: 'candidate'; title: string; url: string; doi?: string; pmid?: string; year?: number; issuer?: string; firstAuthor?: string }>;
@@ -48,6 +56,8 @@ const STAGE_ORDER: StageName[] = ['structure', 'plan', 'retrieve', 'classify', '
 export function initialState(): RunStreamState {
   return {
     opening: null,
+    openingFinal: false,
+    openingSections: null,
     overviewSources: [],
     geneContext: [],
     sourceCatalog: {},
@@ -102,7 +112,8 @@ export function useRunStream(streamUrl: string | null): RunStreamState {
 export function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamState {
   switch (event.type) {
     case 'opening_ready':
-      return { ...prev, opening: prev.opening ?? event.text };
+      if (prev.openingFinal) return prev;
+      return { ...prev, opening: event.text, openingFinal: event.final ?? false, openingSections: event.final ? ((event.sections as OverviewSection[] | undefined) ?? []) : null };
     case 'overview_ready':
       return { ...prev, overviewSources: event.sources };
     case 'gene_context_ready':

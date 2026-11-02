@@ -39,10 +39,26 @@ describe('provisional SSE claim lifecycle', () => {
   });
 });
 
-it('keeps the first substantive overview immutable during streaming', () => {
-  let state = applyEvent(initialState(), { type: 'opening_ready', runId: 'r1', text: 'Initial supported findings' });
-  state = applyEvent(state, { type: 'opening_ready', runId: 'r1', text: 'Later rewrite' });
-  expect(state.opening).toBe('Initial supported findings');
+describe('opening_ready provisional-to-final upgrade (docs/DECISIONS.md, 2026-11-02)', () => {
+  it('shows the provisional overview immediately, not final', () => {
+    const state = applyEvent(initialState(), { type: 'opening_ready', runId: 'r1', text: 'Initial abstracts-only overview', final: false });
+    expect(state.opening).toBe('Initial abstracts-only overview');
+    expect(state.openingFinal).toBe(false);
+  });
+
+  it('upgrades the provisional overview exactly once when the final, claims-grounded one arrives', () => {
+    let state = applyEvent(initialState(), { type: 'opening_ready', runId: 'r1', text: 'Initial abstracts-only overview', final: false });
+    state = applyEvent(state, { type: 'opening_ready', runId: 'r1', text: 'Final grounded overview', final: true });
+    expect(state.opening).toBe('Final grounded overview');
+    expect(state.openingFinal).toBe(true);
+  });
+
+  it('never rewrites the overview again once the final one has been shown', () => {
+    let state = applyEvent(initialState(), { type: 'opening_ready', runId: 'r1', text: 'Initial abstracts-only overview', final: false });
+    state = applyEvent(state, { type: 'opening_ready', runId: 'r1', text: 'Final grounded overview', final: true });
+    state = applyEvent(state, { type: 'opening_ready', runId: 'r1', text: 'Some later stray event', final: false });
+    expect(state.opening).toBe('Final grounded overview');
+  });
 });
 
 describe('algorithm_ready', () => {

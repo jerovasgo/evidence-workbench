@@ -3,6 +3,7 @@
 // never `@/modules/01-orchestrator/pipeline/create-run` etc. directly.
 export * from './schemas/router';
 export * from './schemas/scenario-structure';
+export * from './schemas/overview';
 export * from './validators/identifiers';
 export * from './data/runs-repository';
 export * from './data/stage-outputs-repository';

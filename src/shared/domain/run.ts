@@ -41,7 +41,19 @@ export type Run = z.infer<typeof RunSchema>;
  */
 export const RunEventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('stage_started'), runId: z.string(), stage: z.string() }),
-  z.object({ type: z.literal('opening_ready'), runId: z.string(), text: z.string() }),
+  z.object({
+    type: z.literal('opening_ready'),
+    runId: z.string(),
+    text: z.string(),
+    final: z.boolean().optional(),
+    // Module 01 (docs/DECISIONS.md, 2026-11-02): model-chosen further sections,
+    // only ever present on the final/claims-grounded overview, never on the
+    // provisional abstracts-only one. Kept loose (`z.unknown()`) for the same
+    // module-boundary reason `algorithm_ready`/`mechanism_ready` do — the real
+    // `OverviewSection[]` shape (module 01's own schema) is validated/typed only
+    // at the SSE route and `use-run-stream.ts`.
+    sections: z.array(z.unknown()).optional(),
+  }),
   z.object({
     type: z.literal('stage_progress'),
     runId: z.string(),
