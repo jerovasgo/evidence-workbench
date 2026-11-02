@@ -242,45 +242,55 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
       let executed = await searchPromise;
       let expanded = false;
       const initialCandidates = deduplicateCandidates(executed.candidates);
-      const initialAssessment = assessRetrievalSufficiency(input.freeText, initialCandidates);
-      if (initialAssessment.status !== 'sufficient') {
-        // Empty, off-topic or thin complex searches pay once for a semantic rescue.
-        // The planner can translate terminology and vary evidence facets, but the
-        // resulting queries still run through the same bounded allow-listed tools.
+      const initialQueries = plan.value?.queries.map(({ family, text, purpose }) => ({ family, text, purpose })) ?? [];
+      let assessment = assessRetrievalSufficiency(input.freeText, initialCandidates);
+
+      // 2026-11-02 (docs/DECISIONS.md): up to 2 rescue attempts, not 1 — a genuinely
+      // sparse topic deserves one more, differently-angled try (P3's own prompt
+      // already tells it to "produce complementary reformulations rather than
+      // cosmetic reorderings" when rescued) before the overview settles for a
+      // no-evidence framing. Hard-capped at 2 total so a topic that's truly thin no
+      // matter how it's searched still terminates in bounded time — the tradeoff is
+      // explicit and accepted: a thin-evidence run gets slower in exchange for a
+      // real second chance, never a silent change on the common, already-sufficient
+      // first pass (the loop body never runs at all in that case).
+      for (let attempt = 1; attempt <= 2 && assessment.status !== 'sufficient'; attempt++) {
         const expansion = await planSearch(
           input.runId,
           { condition: input.freeText || input.routerCondition || 'scientific evidence', subQuestions: structure.value?.subQuestions, setting: structure.value?.context },
           { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p3PromptTemplate: deps.p3PromptTemplate, onTrace: deps.onTrace },
         );
-        if (expansion.ok) {
-          expanded = true;
-          const next = await executeSearchPlan(expansion.value, {
-            pubmed: deps.pubmed,
-            europePmc: deps.europePmc,
-            maxConcurrency: deps.maxConcurrency,
-            perQueryTimeoutMs: deps.perQueryTimeoutMs,
-            webSearch: { runId: input.runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES },
-          });
-          executed = { candidates: [...executed.candidates, ...next.candidates], skipped: [...executed.skipped, ...next.skipped], failed: [...executed.failed, ...next.failed] };
+        if (!expansion.ok) {
           await Promise.resolve(deps.stageOutputs?.insert({
-            runId: input.runId,
-            stage: 'retrieval_rescue',
-            status: next.candidates.length ? 'ok' : 'partial',
-            value: {
-              trigger: initialAssessment,
-              initialQueries: plan.value?.queries.map(({ family, text, purpose }) => ({ family, text, purpose })) ?? [],
-              rescueQueries: expansion.value.queries.map(({ family, text, purpose }) => ({ family, text, purpose })),
-              rescuedCandidates: next.candidates.length,
-            },
-            reasons: next.candidates.length ? undefined : ['Semantic rescue returned no additional candidates'],
-            metrics: { ms: 0, costUsd: expansion.usage.costUsd, counts: { initial: initialCandidates.length, rescued: next.candidates.length } },
-          })).catch(() => console.warn(JSON.stringify({ type: 'audit_persistence_failed', runId: input.runId })));
-        } else {
-          await Promise.resolve(deps.stageOutputs?.insert({
-            runId: input.runId, stage: 'retrieval_rescue', status: 'failed', value: { trigger: initialAssessment },
+            runId: input.runId, stage: 'retrieval_rescue', status: 'failed', value: { attempt, trigger: assessment },
             reasons: [expansion.detail], metrics: { ms: 0, costUsd: 0, counts: { initial: initialCandidates.length, rescued: 0 } },
           })).catch(() => console.warn(JSON.stringify({ type: 'audit_persistence_failed', runId: input.runId })));
+          break;
         }
+        expanded = true;
+        const next = await executeSearchPlan(expansion.value, {
+          pubmed: deps.pubmed,
+          europePmc: deps.europePmc,
+          maxConcurrency: deps.maxConcurrency,
+          perQueryTimeoutMs: deps.perQueryTimeoutMs,
+          webSearch: { runId: input.runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES },
+        });
+        executed = { candidates: [...executed.candidates, ...next.candidates], skipped: [...executed.skipped, ...next.skipped], failed: [...executed.failed, ...next.failed] };
+        await Promise.resolve(deps.stageOutputs?.insert({
+          runId: input.runId,
+          stage: 'retrieval_rescue',
+          status: next.candidates.length ? 'ok' : 'partial',
+          value: {
+            attempt,
+            trigger: assessment,
+            initialQueries,
+            rescueQueries: expansion.value.queries.map(({ family, text, purpose }) => ({ family, text, purpose })),
+            rescuedCandidates: next.candidates.length,
+          },
+          reasons: next.candidates.length ? undefined : ['Semantic rescue returned no additional candidates'],
+          metrics: { ms: 0, costUsd: expansion.usage.costUsd, counts: { initial: initialCandidates.length, rescued: next.candidates.length } },
+        })).catch(() => console.warn(JSON.stringify({ type: 'audit_persistence_failed', runId: input.runId })));
+        assessment = assessRetrievalSufficiency(input.freeText, deduplicateCandidates(executed.candidates));
       }
       const retrieveMs = Date.now() - retrieveStarted;
       const ranked = prioritizeSources(input.freeText, deduplicateCandidates(executed.candidates));

@@ -119,10 +119,14 @@ describe('runRetrievalPipeline', () => {
       .mockResolvedValueOnce(fakeRespondResult(structure))
       .mockResolvedValueOnce(fakeRespondResult(rescuePlan));
     const pubmed = fakePubmed({
-      search: vi.fn(async (query: string) => ({ pmids: [query.startsWith('rescue') ? '222' : '111'] })),
+      // The rescue returns two additional candidates (not one) so the merged pool
+      // (1 initial + 2 rescued = 3) clears the 'ranking' shape's required(3) relevant
+      // count and the loop exits after a single attempt — same as this test asserted
+      // before the 2026-11-02 bounded-second-rescue change (docs/DECISIONS.md).
+      search: vi.fn(async (query: string) => ({ pmids: query.startsWith('rescue') ? ['222', '333'] : ['111'] })),
       fetchSummaries: vi.fn(async (pmids: string[]) => pmids.map((pmid) => ({
         pmid,
-        title: pmid === '222' ? 'Replicated GWAS loci for rice drought tolerance' : 'One gene association with drought tolerance in rice',
+        title: pmid === '111' ? 'One gene association with drought tolerance in rice' : 'Replicated GWAS loci for rice drought tolerance',
         pubTypes: [],
       }))),
     });
@@ -132,12 +136,44 @@ describe('runRetrievalPipeline', () => {
       baseDeps({ respond, listModels: vi.fn() }, { pubmed, stageOutputs }),
     );
 
-    expect(result.retrieval.value?.map((source) => source.pmid)).toEqual(expect.arrayContaining(['111', '222']));
+    expect(result.retrieval.value?.map((source) => source.pmid)).toEqual(expect.arrayContaining(['111', '222', '333']));
     expect(result.retrieval.metrics.counts?.expanded).toBe(1);
     const audit = stageOutputs.inserted.find((entry) => entry.stage === 'retrieval_rescue');
     expect(audit?.status).toBe('ok');
-    expect(audit?.value).toMatchObject({ trigger: { status: 'thin' }, rescuedCandidates: 1 });
+    expect(audit?.value).toMatchObject({ attempt: 1, trigger: { status: 'thin' }, rescuedCandidates: 2 });
+    // Reaching 'sufficient' after the first rescue means the loop never tries a second.
+    expect(stageOutputs.inserted.filter((entry) => entry.stage === 'retrieval_rescue')).toHaveLength(1);
     expect(respond).toHaveBeenCalledTimes(2);
+  });
+
+  it('2026-11-02: tries a second, final rescue when the first one is still insufficient, then stops', async () => {
+    const structure = { context: 'field_study' as const, subQuestions: ['Which genes are repeatedly associated with drought tolerance?'], scopeParameters: { system: 'rice' } };
+    const rescuePlan1 = { queries: [{ family: 'pubmed' as const, text: 'rescue1 rice drought tolerance', purpose: 'Replicated associations' }] };
+    const rescuePlan2 = { queries: [{ family: 'pubmed' as const, text: 'rescue2 rice drought GWAS replication', purpose: 'Second-angle replication' }] };
+    const respond = vi.fn()
+      .mockResolvedValueOnce(fakeRespondResult(structure))
+      .mockResolvedValueOnce(fakeRespondResult(rescuePlan1))
+      .mockResolvedValueOnce(fakeRespondResult(rescuePlan2));
+    const pubmed = fakePubmed({
+      // Every pass (initial + both rescues) returns exactly one relevant candidate —
+      // never enough to clear required(3) for a 'ranking' question — so both bounded
+      // attempts fire and the loop still stops at 2, never a third `respond` call.
+      search: vi.fn(async (query: string) => ({
+        pmids: [query.startsWith('rescue1') ? '222' : query.startsWith('rescue2') ? '333' : '111'],
+      })),
+      fetchSummaries: vi.fn(async (pmids: string[]) => pmids.map((pmid) => ({ pmid, title: 'One gene association with drought tolerance in rice', pubTypes: [] }))),
+    });
+    const stageOutputs = fakeStageOutputsRepository();
+    const result = await runRetrievalPipeline(
+      { runId: 'run_rescue2', freeText: 'What genes are most associated with drought tolerance in rice?' },
+      baseDeps({ respond, listModels: vi.fn() }, { pubmed, stageOutputs }),
+    );
+
+    expect(result.retrieval.value?.map((source) => source.pmid)).toEqual(expect.arrayContaining(['111', '222', '333']));
+    const rescues = stageOutputs.inserted.filter((entry) => entry.stage === 'retrieval_rescue');
+    expect(rescues).toHaveLength(2);
+    expect(rescues.map((r) => (r.value as { attempt: number }).attempt)).toEqual([1, 2]);
+    expect(respond).toHaveBeenCalledTimes(3); // structure + 2 rescues, never a 3rd rescue
   });
 
   it('keeps the deterministic search plan when structure fails', async () => {
@@ -145,7 +181,8 @@ describe('runRetrievalPipeline', () => {
       .fn()
       .mockResolvedValueOnce(fakeRespondResult({ context: 'bogus' }))
       .mockResolvedValueOnce(fakeRespondResult({ context: 'bogus' }))
-      .mockResolvedValueOnce(fakeRespondResult({ queries: [] }));
+      .mockResolvedValueOnce(fakeRespondResult({ queries: [] })) // rescue attempt 1
+      .mockResolvedValueOnce(fakeRespondResult({ queries: [] })); // rescue attempt 2 (both indexes stay empty, so both bounded attempts fire)
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
 
     const result = await runRetrievalPipeline(
@@ -197,7 +234,9 @@ describe('runRetrievalPipeline', () => {
 
       expect(result.structure).toEqual({ stage: 'structure', status: 'ok', value: STRUCTURE_OUTPUT, metrics: { ms: 1, costUsd: 0.001 } });
       expect(result.plan.status).toBe('ok');
-      expect(respond).toHaveBeenCalledTimes(1); // empty seed result triggers expansion
+      // Empty seed result triggers expansion; the rescue plan is itself empty and
+      // never resolves the thinness, so both bounded attempts fire (2026-11-02).
+      expect(respond).toHaveBeenCalledTimes(2);
       // Structure wasn't re-persisted since it was resumed, not recomputed.
       expect(stageOutputs.inserted.some((r) => r.stage === 'structure')).toBe(false);
       expect(stageOutputs.inserted.some((r) => r.stage === 'plan')).toBe(true);
@@ -219,14 +258,15 @@ describe('runRetrievalPipeline', () => {
       const respond = vi
         .fn()
         .mockResolvedValueOnce(fakeRespondResult(STRUCTURE_OUTPUT))
-        .mockResolvedValueOnce(fakeRespondResult(PLAN_OUTPUT))
+        .mockResolvedValueOnce(fakeRespondResult(PLAN_OUTPUT)) // rescue attempt 1
+        .mockResolvedValueOnce(fakeRespondResult(PLAN_OUTPUT)) // rescue attempt 2 (pubmed stays empty, so both bounded attempts fire)
         .mockResolvedValueOnce(fakeRespondResult(CLASSIFY_OUTPUT));
       const metaClient: MetaClient = { respond, listModels: vi.fn() };
       const stageOutputs = fakeStageOutputsRepository();
 
       await runRetrievalPipeline({ runId: 'run_1', freeText: 'x' }, baseDeps(metaClient, { stageOutputs }));
 
-      expect(stageOutputs.inserted.map((r) => r.stage)).toEqual(['plan', 'structure', 'retrieval_rescue', 'source_selection', 'retrieve', 'classify', 'extract']);
+      expect(stageOutputs.inserted.map((r) => r.stage)).toEqual(['plan', 'structure', 'retrieval_rescue', 'retrieval_rescue', 'source_selection', 'retrieve', 'classify', 'extract']);
     });
 
     it('still completes the run when persistence itself fails', async () => {

@@ -38,3 +38,40 @@ it('protects concordance allocation from concurrent calls and releases holds onc
  release(); release();
  expect(guard.reserveCall!('r',0.15,false)).toBeTypeOf('function');
 });
+
+describe('setIntentReserve (2026-11-02, docs/DECISIONS.md)', () => {
+  it('blocks a non-reserve-holder call from spending into the reserved amount', () => {
+    const guard = createInMemoryBudgetGuard({ runCostCapUsd: 0.4, dailyBudgetUsd: 20 });
+    guard.setIntentReserve!('r', 0.25);
+    // Room is 0.4 - 0.25 reserve = 0.15 for non-reserve-holder calls.
+    expect(guard.reserveCall!('r', 0.1, false)).toBeTypeOf('function');
+    expect(guard.reserveCall!('r', 0.1, false)).toBeNull();
+  });
+
+  it('lets the reserve holder spend its own reserved amount even when other calls already used the rest', () => {
+    const guard = createInMemoryBudgetGuard({ runCostCapUsd: 0.4, dailyBudgetUsd: 20 });
+    guard.setIntentReserve!('r', 0.25);
+    expect(guard.reserveCall!('r', 0.15, false)).toBeTypeOf('function'); // the non-reserve room
+    expect(guard.reserveCall!('r', 0.1, false)).toBeNull(); // non-reserve room now exhausted
+    expect(guard.reserveCall!('r', 0.15, false, true)).toBeTypeOf('function'); // reserve holder draws from its own reserve
+  });
+
+  it('reproduces the original bug (no reserve) and confirms the reserve fixes it', () => {
+    const guard = createInMemoryBudgetGuard({ runCostCapUsd: 0.4, dailyBudgetUsd: 20, concordanceReserveUsd: 0.1 });
+    // Simulate extraction/verification spending down to the exact point observed live.
+    guard.record('r', 0.31);
+    // Without a reserve, the synthesis call (0.15 + implicit 0.10 concordance reserve) is blocked — the original bug.
+    expect(guard.reserveCall!('r', 0.15, false, true)).toBeNull();
+
+    const reserved = createInMemoryBudgetGuard({ runCostCapUsd: 0.4, dailyBudgetUsd: 20, concordanceReserveUsd: 0.1 });
+    reserved.setIntentReserve!('r', 0.25);
+    // Non-reserve-holder calls are capped earlier, so spend never reaches 0.31 in practice —
+    // but even if it somehow did, the reserve holder still gets its own reserved amount.
+    expect(reserved.reserveCall!('r', 0.15, false, true)).toBeTypeOf('function');
+  });
+
+  it('leaves a run with no reserve set unaffected (existing behavior preserved)', () => {
+    const guard = createInMemoryBudgetGuard({ runCostCapUsd: 0.4, dailyBudgetUsd: 20 });
+    expect(guard.reserveCall!('r', 0.39, false)).toBeTypeOf('function');
+  });
+});

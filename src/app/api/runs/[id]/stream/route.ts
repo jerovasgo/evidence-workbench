@@ -241,6 +241,17 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const encoder = new TextEncoder();
   const streamStarted = Date.now();
 
+  // 2026-11-02 (docs/DECISIONS.md): reserve budget for this run's primary requested
+  // view BEFORE extraction/verification can spend it — root cause of "Insufficient
+  // unreserved budget" always appearing for an Algorithm/Mechanism request was that
+  // their synthesis agent ran last and competed for whatever an unbounded number of
+  // earlier extraction/verification calls hadn't already spent. Matches
+  // algorithm-synthesizer's/mechanism-synthesizer's own `maxCostUsd` (0.15) plus the
+  // concordance reserve (0.10) they'd otherwise also need to clear on top of it.
+  if (run.intent === 'algorithm' || run.intent === 'mechanism') {
+    runtime.budgetGuard.setIntentReserve?.(run.id, 0.25);
+  }
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       let closed = false;

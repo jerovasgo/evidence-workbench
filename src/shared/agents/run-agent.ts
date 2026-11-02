@@ -100,7 +100,13 @@ export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<Agen
 
   let releaseBudget: (() => void) | null | undefined;
   if (ctx.budgetGuard.reserveCall) {
-    releaseBudget = ctx.budgetGuard.reserveCall(ctx.runId, limits.maxCostUsd, params.name === 'relation-labeller');
+    // 2026-11-02 (docs/DECISIONS.md): algorithm/mechanism-synthesizer are the
+    // "primary requested view" for their intent — exempt from their own run's
+    // `setIntentReserve` the same way the relation-labeller is already exempt from
+    // the concordance reserve, so extraction/verification can never spend what this
+    // call needs before it gets its turn.
+    const isReserveHolder = params.name === 'algorithm-synthesizer' || params.name === 'mechanism-synthesizer';
+    releaseBudget = ctx.budgetGuard.reserveCall(ctx.runId, limits.maxCostUsd, params.name === 'relation-labeller', isReserveHolder);
     if (!releaseBudget) return finish({ ok: false, reason: 'budget', detail: 'Insufficient unreserved budget' });
   } else {
     const budgetCheck = ctx.budgetGuard.check(ctx.runId, limits.maxCostUsd);

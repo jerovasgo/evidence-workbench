@@ -6,6 +6,7 @@ import '@xyflow/react/dist/style.css';
 import type { Claim } from '@/shared/domain';
 import { layoutMechanismGraph, type MechanismGraph } from '@/modules/08-mechanism';
 import { mechanismNodeTypes, type MechanismFlowNodeData } from '@/components/mechanism-flow-nodes';
+import { humanizeAbstainReason } from '@/lib/i18n/abstain-reason';
 
 // Module 08 V1 renderer (docs/DECISIONS.md, 2026-10-31): a React Flow + elkjs
 // canvas, mirroring `algorithm-view.tsx`'s shape, with one real difference —
@@ -77,7 +78,7 @@ export function MechanismView({
       <section className="rounded-[var(--radius-card)] border border-warning/40 p-4" aria-label="Mechanism">
         <h3 className="text-sm font-semibold">Mechanism diagram</h3>
         <p className="mt-2 text-xs leading-relaxed text-warning">
-          The available evidence does not support a verified mechanism diagram for this question. {abstainReason}
+          The available evidence does not support a verified mechanism diagram for this question. {humanizeAbstainReason(abstainReason, 'mechanism diagram')}
         </p>
       </section>
     );

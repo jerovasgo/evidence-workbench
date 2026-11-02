@@ -7,6 +7,7 @@ import type { Claim } from '@/shared/domain';
 import { layoutAlgorithmGraph, type AlgorithmGraph, type AlgorithmNode } from '@/modules/06-algorithm';
 import { Chip } from '@/components/ui/chip';
 import { algorithmNodeTypes, type AlgorithmFlowNodeData, type AlgorithmFlowNodeType } from '@/components/algorithm-flow-nodes';
+import { humanizeAbstainReason } from '@/lib/i18n/abstain-reason';
 
 // Module 06 V1.1 renderer (docs/DECISIONS.md, 2026-10-31): a real flowchart canvas
 // (React Flow + elkjs layout, `@/modules/06-algorithm`'s `layoutAlgorithmGraph`),
@@ -113,7 +114,7 @@ export function AlgorithmView({
       <section className="rounded-[var(--radius-card)] border border-warning/40 p-4" aria-label="Algorithm">
         <h3 className="text-sm font-semibold">Decision path</h3>
         <p className="mt-2 text-xs leading-relaxed text-warning">
-          The available evidence does not support a full decision path for this question. {abstainReason}
+          The available evidence does not support a full decision path for this question. {humanizeAbstainReason(abstainReason, 'algorithm')}
         </p>
       </section>
     );
