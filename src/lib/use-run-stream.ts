@@ -124,7 +124,10 @@ export function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamStat
     case 'overview_ready':
       return { ...prev, overviewSources: event.sources };
     case 'gene_context_ready':
-      return { ...prev, geneContext: event.genes };
+      return {
+        ...prev,
+        geneContext: [...new Map([...prev.geneContext, ...event.genes].map((entity) => [`${entity.kind ?? 'gene'}:${entity.symbol.toUpperCase()}`, entity])).values()],
+      };
     case 'source_catalog_ready':
       return { ...prev, sourceCatalog: Object.fromEntries(event.sources.map((source) => [source.id, source])) };
     case 'provisional_claims_ready':

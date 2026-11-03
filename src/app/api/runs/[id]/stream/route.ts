@@ -1,4 +1,4 @@
-import { synthesizeEvidenceOverview, OverviewSectionSchema } from '@/modules/01-orchestrator';
+import { synthesizeEvidenceOverview, synthesizeRetrievedOverview, OverviewSectionSchema } from '@/modules/01-orchestrator';
 import {
   buildReceipt,
   getRunForViewer,
@@ -317,9 +317,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
       // Reference lookups run beside the literature pipeline. They may enrich the
       // overview, but cannot delay retrieval or turn a gene record into a study.
-      void (pending ? lookupGeneContext(pending.freeText).then((genes) => {
+      const sendGeneContextForText = (text: string) => void lookupGeneContext(text).then((genes) => {
         if (genes.length && !closed) send({ type: 'gene_context_ready', runId: run.id, genes });
-      }).catch(() => undefined) : Promise.resolve());
+      }).catch(() => undefined);
+      if (pending) sendGeneContextForText(pending.freeText);
 
       // No context: only an actual blocker if nothing was persisted either —
       // otherwise this is exactly the resumable-reconnect case stage persistence
@@ -339,11 +340,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         }
       }
 
-      // Only verified claims may publish the user-visible Overview. It starts as
-      // soon as two distinct sources provide enough evidence (or at pipeline end
-      // for a single-source run), then the server and client both lock it. This
-      // avoids an abstracts-only model call on the critical path and prevents
-      // later pipeline events from replacing content already presented as final.
+      // Abstracts can publish one explicitly provisional overview while detailed
+      // verification continues. It has its own promise and persisted stage so it
+      // can never block, masquerade as, or overwrite the claims-grounded final.
+      // Once the final is published, both server and client lock it permanently.
+      let provisionalOverviewSent = false;
+      let provisionalOverviewPromise: Promise<void> | undefined;
       let finalOverviewSent = false;
       let overviewPromise: Promise<void> | undefined;
       const startOverview = (claims: Claim[], final = false) => {
@@ -362,6 +364,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           const sections = overviewResult?.sections ?? [];
           finalOverviewSent = true;
           send({ type: 'opening_ready', runId: run.id, text, final: true, sections });
+          sendGeneContextForText([text, ...sections.map((section) => section.body)].join('\n'));
           try { await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'overview', status: 'ok', value: { text, sections, final: true }, metrics: { ms: 0, costUsd: 0 } }); } catch { /* Live text remains available. */ }
         }).catch(() => undefined);
       };
@@ -394,6 +397,30 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
                   JSON.stringify({ type: 'stage_latency', runId: run.id, stage: event.stage, status: event.status, ms: event.metrics.ms, resumed: event.resumed, elapsedMs: Date.now() - streamStarted }),
                 );
               } else if (event.type === 'sources_retrieved') {
+                if (!provisionalOverviewSent && !provisionalOverviewPromise && !finalOverviewSent && runtime.europePmc.fetchAbstract) {
+                  const started = Date.now();
+                  provisionalOverviewPromise = (async () => {
+                    const abstracts = await Promise.all(event.sources.slice(0, 3).map(async (source) => {
+                      const parts = source.tempId.split(':');
+                      const id = source.pmid ?? (source.family === 'europe_pmc' ? parts[2] : undefined);
+                      if (!id) return null;
+                      const timeout = AbortSignal.timeout(2500);
+                      const abstract = await Promise.race([
+                        runtime.europePmc.fetchAbstract!(source.pmid ? 'MED' : parts[1]!, id).catch(() => null),
+                        new Promise<null>((resolve) => timeout.addEventListener('abort', () => resolve(null), { once: true })),
+                      ]);
+                      return abstract ? { id: source.tempId, title: source.title, abstract: abstract.slice(0, 6000) } : null;
+                    }));
+                    const text = await synthesizeRetrievedOverview(run.id, pending?.freeText ?? '', abstracts.filter((source) => source !== null), runtime);
+                    if (!text || finalOverviewSent || closed) return;
+                    provisionalOverviewSent = true;
+                    send({ type: 'opening_ready', runId: run.id, text, final: false });
+                    sendGeneContextForText(text);
+                    try {
+                      await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'overview_provisional', status: 'ok', value: { text, sections: [], final: false }, metrics: { ms: Date.now() - started, costUsd: 0 } });
+                    } catch { /* The live provisional overview remains available. */ }
+                  })().catch(() => undefined).finally(() => { provisionalOverviewPromise = undefined; });
+                }
                 send({ type: 'overview_ready', runId: run.id, sources: event.sources.slice(0, 5).map(({ title, year, url }) => ({ title, year, url })) });
                 send({ type: 'source_catalog_ready', runId: run.id, sources: event.sources.map(({ tempId, title, url, doi, pmid, year, issuer, firstAuthor }) => ({ id: tempId, status: 'candidate', title, url, doi, pmid, year, issuer, firstAuthor })) });
                 console.log(JSON.stringify({ type: 'overview_latency', runId: run.id, elapsedMs: Date.now() - streamStarted }));
@@ -461,6 +488,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         startOverview(result.extraction.value ?? [], true);
         await overviewPromise;
         if (!finalOverviewSent) { startOverview(result.extraction.value ?? [], true); await overviewPromise; }
+        // If verification produced no final overview, keep the stream open for the
+        // already-running abstract synthesis. That provisional answer is the useful
+        // fallback for thin/partial runs and remains bounded by its own 8s timeout.
+        if (!finalOverviewSent && provisionalOverviewPromise) await provisionalOverviewPromise;
         const finalStatus = computeFinalStatus(result);
         await runtime.runsRepository.updateRunStatus(run.id, finalStatus);
         send({ type: 'done', runId: run.id, status: finalStatus });

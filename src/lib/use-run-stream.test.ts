@@ -40,7 +40,7 @@ describe('provisional SSE claim lifecycle', () => {
 });
 
 describe('opening_ready immutable publication', () => {
-  it('keeps provisional synthesis out of the published overview', () => {
+  it('retains provisional synthesis separately for an explicitly labelled early overview', () => {
     const state = applyEvent(initialState(), { type: 'opening_ready', runId: 'r1', text: 'Initial abstracts-only overview', final: false });
     expect(state.opening).toBeNull();
     expect(state.provisionalOpening).toBe('Initial abstracts-only overview');
@@ -67,6 +67,18 @@ describe('opening_ready immutable publication', () => {
     state = applyEvent(state, { type: 'opening_ready', runId: 'r1', text: 'Late abstract synthesis', final: false });
     expect(state.opening).toBe('Final grounded overview');
     expect(state.provisionalOpening).toBeNull();
+  });
+});
+
+describe('gene_context_ready enrichment', () => {
+  it('merges later response entities without duplicating an existing gene', () => {
+    let state = applyEvent(initialState(), { type: 'gene_context_ready', runId: 'r1', genes: [{ symbol: 'HNF1A', kind: 'gene', links: [{ label: 'NCBI Gene', url: 'https://www.ncbi.nlm.nih.gov/gene/6927' }] }] });
+    state = applyEvent(state, { type: 'gene_context_ready', runId: 'r1', genes: [
+      { symbol: 'HNF1A', kind: 'gene', name: 'HNF1 homeobox A', links: [{ label: 'NCBI Gene', url: 'https://www.ncbi.nlm.nih.gov/gene/6927' }] },
+      { symbol: 'TP53', kind: 'gene', links: [{ label: 'NCBI Gene', url: 'https://www.ncbi.nlm.nih.gov/gene/7157' }] },
+    ] });
+    expect(state.geneContext.map((entity) => entity.symbol)).toEqual(['HNF1A', 'TP53']);
+    expect(state.geneContext[0]?.name).toBe('HNF1 homeobox A');
   });
 });
 

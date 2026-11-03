@@ -9,7 +9,7 @@ import { buildEvidenceMatrix } from '@/modules/07-map-matrix';
 import { ReviewAuditPanel } from '@/components/review-audit';
 import { EvidenceDrawer } from '@/components/evidence-drawer';
 import { InitialResearchStatus } from '@/components/initial-research-status';
-import { GeneticEntityText } from '@/components/genetic-entity-text';
+import { assignEntitiesToFirstMention, GeneticEntityText } from '@/components/genetic-entity-text';
 import { DnaLoader } from '@/components/dna-loader';
 import { EvidenceMatrix } from '@/components/evidence-matrix';
 import { EvidenceLandscape } from '@/components/evidence-landscape';
@@ -103,7 +103,7 @@ function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefin
 }
 
 export function RunResult({ runId, mode, intent, query, onMemoryUpdate }: { runId: string; mode?: Mode; intent?: Intent | null; query?: string; onMemoryUpdate?: (snapshot: TurnMemorySnapshot) => void }) {
-  const { opening, openingSections, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, algorithm, algorithmStatus, algorithmAbstainReason, mechanism, mechanismStatus, mechanismAbstainReason, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
+  const { opening, provisionalOpening, openingSections, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, algorithm, algorithmStatus, algorithmAbstainReason, mechanism, mechanismStatus, mechanismAbstainReason, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const isStreaming = status === 'streaming';
@@ -128,7 +128,8 @@ export function RunResult({ runId, mode, intent, query, onMemoryUpdate }: { runI
   const citableSourceIds = new Set((visibleClaims ?? []).map((claim) => claim.sourceId));
   const citableSources = Object.values(sourceCatalog).filter((source) => citableSourceIds.has(source.id));
   const sourceRegistry = computeSourceRegistry(sourceCatalog, sourceProgress, visibleClaims ?? [], withdrawals, provisionalBySource, isStreaming);
-  const substantiveOpening = opening;
+  const substantiveOpening = opening ?? provisionalOpening;
+  const isProvisionalOpening = !opening && Boolean(provisionalOpening);
   const reveal = reducedMotion ? false : { opacity: 0, y: 8 };
   const claimsById = new Map((visibleClaims ?? []).map((claim) => [claim.id, claim] as const));
   // The fixed "Key findings" bullet list is a fallback for when the final,
@@ -136,6 +137,10 @@ export function RunResult({ runId, mode, intent, query, onMemoryUpdate }: { runI
   // once real model-chosen sections exist, they supersede it rather than
   // duplicating the same evidence in two places.
   const hasOpeningSections = (openingSections?.length ?? 0) > 0;
+  const entitiesByBlock = assignEntitiesToFirstMention([
+    ...(substantiveOpening ? [{ id: 'overview', text: substantiveOpening }] : []),
+    ...(openingSections ?? []).map((section, index) => ({ id: `section-${index}`, text: section.body })),
+  ], geneContext);
 
   useEffect(() => {
     if (!onMemoryUpdate || (!opening && !claims?.length)) return;
@@ -166,15 +171,19 @@ export function RunResult({ runId, mode, intent, query, onMemoryUpdate }: { runI
         <Tabs.Trigger value="evidence" className="text-sm text-muted data-[state=active]:text-fg focus-visible:outline focus-visible:outline-2">Evidence &amp; Sources</Tabs.Trigger>
       </Tabs.List>
       <Tabs.Content value="main" className="space-y-5">
-      {substantiveOpening ? <motion.div key="overview" initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-        <p className="editorial-kicker">OVERVIEW</p>
-        <p className="mt-3 max-w-2xl text-[16px] font-light leading-7 text-fg"><GeneticEntityText text={substantiveOpening} entities={geneContext} /></p>
+      {substantiveOpening ? <motion.div key={isProvisionalOpening ? 'overview-provisional' : 'overview-final'} initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+        <div className="flex max-w-2xl items-center justify-between gap-3">
+          <p className="editorial-kicker">{isProvisionalOpening ? 'PRELIMINARY OVERVIEW' : 'OVERVIEW'}</p>
+          {isProvisionalOpening && <span className="rounded-[var(--radius-pill)] border border-border px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-muted">Verification in progress</span>}
+        </div>
+        <p className="mt-3 max-w-2xl text-[16px] font-light leading-7 text-fg"><GeneticEntityText text={substantiveOpening} entities={entitiesByBlock.overview ?? []} /></p>
+        {isProvisionalOpening && <p className="mt-2 max-w-2xl text-xs leading-5 text-muted">Based on retrieved abstracts. It may be refined once source-level verification is complete.</p>}
       </motion.div> : isStreaming && <InitialResearchStatus query={query ?? ''} mode={mode} />}
 
       {hasOpeningSections && openingSections!.map((section, index) => (
         <motion.div key={`${section.heading}-${index}`} initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.05 * (index + 1) }}>
           <p className="editorial-kicker">{section.heading.toUpperCase()}</p>
-          <p className="mt-3 max-w-2xl text-[15px] font-light leading-7 text-fg"><GeneticEntityText text={section.body} entities={geneContext} /></p>
+          <p className="mt-3 max-w-2xl text-[15px] font-light leading-7 text-fg"><GeneticEntityText text={section.body} entities={entitiesByBlock[`section-${index}`] ?? []} /></p>
           {section.claimIds.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Supporting evidence for this section">
               {section.claimIds.map((claimId, claimIndex) => {
