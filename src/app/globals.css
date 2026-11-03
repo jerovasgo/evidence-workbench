@@ -180,20 +180,14 @@ body {
 .message-enter { animation: message-enter .36s ease both; }
 @keyframes message-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-/* DnaLoader (docs/DECISIONS.md, 2026-11-02): the single loading animation used
-   everywhere a run is in progress — stretch into an elongated helix, curl into a
-   compact coil, unroll and restart. Transform-based (not path-morphing), cheap,
-   and covered for free by the global prefers-reduced-motion catch-all above. */
-.dna-loader-cycle { transform-origin: 120px 30px; animation: dna-loader-cycle 6s ease-in-out infinite; }
+/* DnaLoader: the helix stays fixed in its initial orientation while both strands
+   travel and the rungs breathe. This keeps the loader active without rotating or
+   shifting the molecule as a whole. */
+.dna-loader-cycle { transform: none; }
 .dna-loader-strand { stroke-dasharray: 14 9; }
 .dna-loader-strand-a { animation: dna-loader-travel 3s linear infinite; }
 .dna-loader-strand-b { animation: dna-loader-travel 3.6s linear infinite reverse; }
 .dna-loader-rung { animation: dna-loader-rung-fade 2.4s ease-in-out infinite; }
-@keyframes dna-loader-cycle {
-  0%, 30% { transform: scaleX(1) rotate(0deg); }
-  55%, 75% { transform: scaleX(.35) rotate(180deg); }
-  100% { transform: scaleX(1) rotate(360deg); }
-}
 @keyframes dna-loader-travel { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -138; } }
 @keyframes dna-loader-rung-fade { 0%, 100% { opacity: .35; } 50% { opacity: .9; } }
 

@@ -122,6 +122,25 @@ describe('GET /api/runs/[id]/stream', () => {
     expect(metaClient.respond).not.toHaveBeenCalled();
   });
 
+  it('replays only a definitive persisted overview', async () => {
+    const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
+    const finishedRun: RunRecord = { ...routingRun, status: 'done' };
+    const record = (value: unknown) => ({ stage: 'overview', status: 'ok', value, metrics: { ms: 1, costUsd: 0 }, createdAt: '2026-11-02T00:00:00.000Z' });
+    const saved = new Map([['overview', record({ text: 'Definitive evidence-grounded overview.', sections: [], final: true })]]);
+    const GET = await loadGetWithRuntime(mockRuntime(metaClient, fakeRunsRepository({ getRun: vi.fn(async () => finishedRun) }), createPendingRunContextStore(), { insert: vi.fn(), getLatestPerStage: vi.fn().mockResolvedValue(saved) }));
+    const events = await readAllEvents(await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) }));
+    expect(events.filter((event) => event.type === 'opening_ready')).toEqual([{ type: 'opening_ready', runId: 'run_1', text: 'Definitive evidence-grounded overview.', final: true, sections: [] }]);
+  });
+
+  it('does not promote a legacy provisional overview when hydrating a finished run', async () => {
+    const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
+    const finishedRun: RunRecord = { ...routingRun, status: 'done' };
+    const saved = new Map([['overview', { stage: 'overview', status: 'ok', value: { text: 'Draft. Initial overview based on retrieved abstracts; detailed verification is still in progress.', sections: [] }, metrics: { ms: 1, costUsd: 0 }, createdAt: '2026-11-02T00:00:00.000Z' }]]);
+    const GET = await loadGetWithRuntime(mockRuntime(metaClient, fakeRunsRepository({ getRun: vi.fn(async () => finishedRun) }), createPendingRunContextStore(), { insert: vi.fn(), getLatestPerStage: vi.fn().mockResolvedValue(saved) }));
+    const events = await readAllEvents(await GET(new Request('http://localhost/api/runs/run_1/stream'), { params: Promise.resolve({ id: 'run_1' }) }));
+    expect(events.some((event) => event.type === 'opening_ready')).toBe(false);
+  });
+
   it('replays persisted verified and partial claims when a finished run is reopened', async () => {
     const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
     const finishedRun: RunRecord = { ...routingRun, status: 'done' };

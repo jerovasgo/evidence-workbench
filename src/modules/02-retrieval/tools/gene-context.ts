@@ -2,6 +2,7 @@ import { extractSearchHints } from '../retrieval/seed-search-plan';
 
 export interface GeneContext {
   symbol: string;
+  kind: 'gene' | 'protein';
   name?: string;
   summary?: string;
   geneId?: string;
@@ -20,13 +21,17 @@ async function getJson(url: string, headers: HeadersInit, fetchImpl: typeof fetc
 
 /** Fast, optional reference lookup. Its records supply context, never evidence claims. */
 export async function lookupGeneContext(question: string, fetchImpl: typeof fetch = fetch): Promise<GeneContext[]> {
-  const symbols = extractSearchHints(question).geneLike.slice(0, 2).map((s) => s.toUpperCase());
-  if (!symbols.length) return [];
-  const key = symbols.join(',');
+  const accessions = [...new Set(question.toUpperCase().match(/\b(?:[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9][A-Z][A-Z0-9]{2}[0-9])\b/g) ?? [])].slice(0, 2);
+  const symbols = extractSearchHints(question).geneLike
+    .map((s) => s.toUpperCase())
+    .filter((symbol) => !accessions.includes(symbol))
+    .slice(0, 2);
+  if (!symbols.length && !accessions.length) return [];
+  const key = [...symbols, ...accessions].join(',');
   const cached = cache.get(key);
   if (cached && cached.expires > Date.now()) return cached.value;
 
-  const results = await Promise.all(symbols.map(async (symbol): Promise<GeneContext> => {
+  const genes = await Promise.all(symbols.map(async (symbol): Promise<GeneContext | null> => {
     const links = [
       { label: 'NCBI Gene', url: `https://www.ncbi.nlm.nih.gov/gene/?term=${encodeURIComponent(symbol)}` },
       { label: 'HGNC', url: `https://www.genenames.org/tools/search/#!/?query=${encodeURIComponent(symbol)}` },
@@ -38,10 +43,29 @@ export async function lookupGeneContext(question: string, fetchImpl: typeof fetc
     const doc = hgnc.status === 'fulfilled' ? (hgnc.value as { response?: { docs?: { symbol?: string; name?: string; hgnc_id?: string; entrez_id?: string; ensembl_gene_id?: string }[] } }).response?.docs?.[0] : undefined;
     const ncbiId = ncbi.status === 'fulfilled' ? (ncbi.value as { esearchresult?: { idlist?: string[] } }).esearchresult?.idlist?.[0] : undefined;
     const geneId = doc?.entrez_id || ncbiId;
+    if (!doc && !geneId) return null;
     if (geneId) links[0] = { label: 'NCBI Gene', url: `https://www.ncbi.nlm.nih.gov/gene/${encodeURIComponent(geneId)}` };
     if (doc?.ensembl_gene_id) links.push({ label: 'Ensembl', url: `https://www.ensembl.org/Homo_sapiens/Gene/Summary?g=${encodeURIComponent(doc.ensembl_gene_id)}` });
-    return { symbol, name: doc?.name, geneId, hgncId: doc?.hgnc_id, links };
+    return { symbol: doc?.symbol ?? symbol, kind: 'gene', name: doc?.name, geneId, hgncId: doc?.hgnc_id, links };
   }));
+  const proteins = await Promise.all(accessions.map(async (accession): Promise<GeneContext | null> => {
+    try {
+      const record = await getJson(`https://rest.uniprot.org/uniprotkb/${encodeURIComponent(accession)}.json`, { Accept: 'application/json' }, fetchImpl) as {
+        primaryAccession?: string;
+        proteinDescription?: { recommendedName?: { fullName?: { value?: string } } };
+      };
+      if (record.primaryAccession?.toUpperCase() !== accession) return null;
+      return {
+        symbol: record.primaryAccession,
+        kind: 'protein',
+        name: record.proteinDescription?.recommendedName?.fullName?.value,
+        links: [{ label: 'UniProt', url: `https://www.uniprot.org/uniprotkb/${encodeURIComponent(record.primaryAccession)}/entry` }],
+      };
+    } catch {
+      return null;
+    }
+  }));
+  const results = [...genes, ...proteins].filter((result): result is GeneContext => result !== null);
   cache.set(key, { expires: Date.now() + TTL_MS, value: results });
   return results;
 }

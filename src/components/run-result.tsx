@@ -8,6 +8,8 @@ import type { Claim } from '@/shared/domain';
 import { buildEvidenceMatrix } from '@/modules/07-map-matrix';
 import { ReviewAuditPanel } from '@/components/review-audit';
 import { EvidenceDrawer } from '@/components/evidence-drawer';
+import { InitialResearchStatus } from '@/components/initial-research-status';
+import { GeneticEntityText } from '@/components/genetic-entity-text';
 import { DnaLoader } from '@/components/dna-loader';
 import { EvidenceMatrix } from '@/components/evidence-matrix';
 import { EvidenceLandscape } from '@/components/evidence-landscape';
@@ -22,7 +24,6 @@ import { Chip } from '@/components/ui/chip';
 import { useRunStream } from '@/lib/use-run-stream';
 import { buildResultSummary } from '@/lib/i18n/result-summary';
 import { computeSourceRegistry } from '@/lib/source-status';
-import { initialProcessingMessage } from '@/lib/processing-messages';
 import type { Mode } from '@/lib/modes';
 import type { Intent } from '@/modules/01-orchestrator';
 import type { TurnMemorySnapshot } from '@/lib/use-conversations';
@@ -167,16 +168,13 @@ export function RunResult({ runId, mode, intent, query, onMemoryUpdate }: { runI
       <Tabs.Content value="main" className="space-y-5">
       {substantiveOpening ? <motion.div key="overview" initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
         <p className="editorial-kicker">OVERVIEW</p>
-        <p className="mt-3 max-w-2xl text-[16px] font-light leading-7 text-fg">{substantiveOpening}</p>
-      </motion.div> : isStreaming && <div className="flex flex-col items-start gap-4">
-        <p role="status" className="text-sm leading-6 text-fg">{initialProcessingMessage(mode)}</p>
-        <DnaLoader />
-      </div>}
+        <p className="mt-3 max-w-2xl text-[16px] font-light leading-7 text-fg"><GeneticEntityText text={substantiveOpening} entities={geneContext} /></p>
+      </motion.div> : isStreaming && <InitialResearchStatus query={query ?? ''} mode={mode} />}
 
       {hasOpeningSections && openingSections!.map((section, index) => (
         <motion.div key={`${section.heading}-${index}`} initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.05 * (index + 1) }}>
           <p className="editorial-kicker">{section.heading.toUpperCase()}</p>
-          <p className="mt-3 max-w-2xl text-[15px] font-light leading-7 text-fg">{section.body}</p>
+          <p className="mt-3 max-w-2xl text-[15px] font-light leading-7 text-fg"><GeneticEntityText text={section.body} entities={geneContext} /></p>
           {section.claimIds.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Supporting evidence for this section">
               {section.claimIds.map((claimId, claimIndex) => {

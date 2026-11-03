@@ -1,4 +1,4 @@
-import { synthesizeEvidenceOverview, synthesizeRetrievedOverview, OverviewSectionSchema } from '@/modules/01-orchestrator';
+import { synthesizeEvidenceOverview, OverviewSectionSchema } from '@/modules/01-orchestrator';
 import {
   buildReceipt,
   getRunForViewer,
@@ -87,6 +87,10 @@ function logAgentTrace(runId: string, event: AgentTraceEvent): void {
 
 function sseFrame(event: RunEvent): string {
   return `data: ${JSON.stringify(event)}\n\n`;
+}
+
+function isLegacyProvisionalOverview(text: string): boolean {
+  return /(?:Initial overview based on retrieved abstracts|Síntesis inicial basada en resúmenes recuperados)/i.test(text);
 }
 
 // Module 05 `relation-labeller` slice (2026-10-28 scoping decision, docs/DECISIONS.md):
@@ -276,11 +280,11 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         const savedOverview = saved.get('overview')?.value;
         // Accepts both shapes: a plain string (rows persisted before 2026-11-02's
         // sectioned-overview change) and the current `{text, sections}` object.
-        if (typeof savedOverview === 'string') {
+        if (typeof savedOverview === 'string' && !isLegacyProvisionalOverview(savedOverview)) {
           send({ type: 'opening_ready', runId: run.id, text: savedOverview, final: true });
         } else {
-          const parsedOverview = z.object({ text: z.string(), sections: z.array(OverviewSectionSchema).optional() }).safeParse(savedOverview);
-          if (parsedOverview.success) send({ type: 'opening_ready', runId: run.id, text: parsedOverview.data.text, final: true, sections: parsedOverview.data.sections ?? [] });
+          const parsedOverview = z.object({ text: z.string(), sections: z.array(OverviewSectionSchema).optional(), final: z.boolean().optional() }).safeParse(savedOverview);
+          if (parsedOverview.success && parsedOverview.data.final !== false && !isLegacyProvisionalOverview(parsedOverview.data.text)) send({ type: 'opening_ready', runId: run.id, text: parsedOverview.data.text, final: true, sections: parsedOverview.data.sections ?? [] });
         }
         const candidates = CandidateSourceSchema.array().safeParse(saved.get('retrieve')?.value);
         if (candidates.success) send({ type: 'source_catalog_ready', runId: run.id, sources: candidates.data.map(({ tempId, title, url, doi, pmid, year, issuer, firstAuthor }) => ({ id: tempId, status: 'candidate', title, url, doi, pmid, year, issuer, firstAuthor })) });
@@ -335,18 +339,11 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         }
       }
 
-      // 2026-11-02 (docs/DECISIONS.md): `overviewPublished` used to be a single flag
-      // shared by both the fast, abstract-only provisional overview and the real,
-      // claims-grounded one — whichever finished first permanently blocked the
-      // other, including the three explicit "final" calls at the end of the
-      // pipeline below. Since the provisional path only needs `retrieve` to finish
-      // (seconds) while the real one needs actual extraction+verification (much
-      // later), the provisional overview almost always won the race in practice,
-      // and `synthesizeEvidenceOverview` — the one with the mandatory-closing-clause
-      // prompt work — essentially never ran. Two separate flags fix this: the real
-      // overview now always runs once real claims exist and upgrades (replaces,
-      // once) whatever provisional text was already shown.
-      let provisionalOverviewSent = false;
+      // Only verified claims may publish the user-visible Overview. It starts as
+      // soon as two distinct sources provide enough evidence (or at pipeline end
+      // for a single-source run), then the server and client both lock it. This
+      // avoids an abstracts-only model call on the critical path and prevents
+      // later pipeline events from replacing content already presented as final.
       let finalOverviewSent = false;
       let overviewPromise: Promise<void> | undefined;
       const startOverview = (claims: Claim[], final = false) => {
@@ -365,7 +362,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           const sections = overviewResult?.sections ?? [];
           finalOverviewSent = true;
           send({ type: 'opening_ready', runId: run.id, text, final: true, sections });
-          try { await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'overview', status: 'ok', value: { text, sections }, metrics: { ms: 0, costUsd: 0 } }); } catch { /* Live text remains available. */ }
+          try { await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'overview', status: 'ok', value: { text, sections, final: true }, metrics: { ms: 0, costUsd: 0 } }); } catch { /* Live text remains available. */ }
         }).catch(() => undefined);
       };
       try {
@@ -397,33 +394,6 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
                   JSON.stringify({ type: 'stage_latency', runId: run.id, stage: event.stage, status: event.status, ms: event.metrics.ms, resumed: event.resumed, elapsedMs: Date.now() - streamStarted }),
                 );
               } else if (event.type === 'sources_retrieved') {
-                if (!provisionalOverviewSent && !finalOverviewSent && !overviewPromise && runtime.europePmc.fetchAbstract) {
-                  const started = Date.now();
-                  overviewPromise = (async () => {
-                    const abstracts = await Promise.all(event.sources.slice(0, 3).map(async (source) => {
-                      const parts = source.tempId.split(':');
-                      const id = source.pmid ?? (source.family === 'europe_pmc' ? parts[2] : undefined);
-                      if (!id) return null;
-                      const timeout = AbortSignal.timeout(2500);
-                      const abstract = await Promise.race([
-                        runtime.europePmc.fetchAbstract!(source.pmid ? 'MED' : parts[1]!, id).catch(() => null),
-                        new Promise<null>((resolve) => timeout.addEventListener('abort', () => resolve(null), { once: true })),
-                      ]);
-                      return abstract ? { id: source.tempId, title: source.title, abstract: abstract.slice(0, 6000) } : null;
-                    }));
-                    const text = await synthesizeRetrievedOverview(run.id, pending?.freeText ?? '', abstracts.filter((source) => source !== null), runtime);
-                    if (!text) { overviewPromise = undefined; return; }
-                    const overview = `${text}\n\n${/[¿áéíóú]|\b(compara|qué|gen|estudios)\b/i.test(pending?.freeText ?? '') ? 'Síntesis inicial basada en resúmenes recuperados; la verificación detallada sigue en curso.' : 'Initial overview based on retrieved abstracts; detailed verification is still in progress.'}`;
-                    provisionalOverviewSent = true;
-          send({ type: 'opening_ready', runId: run.id, text: overview, final: false });
-                    await runtime.stageOutputsRepository.insert({ runId: run.id, stage: 'overview', status: 'ok', value: { text: overview, sections: [] }, metrics: { ms: Date.now() - started, costUsd: 0 } });
-                    // Clears the in-flight lock on success too, not just on failure —
-                    // otherwise the real, claims-grounded overview below could never
-                    // start once the provisional one succeeded (`overviewPromise`
-                    // would stay a resolved-but-truthy Promise forever).
-                    overviewPromise = undefined;
-                  })().catch(() => { overviewPromise = undefined; });
-                }
                 send({ type: 'overview_ready', runId: run.id, sources: event.sources.slice(0, 5).map(({ title, year, url }) => ({ title, year, url })) });
                 send({ type: 'source_catalog_ready', runId: run.id, sources: event.sources.map(({ tempId, title, url, doi, pmid, year, issuer, firstAuthor }) => ({ id: tempId, status: 'candidate', title, url, doi, pmid, year, issuer, firstAuthor })) });
                 console.log(JSON.stringify({ type: 'overview_latency', runId: run.id, elapsedMs: Date.now() - streamStarted }));

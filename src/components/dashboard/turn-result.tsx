@@ -1,6 +1,5 @@
 import { RunResult } from '@/components/run-result';
-import { DnaLoader } from '@/components/dna-loader';
-import { initialProcessingMessage } from '@/lib/processing-messages';
+import { InitialResearchStatus } from '@/components/initial-research-status';
 import type { Turn, TurnMemorySnapshot } from '@/lib/use-conversations';
 import { useCallback } from 'react';
 
@@ -31,12 +30,7 @@ export function TurnResult({ turn, onRetry, onMemoryUpdate }: { turn: Turn; onRe
   }
 
   if (!turn.runId) {
-    return (
-      <div className="flex flex-col items-start gap-4">
-        <p role="status" className="text-sm leading-6 text-fg">{initialProcessingMessage(turn.mode)}</p>
-        <DnaLoader />
-      </div>
-    );
+    return <InitialResearchStatus query={turn.freeText} mode={turn.mode} />;
   }
 
   return <RunResult runId={turn.runId} mode={turn.mode} intent={turn.intent} query={turn.freeText} onMemoryUpdate={updateMemory} />;

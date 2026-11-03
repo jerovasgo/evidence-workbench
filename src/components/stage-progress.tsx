@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { cn } from '@/lib/cn';
 import type { StageName, StageState } from '@/lib/use-run-stream';
 import { narrateStageResult, narrateSourceProgress } from '@/lib/i18n/stage-narration';
@@ -33,14 +33,19 @@ const STATUS_DOT: Record<StageState['status'], string> = {
   failed: 'bg-conflict',
 };
 
-/** One line for the collapsed summary: the running stage, or the most recently finished one, never a fabricated percentage. */
-function currentStageSummary(stages: Record<StageName, StageState>): string {
-  const running = STAGE_ORDER.find((s) => stages[s].status === 'running');
-  if (running) return `${STAGE_LABEL[running]}…`;
-
-  const lastActive = [...STAGE_ORDER].reverse().find((s) => stages[s].status !== 'pending');
-  if (!lastActive) return 'Starting…';
-  return `${STAGE_LABEL[lastActive]} ${stages[lastActive].status}`;
+export function currentActivityMessage(
+  stages: Record<StageName, StageState>,
+  sourceProgress: string[],
+  sourceCatalog: Record<string, { title: string }>,
+): string {
+  const latestSourceEvent = sourceProgress.at(-1);
+  if (latestSourceEvent && stages.extract.status === 'running') {
+    return narrateSourceProgress(latestSourceEvent, sourceCatalog);
+  }
+  const running = STAGE_ORDER.find((stage) => stages[stage].status === 'running');
+  if (running) return narrateStageResult(running, 'running');
+  const lastActive = [...STAGE_ORDER].reverse().find((stage) => stages[stage].status !== 'pending');
+  return lastActive ? narrateStageResult(lastActive, stages[lastActive].status) : 'Preparing the research workflow…';
 }
 
 export function StageProgress({
@@ -54,15 +59,31 @@ export function StageProgress({
   sourceCatalog: Record<string, { title: string }>;
   isStreaming: boolean;
 }) {
-  // Captured once: a run that's still streaming opens expanded by default, but a
-  // reader who manually collapses it while it's running stays in control — this
-  // never re-forces it open on a later render.
-  const [defaultOpen] = useState(isStreaming);
+  const reducedMotion = useReducedMotion();
+  const activity = currentActivityMessage(stages, sourceProgress, sourceCatalog);
 
   return (
-    <details className="glass rounded-[var(--radius-card)] p-4" open={defaultOpen}>
+    <details className="glass rounded-[var(--radius-card)] p-4">
       <summary className="cursor-pointer select-none text-sm text-fg">
-        Agent activity <span className="text-muted">{'—'} {currentStageSummary(stages)}</span>
+        <span className="inline-flex max-w-[calc(100%-1rem)] items-center gap-2 align-middle">
+          <span className="shrink-0">Agent activity</span>
+          <span aria-hidden="true" className="text-muted">—</span>
+          <span className="relative block h-5 min-w-0 flex-1 overflow-hidden text-muted" aria-live="polite" aria-atomic="true">
+            <AnimatePresence initial={false} mode="wait">
+              <motion.span
+                key={activity}
+                className="absolute inset-0 truncate"
+                initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+              >
+                {activity}
+              </motion.span>
+            </AnimatePresence>
+          </span>
+          {isStreaming && <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-fg" aria-hidden="true" />}
+        </span>
       </summary>
       <ol className="mt-3 flex flex-col gap-2">
         {STAGE_ORDER.map((stage) => {

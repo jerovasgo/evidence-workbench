@@ -39,14 +39,15 @@ describe('provisional SSE claim lifecycle', () => {
   });
 });
 
-describe('opening_ready provisional-to-final upgrade (docs/DECISIONS.md, 2026-11-02)', () => {
-  it('shows the provisional overview immediately, not final', () => {
+describe('opening_ready immutable publication', () => {
+  it('keeps provisional synthesis out of the published overview', () => {
     const state = applyEvent(initialState(), { type: 'opening_ready', runId: 'r1', text: 'Initial abstracts-only overview', final: false });
-    expect(state.opening).toBe('Initial abstracts-only overview');
+    expect(state.opening).toBeNull();
+    expect(state.provisionalOpening).toBe('Initial abstracts-only overview');
     expect(state.openingFinal).toBe(false);
   });
 
-  it('upgrades the provisional overview exactly once when the final, claims-grounded one arrives', () => {
+  it('publishes the claims-grounded overview exactly once', () => {
     let state = applyEvent(initialState(), { type: 'opening_ready', runId: 'r1', text: 'Initial abstracts-only overview', final: false });
     state = applyEvent(state, { type: 'opening_ready', runId: 'r1', text: 'Final grounded overview', final: true });
     expect(state.opening).toBe('Final grounded overview');
@@ -57,7 +58,15 @@ describe('opening_ready provisional-to-final upgrade (docs/DECISIONS.md, 2026-11
     let state = applyEvent(initialState(), { type: 'opening_ready', runId: 'r1', text: 'Initial abstracts-only overview', final: false });
     state = applyEvent(state, { type: 'opening_ready', runId: 'r1', text: 'Final grounded overview', final: true });
     state = applyEvent(state, { type: 'opening_ready', runId: 'r1', text: 'Some later stray event', final: false });
+    state = applyEvent(state, { type: 'opening_ready', runId: 'r1', text: 'Duplicate final', final: true });
     expect(state.opening).toBe('Final grounded overview');
+  });
+
+  it('ignores a late provisional event when final content wins the race', () => {
+    let state = applyEvent(initialState(), { type: 'opening_ready', runId: 'r1', text: 'Final grounded overview', final: true });
+    state = applyEvent(state, { type: 'opening_ready', runId: 'r1', text: 'Late abstract synthesis', final: false });
+    expect(state.opening).toBe('Final grounded overview');
+    expect(state.provisionalOpening).toBeNull();
   });
 });
 
