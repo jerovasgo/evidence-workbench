@@ -9,7 +9,7 @@ import type { Mode } from '@/lib/modes';
 import type { ResearchDepth } from '@/lib/research-depth';
 
 export function DashboardView({ initialQuery, initialMode, initialDepth }: { initialQuery?: string; initialMode?: Mode; initialDepth?: ResearchDepth }) {
-  const { turns, sending, sendMessage, retryTurn, newResearch, loadPrecomputedTurn } = useConversations(initialQuery, initialMode, initialDepth);
+  const { turns, sending, sendMessage, retryTurn, newResearch, updateTurnMemory, loadPrecomputedTurn } = useConversations(initialQuery, initialMode, initialDepth);
 
   const hasActiveThread = turns.length > 0;
 
@@ -21,7 +21,7 @@ export function DashboardView({ initialQuery, initialMode, initialDepth }: { ini
         {hasActiveThread ? (
           <>
             <div className="flex-1 overflow-y-auto">
-              <ConversationThread turns={turns} onRetryTurn={retryTurn} />
+              <ConversationThread turns={turns} onRetryTurn={retryTurn} onMemoryUpdate={updateTurnMemory} />
             </div>
             <Composer onSend={(text, mode, depth) => void sendMessage(text, mode, depth)} sending={sending} />
           </>

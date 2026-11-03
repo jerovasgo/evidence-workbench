@@ -2,7 +2,7 @@
 
 import { isComparisonRequest } from '@/lib/research-intent';
 import * as Tabs from '@radix-ui/react-tabs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import type { Claim } from '@/shared/domain';
 import { buildEvidenceMatrix } from '@/modules/07-map-matrix';
@@ -25,6 +25,7 @@ import { computeSourceRegistry } from '@/lib/source-status';
 import { initialProcessingMessage } from '@/lib/processing-messages';
 import type { Mode } from '@/lib/modes';
 import type { Intent } from '@/modules/01-orchestrator';
+import type { TurnMemorySnapshot } from '@/lib/use-conversations';
 
 // The live/finished result of one run: an initial processing message + collapsed
 // "Research progress" while streaming, then exactly one result — a short, receipt-
@@ -100,7 +101,7 @@ function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefin
   return null;
 }
 
-export function RunResult({ runId, mode, intent, query }: { runId: string; mode?: Mode; intent?: Intent | null; query?: string }) {
+export function RunResult({ runId, mode, intent, query, onMemoryUpdate }: { runId: string; mode?: Mode; intent?: Intent | null; query?: string; onMemoryUpdate?: (snapshot: TurnMemorySnapshot) => void }) {
   const { opening, openingSections, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, algorithm, algorithmStatus, algorithmAbstainReason, mechanism, mechanismStatus, mechanismAbstainReason, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
@@ -134,6 +135,28 @@ export function RunResult({ runId, mode, intent, query }: { runId: string; mode?
   // once real model-chosen sections exist, they supersede it rather than
   // duplicating the same evidence in two places.
   const hasOpeningSections = (openingSections?.length ?? 0) > 0;
+
+  useEffect(() => {
+    if (!onMemoryUpdate || (!opening && !claims?.length)) return;
+    const selectedClaims = selectDiverseFindings(claims ?? [], 4);
+    const sourceIds = [...new Set(selectedClaims.map((claim) => claim.sourceId))].slice(0, 4);
+    onMemoryUpdate({
+      overview: opening ?? undefined,
+      findings: selectedClaims.map((claim) => ({
+        id: claim.id,
+        text: claim.text.slice(0, 360),
+        sourceTitle: sourceCatalog[claim.sourceId]?.title.slice(0, 220),
+      })),
+      sources: sourceIds.flatMap((sourceId) => {
+        const source = sourceCatalog[sourceId];
+        return source ? [{ id: source.id, title: source.title.slice(0, 220), year: source.year }] : [];
+      }),
+      visualization: {
+        kind: isAlgorithmRequested ? 'algorithm' : isMechanismRequested ? 'mechanism' : isEvidenceMapRequested ? 'evidence_map' : showComparison ? 'comparison' : 'evidence',
+        summary: `${selectedClaims.length} key finding${selectedClaims.length === 1 ? '' : 's'} represented for this answer.`,
+      },
+    });
+  }, [claims, isAlgorithmRequested, isEvidenceMapRequested, isMechanismRequested, onMemoryUpdate, opening, showComparison, sourceCatalog]);
 
   return (
     <Tabs.Root defaultValue="main" className="flex flex-col gap-5">

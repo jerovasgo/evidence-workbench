@@ -11,6 +11,7 @@ export * from './data/conversations-repository';
 export * from './data/pending-run-store';
 export * from './agents/scenario-structurer';
 export * from './pipeline/create-run';
+export * from './agents/conversation-resolver';
 export * from './pipeline/run-retrieval';
 export * from './pipeline/extract-and-verify-pool';
 export * from './pipeline/build-receipt';

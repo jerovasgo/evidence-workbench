@@ -1,7 +1,7 @@
 import { TurnResult } from '@/components/dashboard/turn-result';
-import type { Turn } from '@/lib/use-conversations';
+import type { Turn, TurnMemorySnapshot } from '@/lib/use-conversations';
 
-export function ConversationThread({ turns, onRetryTurn }: { turns: Turn[]; onRetryTurn: (turnId: string) => void }) {
+export function ConversationThread({ turns, onRetryTurn, onMemoryUpdate }: { turns: Turn[]; onRetryTurn: (turnId: string) => void; onMemoryUpdate: (turnId: string, snapshot: TurnMemorySnapshot) => void }) {
   return (
     // pt-16 clears the fixed mobile hamburger trigger (Sidebar, top-4 + h-9); not
     // needed at md: and up, where the sidebar sits inline instead of floating.
@@ -20,7 +20,7 @@ export function ConversationThread({ turns, onRetryTurn }: { turns: Turn[]; onRe
                 accordions, the Algorithm/Mechanism/Map canvases) keep their own
                 framing — only this outer wrapper is frameless. */}
             <div className="min-w-0 flex-1 pt-1">
-              <TurnResult turn={turn} onRetry={onRetryTurn} />
+              <TurnResult turn={turn} onRetry={onRetryTurn} onMemoryUpdate={onMemoryUpdate} />
             </div>
           </div>
         </article>

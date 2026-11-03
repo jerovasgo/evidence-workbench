@@ -5,9 +5,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Mode } from '@/lib/modes';
 import { DEFAULT_RESEARCH_DEPTH, type ResearchDepth } from '@/lib/research-depth';
 import type { Intent } from '@/modules/01-orchestrator';
+import {
+  compactConversationContext,
+  CONVERSATION_MEMORY_TTL_MS,
+  type ConversationMemoryTurn,
+} from '@/shared/domain';
 
 export interface Turn {
   id: string;
+  createdAt: number;
   freeText: string;
   mode: Mode;
   depth?: ResearchDepth;
@@ -30,7 +36,11 @@ export interface Turn {
   answer?: string;
   clarification?: string;
   errorMessage?: string;
+  /** Compact evidence capsule kept only in this tab for contextual follow-ups. */
+  memory?: ConversationMemoryTurn;
 }
+
+export type TurnMemorySnapshot = Pick<ConversationMemoryTurn, 'overview' | 'findings' | 'sources' | 'visualization'>;
 
 export interface UseConversationsResult {
   turns: Turn[];
@@ -38,6 +48,7 @@ export interface UseConversationsResult {
   sendMessage: (freeText: string, mode: Mode, depth?: ResearchDepth) => Promise<void>;
   retryTurn: (turnId: string) => void;
   newResearch: () => void;
+  updateTurnMemory: (turnId: string, snapshot: TurnMemorySnapshot) => void;
   /**
    * 2026-11-01 (docs/DECISIONS.md): the hackathon-scoped precomputed-demo-runs
    * shortcut — appends a turn with its `runId`/`intent` already known and skips
@@ -63,21 +74,41 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
   const [turns, setTurns] = useState<Turn[]>([]);
   const [sending, setSending] = useState(false);
   const autoSubmitted = useRef(false);
+  const conversationId = useRef(crypto.randomUUID());
+  const lastActivityAt = useRef(Date.now());
+
+  const contextFromTurns = useCallback((sourceTurns: Turn[]) => compactConversationContext(
+    conversationId.current,
+    sourceTurns.map((turn) => turn.memory ?? {
+      id: turn.id,
+      query: turn.freeText,
+      runId: turn.runId,
+      intent: turn.intent,
+      findings: [],
+      sources: [],
+      capturedAt: turn.createdAt,
+    }),
+  ), []);
 
   /** POSTs one turn (fresh or retried) and reconciles the optimistic `turnId` entry with the result — never removes it, win or lose. */
-  const submitTurn = useCallback(async (turnId: string, freeText: string, mode: Mode, depth: ResearchDepth) => {
+  const submitTurn = useCallback(async (turnId: string, freeText: string, mode: Mode, depth: ResearchDepth, contextTurns: Turn[]) => {
     setSending(true);
 
     try {
       const res = await fetch('/api/runs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ freeText, userId: null, mode, depth }),
+        body: JSON.stringify({ freeText, userId: null, mode, depth, conversation: contextFromTurns(contextTurns) }),
       });
       const body = await res.json();
 
       if (body.status === 'direct_answer') {
-        setTurns((prev) => prev.map((t) => t.id === turnId ? { ...t, status: 'answered', answer: body.answer } : t));
+        setTurns((prev) => prev.map((t) => t.id === turnId ? {
+          ...t,
+          status: 'answered',
+          answer: body.answer,
+          memory: { id: t.id, query: t.freeText, runId: null, intent: null, overview: body.answer, findings: [], sources: [], capturedAt: Date.now() },
+        } : t));
         return;
       }
       if (body.status === 'clarification_required') {
@@ -93,30 +124,38 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
       }
 
       setTurns((prev) =>
-        prev.map((t) => (t.id === turnId ? { id: body.runId, freeText, mode, depth, runId: body.runId, intent: body.intent ?? null } : t)),
+          prev.map((t) => (t.id === turnId ? { ...t, id: body.runId, freeText, mode, depth, runId: body.runId, intent: body.intent ?? null, status: undefined } : t)),
       );
     } catch {
       setTurns((prev) => prev.map((t) => (t.id === turnId ? { ...t, status: 'error', errorMessage: 'Could not reach the server. Please try again.' } : t)));
     } finally {
       setSending(false);
     }
-  }, []);
+  }, [contextFromTurns]);
 
   const sendMessage = useCallback(
     async (freeText: string, mode: Mode, depth: ResearchDepth = DEFAULT_RESEARCH_DEPTH) => {
       if (!freeText.trim()) return;
-      const previous = turns.at(-1);
+      const now = Date.now();
+      const expired = now - lastActivityAt.current >= CONVERSATION_MEMORY_TTL_MS;
+      if (expired) {
+        conversationId.current = crypto.randomUUID();
+        setTurns([]);
+      }
+      lastActivityAt.current = now;
+      const activeTurns = expired ? [] : turns;
+      const previous = activeTurns.at(-1);
       const trimmed = previous?.status === 'clarifying' ? `${previous.freeText}: ${freeText.trim()}` : freeText.trim();
       if (!trimmed) return;
       const turnId = `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const clarification = comparisonClarification(trimmed);
       if (clarification) {
-        setTurns((prev) => [...prev, { id: turnId, freeText: trimmed, mode, depth, runId: null, intent: null, status: 'clarifying', clarification }]);
+        setTurns((prev) => [...prev, { id: turnId, createdAt: now, freeText: trimmed, mode, depth, runId: null, intent: null, status: 'clarifying', clarification }]);
         return;
       }
       // Appears in the thread immediately — before the POST even starts, not after it resolves.
-      setTurns((prev) => [...prev, { id: turnId, freeText: trimmed, mode, depth, runId: null, intent: null, status: 'sending' }]);
-      await submitTurn(turnId, trimmed, mode, depth);
+      setTurns((prev) => [...prev, { id: turnId, createdAt: now, freeText: trimmed, mode, depth, runId: null, intent: null, status: 'sending' }]);
+      await submitTurn(turnId, trimmed, mode, depth, activeTurns);
     },
     [submitTurn, turns],
   );
@@ -126,7 +165,7 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
       setTurns((prev) => {
         const turn = prev.find((t) => t.id === turnId);
         if (!turn || turn.status !== 'error') return prev;
-        void submitTurn(turnId, turn.freeText, turn.mode, turn.depth ?? DEFAULT_RESEARCH_DEPTH);
+        void submitTurn(turnId, turn.freeText, turn.mode, turn.depth ?? DEFAULT_RESEARCH_DEPTH, prev.filter((candidate) => candidate.id !== turnId));
         return prev.map((t) => (t.id === turnId ? { ...t, status: 'sending', errorMessage: undefined } : t));
       });
     },
@@ -144,11 +183,30 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
 
   const newResearch = useCallback(() => {
     setTurns([]);
+    conversationId.current = crypto.randomUUID();
+    lastActivityAt.current = Date.now();
+  }, []);
+
+  const updateTurnMemory = useCallback((turnId: string, snapshot: TurnMemorySnapshot) => {
+    setTurns((prev) => prev.map((turn) => turn.id === turnId ? {
+      ...turn,
+      memory: {
+        id: turn.id,
+        query: turn.freeText,
+        runId: turn.runId,
+        intent: turn.intent,
+        overview: snapshot.overview,
+        findings: snapshot.findings,
+        sources: snapshot.sources,
+        visualization: snapshot.visualization,
+        capturedAt: Date.now(),
+      },
+    } : turn));
   }, []);
 
   const loadPrecomputedTurn = useCallback((runId: string, freeText: string, mode: Mode, intent: Intent) => {
-    setTurns((prev) => [...prev, { id: runId, freeText, mode, runId, intent }]);
+    setTurns((prev) => [...prev, { id: runId, createdAt: Date.now(), freeText, mode, runId, intent }]);
   }, []);
 
-  return { turns, sending, sendMessage, retryTurn, newResearch, loadPrecomputedTurn };
+  return { turns, sending, sendMessage, retryTurn, newResearch, updateTurnMemory, loadPrecomputedTurn };
 }

@@ -5,5 +5,6 @@
 // the one module that defines it and lives in that module's own schemas/ folder.
 export * from './source';
 export * from './claim';
+export * from './conversation-memory';
 export * from './relation';
 export * from './run';

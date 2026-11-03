@@ -2,7 +2,8 @@ import { simpleResponse } from '@/lib/simple-response';
 import { comparisonClarification } from '@/lib/research-intent';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createRun, CreateRunRequestSchema, getServerRuntime, intentNeedsRetrieval } from '@/modules/01-orchestrator';
+import { createRun, CreateRunRequestSchema, getServerRuntime, intentNeedsRetrieval, resolveConversationQuery } from '@/modules/01-orchestrator';
+import { ConversationContextSchema } from '@/shared/domain';
 
 // Module 01: "Route handlers are thin: validate -> enqueue -> stream." All real
 // logic lives in modules/01-orchestrator/pipeline/{create-run,run-retrieval}.ts,
@@ -27,6 +28,7 @@ import { createRun, CreateRunRequestSchema, getServerRuntime, intentNeedsRetriev
 const RequestWithConversationSchema = CreateRunRequestSchema.extend({
   mode: z.enum(['auto', 'algorithm', 'mechanism', 'evidence_map']).optional(),
   depth: z.enum(['quick', 'balanced', 'deep']).optional(),
+  conversation: ConversationContextSchema.optional(),
 });
 
 export async function POST(request: Request): Promise<Response> {
@@ -45,11 +47,14 @@ export async function POST(request: Request): Promise<Response> {
   const answer = simpleResponse(parsed.data.freeText);
   if (answer) return NextResponse.json({ status: 'direct_answer', answer });
 
-  const clarification = comparisonClarification(parsed.data.freeText);
+  const runtime = getServerRuntime();
+  const resolution = await resolveConversationQuery(parsed.data.freeText, parsed.data.conversation, runtime);
+  const effectiveFreeText = resolution.standaloneQuery;
+
+  const clarification = comparisonClarification(effectiveFreeText);
   if (clarification) return NextResponse.json({ status: 'clarification_required', clarification });
 
-  const runtime = getServerRuntime();
-  const outcome = await createRun(parsed.data, runtime);
+  const outcome = await createRun({ freeText: effectiveFreeText, userId: parsed.data.userId }, runtime);
 
   switch (outcome.status) {
     case 'rejected_identifiers':
@@ -76,7 +81,9 @@ export async function POST(request: Request): Promise<Response> {
       if (needsStream) {
         try {
           await runtime.pendingRunContext.put(outcome.run.id, {
-            freeText: parsed.data.freeText,
+            freeText: effectiveFreeText,
+            originalFreeText: parsed.data.freeText,
+            conversationId: parsed.data.conversation?.id,
             depth: parsed.data.depth ?? 'balanced',
             routerCondition: outcome.routerOutput.condition,
             routerSetting: outcome.routerOutput.setting,
@@ -96,6 +103,7 @@ export async function POST(request: Request): Promise<Response> {
           intent: outcome.routerOutput.intent,
           status: outcome.run.status,
           streamUrl: needsStream ? `/api/runs/${outcome.run.id}/stream` : undefined,
+          contextResolution: resolution.strategy,
         },
         { status: 201 },
       );

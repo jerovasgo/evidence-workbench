@@ -17,6 +17,8 @@
 
 export interface PendingRunContext {
   freeText: string;
+  originalFreeText?: string;
+  conversationId?: string;
   depth?: import('@/lib/research-depth').ResearchDepth;
   routerCondition?: string;
   routerSetting?: string;

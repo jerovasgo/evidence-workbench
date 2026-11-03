@@ -3,6 +3,24 @@
 This is a hackathon prototype (CLAUDE.md, SPEC §10), not a compliance certification.
 This file tracks what is actually built, not the full target state in `docs/architecture/10-security-privacy-cost.md`.
 
+## Temporary conversation memory (2026-11-02)
+
+- Active-chat context lives only in React state in the current browser tab. It is
+  never written to `localStorage`, `sessionStorage`, the conversations tables or an
+  account profile.
+- Each new chat receives a random UUID. “New research”, a two-hour inactivity
+  timeout, unmounting the dashboard, refreshing, or closing the tab discards the
+  capsule and starts an isolated context.
+- Requests carry at most three recent turns, four findings and four sources per turn.
+  The server validates that bounded schema, selects relevant turns, and only invokes
+  the contextual resolver for language that actually depends on earlier turns.
+- Common references (a named gene, an ordinal finding, or the previous study) are
+  resolved deterministically. Ambiguous elliptical follow-ups use one bounded T0
+  Meta call; independent questions incur no additional model call or latency.
+- The existing single-use `pendingRunContext` may briefly contain the resolved,
+  standalone query so the SSE worker can execute it. It remains an expiring request
+  handoff, not browsable conversation history.
+
 ## Built so far (2026-10-27, Day 1)
 
 - **RLS on every table.** `supabase/migrations/0001_init_core_schema.sql` creates the

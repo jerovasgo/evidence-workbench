@@ -194,4 +194,43 @@ describe('POST /api/runs', () => {
     expect(body.intent).toBe('evidence_map');
     expect(body.streamUrl).toBeDefined();
   });
+
+  it('resolves a contextual gene follow-up from the tab-scoped memory capsule', async () => {
+    const metaClient: MetaClient = { respond: vi.fn(), listModels: vi.fn() };
+    const runtime = mockRuntime(metaClient);
+    const POST = await loadPostWithRuntime(runtime);
+
+    const res = await POST(new Request('http://localhost/api/runs', {
+      method: 'POST',
+      body: JSON.stringify({
+        freeText: '¿Y qué ocurre con ese gen?',
+        userId: null,
+        conversation: {
+          id: '11111111-1111-4111-8111-111111111111',
+          turns: [{
+            id: 'turn-1',
+            query: 'What evidence links HIF1A to hypoxia?',
+            runId: '22222222-2222-4222-8222-222222222222',
+            intent: 'evidence_map',
+            overview: 'HIF1A coordinates the transcriptional response to hypoxia.',
+            findings: [],
+            sources: [],
+            capturedAt: Date.now(),
+          }],
+        },
+      }),
+    }));
+
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.contextResolution).toBe('deterministic');
+    expect(runtime.pendingRunContext.put).toHaveBeenCalledWith(
+      body.runId,
+      expect.objectContaining({
+        originalFreeText: '¿Y qué ocurre con ese gen?',
+        freeText: expect.stringContaining('HIF1A'),
+        conversationId: '11111111-1111-4111-8111-111111111111',
+      }),
+    );
+  });
 });
