@@ -27,6 +27,7 @@ import { structureScenario } from '../agents/scenario-structurer';
 import { ScenarioStructureSchema, type ScenarioStructure } from '../schemas/scenario-structure';
 import type { StageOutputRecord, StageOutputsRepository } from '../data/stage-outputs-repository';
 import { extractAndVerifyPool, type PoolSourceOutcome } from './extract-and-verify-pool';
+import { throwIfCancelled } from '../server/run-cancellation';
 
 // Module 01 request lifecycle: "structure (T0) -> [plan -> retrieve -> curate] ->
 // extract -> verify". Covers structure (P2) -> plan (P3) -> retrieve (module 02
@@ -131,6 +132,13 @@ export interface RunRetrievalDeps {
   maxExtractSources?: number;
   extractionTimeBudgetMs?: number;
   maxExtractConcurrency?: number;
+  /** 2026-11-02 (docs/DECISIONS.md): depth-dependent bound on the semantic-rescue
+   *  loop below (default 2, matching the loop's own prior hardcoded cap). */
+  maxRescueAttempts?: number;
+  /** 2026-11-02 (docs/DECISIONS.md): checked at loop boundaries (before each search-
+   *  plan query, each rescue attempt, each extraction source) and threaded into
+   *  individual model/fetch calls — an aborted signal stops new work immediately. */
+  signal?: AbortSignal;
   /** Enables resumability: reuse a usable prior stage output instead of recomputing, and persist each newly computed one. Omit to run every stage fresh (e.g. tests). */
   stageOutputs?: StageOutputsRepository;
   onTrace?: (event: AgentTraceEvent) => void;
@@ -148,6 +156,7 @@ export interface RunRetrievalResult {
 }
 
 export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRetrievalDeps): Promise<RunRetrievalResult> {
+  throwIfCancelled(input.runId, deps.signal);
   const latest = deps.stageOutputs ? await deps.stageOutputs.getLatestPerStage(input.runId).catch(() => undefined) : undefined;
 
   // The initial literature search is deterministic and begins before the model
@@ -176,6 +185,7 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
     europePmc: deps.europePmc,
     maxConcurrency: deps.maxConcurrency,
     perQueryTimeoutMs: deps.perQueryTimeoutMs,
+    signal: deps.signal,
   }) : null;
 
   // Publish the existing search results independently of scenario structuring.
@@ -245,20 +255,24 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
       const initialQueries = plan.value?.queries.map(({ family, text, purpose }) => ({ family, text, purpose })) ?? [];
       let assessment = assessRetrievalSufficiency(input.freeText, initialCandidates);
 
-      // 2026-11-02 (docs/DECISIONS.md): up to 2 rescue attempts, not 1 — a genuinely
-      // sparse topic deserves one more, differently-angled try (P3's own prompt
-      // already tells it to "produce complementary reformulations rather than
+      // 2026-11-02 (docs/DECISIONS.md): up to 2 rescue attempts by default, not 1 — a
+      // genuinely sparse topic deserves one more, differently-angled try (P3's own
+      // prompt already tells it to "produce complementary reformulations rather than
       // cosmetic reorderings" when rescued) before the overview settles for a
-      // no-evidence framing. Hard-capped at 2 total so a topic that's truly thin no
-      // matter how it's searched still terminates in bounded time — the tradeoff is
-      // explicit and accepted: a thin-evidence run gets slower in exchange for a
-      // real second chance, never a silent change on the common, already-sufficient
-      // first pass (the loop body never runs at all in that case).
-      for (let attempt = 1; attempt <= 2 && assessment.status !== 'sufficient'; attempt++) {
+      // no-evidence framing. Hard-capped so a topic that's truly thin no matter how
+      // it's searched still terminates in bounded time — the tradeoff is explicit and
+      // accepted: a thin-evidence run gets slower in exchange for a real second
+      // chance, never a silent change on the common, already-sufficient first pass
+      // (the loop body never runs at all in that case). The cap itself is now
+      // depth-dependent (`RESEARCH_DEPTH_RESCUE_ATTEMPTS`) — Quick searches harder
+      // once, Deep up to three times, Balanced keeps this original behavior exactly.
+      const maxRescueAttempts = deps.maxRescueAttempts ?? 2;
+      for (let attempt = 1; attempt <= maxRescueAttempts && assessment.status !== 'sufficient'; attempt++) {
+        throwIfCancelled(input.runId, deps.signal);
         const expansion = await planSearch(
           input.runId,
           { condition: input.freeText || input.routerCondition || 'scientific evidence', subQuestions: structure.value?.subQuestions, setting: structure.value?.context },
-          { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p3PromptTemplate: deps.p3PromptTemplate, onTrace: deps.onTrace },
+          { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p3PromptTemplate: deps.p3PromptTemplate, signal: deps.signal, onTrace: deps.onTrace },
         );
         if (!expansion.ok) {
           await Promise.resolve(deps.stageOutputs?.insert({
@@ -274,6 +288,7 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
           maxConcurrency: deps.maxConcurrency,
           perQueryTimeoutMs: deps.perQueryTimeoutMs,
           webSearch: { runId: input.runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, allowedDomains: deps.allowedFetchDomains ?? DEFAULT_ALLOWED_DOMAIN_NAMES },
+          signal: deps.signal,
         });
         executed = { candidates: [...executed.candidates, ...next.candidates], skipped: [...executed.skipped, ...next.skipped], failed: [...executed.failed, ...next.failed] };
         await Promise.resolve(deps.stageOutputs?.insert({
@@ -370,6 +385,7 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
         metrics: { ms: 0, costUsd: 0 },
       });
     } else {
+      throwIfCancelled(input.runId, deps.signal);
       const extractStarted = Date.now();
       const pool = await extractAndVerifyPool(
         {
@@ -390,6 +406,7 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
           p0Preamble: deps.p0Preamble,
           p5PromptTemplate: deps.p5PromptTemplate,
           p10PromptTemplate: deps.p10PromptTemplate,
+          signal: deps.signal,
           onTrace: deps.onTrace,
           onSectionAudit: async (sourceId, audit) => { await Promise.resolve(deps.stageOutputs?.insert({ runId: input.runId, stage: `sections:${sourceId}`, status: 'ok', value: audit, metrics: { ms: 0, costUsd: 0 } })).catch(() => console.warn(JSON.stringify({ type: 'audit_persistence_failed', runId: input.runId }))); },
           onSourceDone: (sourceId, outcome) => deps.onStageEvent?.({ type: 'source_extracted', sourceId, outcome }),

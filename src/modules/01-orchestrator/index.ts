@@ -17,5 +17,6 @@ export * from './pipeline/extract-and-verify-pool';
 export * from './pipeline/build-receipt';
 export * from './server/runtime';
 export * from './server/pending-run-context';
+export * from './server/run-cancellation';
 
 export { synthesizeEvidenceOverview, synthesizeRetrievedOverview } from './agents/evidence-overview';

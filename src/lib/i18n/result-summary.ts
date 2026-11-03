@@ -8,7 +8,7 @@ import type { Claim, Receipt } from '@/shared/domain';
 // in CLAUDE.md's "cut order" list; this exists so the result never opens on silence,
 // without adding a model call, latency or fabrication risk.
 
-type RunStatus = 'streaming' | 'done' | 'partial' | 'abstained' | 'failed';
+type RunStatus = 'streaming' | 'done' | 'partial' | 'abstained' | 'failed' | 'cancelled';
 
 function sourceKindsPhrase(sourcesByKind: Record<string, number>): string {
   const entries = Object.entries(sourcesByKind)
@@ -30,7 +30,7 @@ export function buildResultSummary(status: RunStatus, receipt: Receipt | null, c
     return 'This doesn’t read as a scientific evidence question I can investigate — try rephrasing around a specific finding, topic or question.';
   }
 
-  if (status === 'failed' || !receipt) return null;
+  if (status === 'failed' || status === 'cancelled' || !receipt) return null;
 
   const claimCount = claims?.length ?? receipt.citationsExist;
   const safetyCount = claims?.filter((c) => c.safetyCritical).length ?? 0;

@@ -24,6 +24,12 @@ import { runRetrievalPipeline, type RunRetrievalResult } from './run-retrieval';
 export const CreateRunRequestSchema = z.object({
   freeText: z.string().min(1).max(1500),
   userId: z.string().uuid().nullable(),
+  // 2026-11-02 (docs/DECISIONS.md): an explicit, non-'auto' mode is a strict subset
+  // of `Intent` (algorithm/mechanism/evidence_map) — when present, it determines
+  // `run.intent` directly instead of hinting the router, per "el modo seleccionado
+  // debe determinar el formato de salida." `'auto'`/omitted still goes through the
+  // router exactly as before.
+  mode: z.enum(['auto', 'algorithm', 'mechanism', 'evidence_map']).optional(),
 });
 export type CreateRunRequest = z.infer<typeof CreateRunRequestSchema>;
 
@@ -79,10 +85,17 @@ export async function createRun(request: CreateRunRequest, deps: CreateRunDeps):
 
   const runId = randomUUID();
 
+  // 2026-11-02 (docs/DECISIONS.md): an explicit, non-'auto' mode wins outright —
+  // skips the router call entirely (same fast-path shape as the comparison/simple-
+  // gene-question branches below, and a real cost/latency win on top of making the
+  // user's choice actually work).
+  const explicitMode = parsed.mode && parsed.mode !== 'auto' ? parsed.mode : undefined;
   const simpleGeneQuestion = /^(?:what is|what does|qu[eé] es|qu[eé] hace)\s+(?:(?:the )?gene?\s+)?[A-Z][A-Z0-9-]{1,12}\s*\??$/.test(parsed.freeText.trim());
   const explicitComparison = isComparisonRequest(parsed.freeText);
   const explicitGeneticsEvidence = isGeneticsEvidenceRequest(parsed.freeText);
-  const routerResult = simpleGeneQuestion || explicitComparison || explicitGeneticsEvidence
+  const routerResult = explicitMode
+    ? { ok: true as const, value: { ...fallbackRouterOutput(parsed.freeText), intent: explicitMode, confidence: 'high' as const } }
+    : simpleGeneQuestion || explicitComparison || explicitGeneticsEvidence
     ? { ok: true as const, value: explicitComparison
       ? { ...fallbackRouterOutput(parsed.freeText), intent: 'comparison' as const, confidence: 'high' as const }
       : { intent: 'fact_lookup' as const, confidence: 'high' as const } }
@@ -107,7 +120,7 @@ export async function createRun(request: CreateRunRequest, deps: CreateRunDeps):
   if (!routerResult.ok) console.warn(JSON.stringify({ type: 'router_fallback', runId, reason: routerResult.reason }));
   const routerOutput = routerResult.ok ? routerResult.value : fallbackRouterOutput(parsed.freeText);
 
-  if (isComparisonRequest(parsed.freeText) && routerOutput.intent !== 'out_of_scope') routerOutput.intent = 'comparison';
+  if (!explicitMode && isComparisonRequest(parsed.freeText) && routerOutput.intent !== 'out_of_scope') routerOutput.intent = 'comparison';
   const status = routerOutput.intent === 'out_of_scope' ? 'abstained' : 'routing';
   const run = await deps.runsRepository.createRun({
     id: runId,

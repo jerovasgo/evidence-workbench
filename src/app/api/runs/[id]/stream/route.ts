@@ -11,10 +11,11 @@ import { labelRelationsBatched, pairClaimsForRelations } from '@/modules/05-gove
 import type { AgentTraceEvent } from '@/shared/agents';
 import { ClaimSchema, ReceiptSchema, RelationSchema, isVerifiedClaim, type Claim, type RunEvent } from '@/shared/domain';
 import { CandidateSourceSchema } from '@/modules/02-retrieval';
-import { RESEARCH_DEPTH_CONCURRENCY, RESEARCH_DEPTH_TIME_MS } from '@/lib/research-depth';
+import { RESEARCH_DEPTH_CONCURRENCY, RESEARCH_DEPTH_MAX_SOURCES, RESEARCH_DEPTH_RESCUE_ATTEMPTS, RESEARCH_DEPTH_TIME_MS } from '@/lib/research-depth';
 import { lookupGeneContext } from '@/modules/02-retrieval';
 import { synthesizeAlgorithm, AlgorithmGraphSchema, type AlgorithmInputClaim } from '@/modules/06-algorithm';
 import { synthesizeMechanism, MechanismGraphSchema, type MechanismInputClaim } from '@/modules/08-mechanism';
+import { registerRun, unregisterRun, throwIfCancelled, RunCancelledError } from '@/modules/01-orchestrator';
 import { z } from 'zod';
 
 // 2026-11-02 (docs/DECISIONS.md): Vercel's Hobby plan, with Fluid Compute (default on
@@ -240,7 +241,7 @@ function computeFinalStatus(result: RunRetrievalResult): 'done' | 'partial' | 'f
   return 'partial';
 }
 
-export async function GET(_request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> {
   const { id } = await context.params;
   const runtime = getServerRuntime();
 
@@ -251,6 +252,14 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const run = runOutcome.run;
   const encoder = new TextEncoder();
   const streamStarted = Date.now();
+
+  // 2026-11-02 (docs/DECISIONS.md): real cancellation. `abortController.signal` is
+  // threaded into the pipeline below; a raw client disconnect (closed tab, lost
+  // connection, refresh) fires `request.signal`'s own abort, which this listener
+  // forwards into the exact same path an explicit Stop click uses (`DELETE
+  // /api/runs/:id/cancel`) — one cancellation mechanism, two triggers.
+  const abortController = registerRun(run.id);
+  request.signal.addEventListener('abort', () => abortController.abort());
 
   // 2026-11-02 (docs/DECISIONS.md): reserve budget for this run's primary requested
   // view BEFORE extraction/verification can spend it — root cause of "Insufficient
@@ -305,6 +314,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         send({ type: 'done', runId: run.id, status: run.status });
         const relations = RelationSchema.array().safeParse(saved.get('relate')?.value);
         send({ type: 'relations_ready', runId: run.id, questions: [], relations: relations.success ? relations.data : [], status: relations.success ? 'ok' : 'partial' });
+        unregisterRun(run.id);
         controller.close();
         return;
       }
@@ -335,6 +345,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
             message: 'Retrieval context is no longer available for this run (never started streaming, or expired before it could). Start a new run.',
           });
           send({ type: 'done', runId: run.id, status: 'failed' });
+          unregisterRun(run.id);
           controller.close();
           return;
         }
@@ -386,6 +397,9 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
             europePmc: runtime.europePmc,
             extractionTimeBudgetMs: RESEARCH_DEPTH_TIME_MS[pending?.depth ?? 'balanced'],
             maxExtractConcurrency: RESEARCH_DEPTH_CONCURRENCY[pending?.depth ?? 'balanced'],
+            maxExtractSources: RESEARCH_DEPTH_MAX_SOURCES[pending?.depth ?? 'balanced'],
+            maxRescueAttempts: RESEARCH_DEPTH_RESCUE_ATTEMPTS[pending?.depth ?? 'balanced'],
+            signal: abortController.signal,
             onTrace: (event) => logAgentTrace(run.id, event),
             onStageEvent: (event) => {
               if (event.type === 'stage_started') {
@@ -463,6 +477,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         const receipt = buildReceipt(result);
         send({ type: 'receipt_ready', runId: run.id, receipt });
 
+        // Stop before the two most expensive remaining calls (T2 tier synthesis)
+        // if the run was cancelled while extraction was finishing up.
+        throwIfCancelled(run.id, abortController.signal);
+
         startOverview(result.extraction.value ?? [], true);
         // On the critical path, before `done` — see `synthesizeAlgorithmForRun`'s own
         // comment. A no-op (returns null) for any intent other than `algorithm`.
@@ -513,11 +531,22 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           send({ type: 'relations_ready', runId: run.id, questions: result.structure.value?.subQuestions ?? [], relations: [], status: 'failed' });
         }
       } catch (err) {
-        send({ type: 'error', runId: run.id, message: err instanceof Error ? err.message : 'Unknown error' });
-        await runtime.runsRepository.updateRunStatus(run.id, 'failed').catch(() => undefined);
-        send({ type: 'done', runId: run.id, status: 'failed' });
+        // 2026-11-02 (docs/DECISIONS.md): a cancelled run is not an error — surfaced
+        // either as `RunCancelledError` (thrown at a loop boundary once the signal
+        // is aborted) or as the signal simply being aborted by the time the pipeline
+        // unwinds (a raw client disconnect, no explicit throw in the way).
+        if (err instanceof RunCancelledError || abortController.signal.aborted) {
+          runtime.budgetGuard.cancelRun?.(run.id);
+          await runtime.runsRepository.updateRunStatus(run.id, 'cancelled').catch(() => undefined);
+          send({ type: 'done', runId: run.id, status: 'cancelled' });
+        } else {
+          send({ type: 'error', runId: run.id, message: err instanceof Error ? err.message : 'Unknown error' });
+          await runtime.runsRepository.updateRunStatus(run.id, 'failed').catch(() => undefined);
+          send({ type: 'done', runId: run.id, status: 'failed' });
+        }
       } finally {
         closed = true;
+        unregisterRun(run.id);
         controller.close();
       }
     },

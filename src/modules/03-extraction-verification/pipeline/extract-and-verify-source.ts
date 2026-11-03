@@ -76,6 +76,8 @@ export interface ExtractAndVerifySourceDeps {
   p0Preamble: string;
   p5PromptTemplate: string;
   p10PromptTemplate: string;
+  /** 2026-11-02 (docs/DECISIONS.md): forwarded into every `runAgent` call below. */
+  signal?: AbortSignal;
   /** Located, deterministic-check-passing claims; source and support checks remain pending. */
   onProvisionalClaims?: (claims: Claim[]) => void;
   onTrace?: (event: AgentTraceEvent) => void;
@@ -124,7 +126,7 @@ export async function extractAndVerifySource(
   const extractionResults = await mapWithConcurrency(batches, input.extractionBatchConcurrency ?? MAX_EXTRACT_CONCURRENCY, (batch) => extractClaims(
     input.runId,
     { sourceTitle: input.sourceTitle, passages: batch.map((p) => ({ passageId: p.id, locator: p.locator, text: p.text })), subQuestions: input.subQuestions },
-    { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p5PromptTemplate: deps.p5PromptTemplate, onTrace: deps.onTrace },
+    { metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, p0Preamble: deps.p0Preamble, p5PromptTemplate: deps.p5PromptTemplate, signal: deps.signal, onTrace: deps.onTrace },
   ));
   extractionResults.forEach((result, index) => {
     for (const passage of batches[index]!) {
@@ -189,6 +191,7 @@ export async function extractAndVerifySource(
         budgetGuard: deps.budgetGuard,
         p0Preamble: deps.p0Preamble,
         p10PromptTemplate: deps.p10PromptTemplate,
+        signal: deps.signal,
         onTrace: deps.onTrace,
       },
     );

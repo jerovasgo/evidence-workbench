@@ -18,6 +18,7 @@ export interface JudgeSupportDeps {
   budgetGuard: BudgetGuard;
   p0Preamble: string;
   p10PromptTemplate: string;
+  signal?: AbortSignal;
   onTrace?: (event: AgentTraceEvent) => void;
 }
 
@@ -47,6 +48,6 @@ export async function judgeSupport(
     // already hit for the router (P1) and raised there. Starts higher here instead
     // of repeating that discovery the hard way.
     limits: { maxOutputTokens: 1500, timeoutMs: 20000, maxCostUsd: 0.04 },
-    ctx: { runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, onTrace: deps.onTrace },
+    ctx: { runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, signal: deps.signal, onTrace: deps.onTrace },
   });
 }

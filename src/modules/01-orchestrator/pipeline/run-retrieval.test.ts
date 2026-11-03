@@ -288,4 +288,44 @@ describe('runRetrievalPipeline', () => {
       expect(result.structure.status).toBe('ok');
     });
   });
+
+  describe('cancellation (2026-11-02, docs/DECISIONS.md: real cancellation)', () => {
+    it('a pre-aborted signal stops the pipeline before any retrieval call is made', async () => {
+      const respond = vi.fn().mockResolvedValue(fakeRespondResult(STRUCTURE_OUTPUT));
+      const metaClient: MetaClient = { respond, listModels: vi.fn() };
+      const pubmed = fakePubmed();
+      const controller = new AbortController();
+      controller.abort();
+
+      await expect(
+        runRetrievalPipeline(
+          { runId: 'run_1', freeText: 'x' },
+          baseDeps(metaClient, { pubmed, signal: controller.signal }),
+        ),
+      ).rejects.toThrow('cancelled');
+      expect(pubmed.search).not.toHaveBeenCalled();
+    });
+
+    it('aborting mid-run stops the semantic-rescue loop from starting a further attempt', async () => {
+      const structure = { context: 'field_study' as const, subQuestions: ['q'], scopeParameters: {} };
+      const respond = vi.fn().mockResolvedValue(fakeRespondResult(structure));
+      const metaClient: MetaClient = { respond, listModels: vi.fn() };
+      const controller = new AbortController();
+      // Every pubmed search returns nothing relevant, which would normally drive the
+      // bounded rescue loop to retry — aborting after the first call must stop it short.
+      const pubmed = fakePubmed({
+        search: vi.fn(async () => {
+          controller.abort();
+          return { pmids: [] };
+        }),
+      });
+
+      await expect(
+        runRetrievalPipeline(
+          { runId: 'run_1', freeText: 'x' },
+          baseDeps(metaClient, { pubmed, signal: controller.signal }),
+        ),
+      ).rejects.toThrow('cancelled');
+    });
+  });
 });

@@ -18,6 +18,7 @@ export interface ExtractClaimsDeps {
   budgetGuard: BudgetGuard;
   p0Preamble: string;
   p5PromptTemplate: string;
+  signal?: AbortSignal;
   onTrace?: (event: AgentTraceEvent) => void;
 }
 
@@ -43,6 +44,6 @@ export async function extractClaims(
     prompt,
     outputSchema: ExtractClaimsOutputSchema,
     limits: { maxOutputTokens: 4500, timeoutMs: 30000, maxCostUsd: 0.05 },
-    ctx: { runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, onTrace: deps.onTrace },
+    ctx: { runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, signal: deps.signal, onTrace: deps.onTrace },
   });
 }

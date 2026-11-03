@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { SearchBar } from '@/components/search-bar';
-import { DEFAULT_MODE, type Mode } from '@/lib/modes';
-import { DEFAULT_RESEARCH_DEPTH, type ResearchDepth } from '@/lib/research-depth';
+import type { Mode } from '@/lib/modes';
+import type { ResearchDepth } from '@/lib/research-depth';
 import { PRECOMPUTED_DEMO_RUNS } from '@/lib/precomputed-demo-runs';
 import type { Intent } from '@/modules/01-orchestrator';
 
@@ -17,16 +17,26 @@ const SUGGESTIONS = [
 // live pipeline entirely via `onSelectPrecomputed` — instant for a demo. A
 // suggestion with no entry (or a stale one, if `SUGGESTIONS`'s text ever changes)
 // falls through to the normal `onSend` live path unchanged — never a broken state.
+//
+// 2026-11-02 (docs/DECISIONS.md): mode/depth are controlled from `useConversations`'s
+// lifted state (same reasoning as `Composer`), so a selection made here before the
+// very first message is sent is never lost once the dashboard swaps to `Composer`.
 export function EmptyState({
   onSend,
   onSelectPrecomputed,
+  mode,
+  depth,
+  onModeChange,
+  onDepthChange,
 }: {
   onSend: (text: string, mode: Mode, depth: ResearchDepth) => void;
   onSelectPrecomputed: (runId: string, freeText: string, mode: Mode, intent: Intent) => void;
+  mode: Mode;
+  depth: ResearchDepth;
+  onModeChange: (mode: Mode) => void;
+  onDepthChange: (depth: ResearchDepth) => void;
 }) {
   const [value, setValue] = useState('');
-  const [mode, setMode] = useState<Mode>(DEFAULT_MODE);
-  const [depth, setDepth] = useState<ResearchDepth>(DEFAULT_RESEARCH_DEPTH);
 
   function submit(text: string) {
     if (!text.trim()) return;
@@ -43,7 +53,7 @@ export function EmptyState({
       <h1 className="text-2xl font-medium text-fg">What would you like to understand?</h1>
 
       <div className="mt-8 w-full">
-        <SearchBar value={value} onChange={setValue} mode={mode} onModeChange={setMode} depth={depth} onDepthChange={setDepth} onSubmit={() => submit(value)} autoFocus />
+        <SearchBar value={value} onChange={setValue} mode={mode} onModeChange={onModeChange} depth={depth} onDepthChange={onDepthChange} onSubmit={() => submit(value)} autoFocus />
       </div>
 
       <div className="mt-5 flex flex-wrap justify-center gap-2">

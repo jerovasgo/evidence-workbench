@@ -54,6 +54,10 @@ export interface ExtractAndVerifyPoolDeps {
   p0Preamble: string;
   p5PromptTemplate: string;
   p10PromptTemplate: string;
+  /** 2026-11-02 (docs/DECISIONS.md): checked the same way the soft time deadline
+   *  already is — workers stop starting new sources once aborted; in-flight work
+   *  (also signal-aware, see `extractAndVerifySource`) winds down on its own. */
+  signal?: AbortSignal;
   onSourceDone?: (sourceId: string, outcome: PoolSourceOutcome) => void;
   onProvisionalClaims?: (sourceId: string, claims: Claim[]) => void;
   onTrace?: (event: AgentTraceEvent) => void;
@@ -83,7 +87,7 @@ export async function extractAndVerifyPool(
   let totalCostUsd = 0;
 
   async function processOne(candidate: CandidateSource): Promise<void> {
-    const fullText = await fetchFullTextForCandidate(candidate, deps.europePmc, deps.webFetch);
+    const fullText = await fetchFullTextForCandidate(candidate, deps.europePmc, deps.webFetch, deps.signal);
 
     let outcome: PoolSourceOutcome;
     if (!fullText) {
@@ -107,6 +111,7 @@ export async function extractAndVerifyPool(
           p0Preamble: deps.p0Preamble,
           p5PromptTemplate: deps.p5PromptTemplate,
           p10PromptTemplate: deps.p10PromptTemplate,
+          signal: deps.signal,
           onTrace: deps.onTrace,
           onSectionAudit: deps.onSectionAudit,
           onProvisionalClaims: (claims) => deps.onProvisionalClaims?.(candidate.tempId, claims),
@@ -129,7 +134,7 @@ export async function extractAndVerifyPool(
   let next = 0;
   async function worker(): Promise<void> {
     for (;;) {
-      if (Date.now() >= deadline) return;
+      if (Date.now() >= deadline || deps.signal?.aborted) return;
       const i = next++;
       if (i >= selected.length) return;
       await processOne(selected[i]!);

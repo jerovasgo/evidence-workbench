@@ -23,6 +23,7 @@ export interface PlanSearchDeps {
   budgetGuard: BudgetGuard;
   p0Preamble: string;
   p3PromptTemplate: string;
+  signal?: AbortSignal;
   onTrace?: (event: AgentTraceEvent) => void;
 }
 
@@ -51,6 +52,6 @@ export async function planSearch(
     // (docs/DAY0-VERIFICATION.md) — this starts higher and should be re-checked the
     // same way rather than trusted as final.
     limits: { maxOutputTokens: 2000, timeoutMs: 15000, maxCostUsd: 0.03 },
-    ctx: { runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, onTrace: deps.onTrace },
+    ctx: { runId, metaClient: deps.metaClient, budgetGuard: deps.budgetGuard, signal: deps.signal, onTrace: deps.onTrace },
   });
 }

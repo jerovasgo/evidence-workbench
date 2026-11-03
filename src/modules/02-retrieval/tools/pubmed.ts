@@ -28,8 +28,8 @@ export interface PubmedSummary {
 }
 
 export interface PubmedClient {
-  search(query: string, options?: { retmax?: number }): Promise<PubmedSearchResult>;
-  fetchSummaries(pmids: string[]): Promise<PubmedSummary[]>;
+  search(query: string, options?: { retmax?: number; signal?: AbortSignal }): Promise<PubmedSearchResult>;
+  fetchSummaries(pmids: string[], options?: { signal?: AbortSignal }): Promise<PubmedSummary[]>;
 }
 
 export interface CreatePubmedClientOptions {
@@ -69,14 +69,17 @@ export function createPubmedClient(options: CreatePubmedClientOptions = {}): Pub
     return params;
   }
 
-  async function search(query: string, { retmax = 20 }: { retmax?: number } = {}): Promise<PubmedSearchResult> {
+  async function search(
+    query: string,
+    { retmax = 20, signal }: { retmax?: number; signal?: AbortSignal } = {},
+  ): Promise<PubmedSearchResult> {
     const cacheKey = `search:relevance:${query}:${retmax}`;
     const cached = cache.get(cacheKey) as PubmedSearchResult | undefined;
     if (cached) return cached;
 
     const params = buildParams({ db: 'pubmed', term: query, retmax: String(retmax), sort: 'relevance' });
     const json = await rateLimiter.schedule(async () => {
-      const res = await fetchImpl(`${EUTILS_BASE}/esearch.fcgi?${params.toString()}`);
+      const res = await fetchImpl(`${EUTILS_BASE}/esearch.fcgi?${params.toString()}`, { signal });
       if (!res.ok) throw new Error(`PubMed esearch failed: HTTP ${res.status}`);
       return (await res.json()) as EsearchResponse;
     });
@@ -86,7 +89,7 @@ export function createPubmedClient(options: CreatePubmedClientOptions = {}): Pub
     return result;
   }
 
-  async function fetchSummaries(pmids: string[]): Promise<PubmedSummary[]> {
+  async function fetchSummaries(pmids: string[], { signal }: { signal?: AbortSignal } = {}): Promise<PubmedSummary[]> {
     if (pmids.length === 0) return [];
 
     const resolved = new Map<string, PubmedSummary>();
@@ -100,7 +103,7 @@ export function createPubmedClient(options: CreatePubmedClientOptions = {}): Pub
     if (toFetch.length > 0) {
       const params = buildParams({ db: 'pubmed', id: toFetch.join(',') });
       const json = await rateLimiter.schedule(async () => {
-        const res = await fetchImpl(`${EUTILS_BASE}/esummary.fcgi?${params.toString()}`);
+        const res = await fetchImpl(`${EUTILS_BASE}/esummary.fcgi?${params.toString()}`, { signal });
         if (!res.ok) throw new Error(`PubMed esummary failed: HTTP ${res.status}`);
         return (await res.json()) as EsummaryResponse;
       });

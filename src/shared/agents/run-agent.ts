@@ -54,6 +54,11 @@ export interface RunAgentContext {
   runId: string;
   metaClient: MetaClient;
   budgetGuard: BudgetGuard;
+  /** 2026-11-02 (docs/DECISIONS.md): real cancellation. Checked before reserving any
+   *  budget (an already-aborted call spends nothing), and combined with the
+   *  per-call timeout controller so an in-flight Meta API call is actually
+   *  interrupted, not just prevented from starting a new one. */
+  signal?: AbortSignal;
   /** Receives structured trace events; must never be given prompt or document text. */
   onTrace?: (event: AgentTraceEvent) => void;
 }
@@ -94,6 +99,7 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
 
 export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<AgentResult<TOut>> {
   const { ctx, limits } = params;
+  if (ctx.signal?.aborted) return { ok: false, reason: 'api_error', detail: 'Run was cancelled' };
   const started = Date.now();
   const reasoningEffort = tierToReasoningEffort(params.tier);
   const outputFormat = toStructuredOutputFormat(params.name, params.outputSchema);
@@ -132,8 +138,10 @@ export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<Agen
 
   const timedCall = (messages: typeof baseMessages, attempt: 1 | 2) => {
     const controller = new AbortController();
+    const onExternalAbort = () => controller.abort();
+    ctx.signal?.addEventListener('abort', onExternalAbort);
     return withTimeout(call(messages, attempt, controller.signal), limits.timeoutMs)
-      .finally(() => controller.abort());
+      .finally(() => { controller.abort(); ctx.signal?.removeEventListener('abort', onExternalAbort); });
   };
 
   let first: RespondResult;

@@ -51,6 +51,9 @@ describe('RunEventSchema', () => {
 
   it('requires status on the done event', () => {
     expect(() => RunEventSchema.parse({ type: 'done', runId: 'run_1', status: 'done' })).not.toThrow();
-    expect(() => RunEventSchema.parse({ type: 'done', runId: 'run_1', status: 'cancelled' })).toThrow();
+    // 2026-11-02 (docs/DECISIONS.md): 'cancelled' is now a real terminal status (real
+    // cancellation) — this asserts the enum still rejects a genuinely invalid value.
+    expect(() => RunEventSchema.parse({ type: 'done', runId: 'run_1', status: 'cancelled' })).not.toThrow();
+    expect(() => RunEventSchema.parse({ type: 'done', runId: 'run_1', status: 'bogus' })).toThrow();
   });
 });

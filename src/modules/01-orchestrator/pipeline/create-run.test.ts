@@ -172,6 +172,59 @@ describe('createRun', () => {
     if (result.status !== 'routed') throw new Error('unreachable');
     expect(result.routerOutput.intent).toBe('evidence_map');
   });
+
+  // 2026-11-02 (docs/DECISIONS.md): an explicit mode used to be validated by the
+  // route handler and then silently dropped before ever reaching createRun — the
+  // user's choice had no effect on run.intent, and therefore no effect on which
+  // view the stream route would ever attempt to synthesize.
+  it('sets run.intent directly from an explicit mode, skipping the router call entirely', async () => {
+    const respond = vi.fn();
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const runsRepository = fakeRunsRepository();
+
+    const result = await createRun(
+      { freeText: 'What does PTEN do in a cell?', userId: null, mode: 'algorithm' },
+      baseDeps(metaClient, runsRepository),
+    );
+
+    expect(result.status).toBe('routed');
+    if (result.status !== 'routed') throw new Error('unreachable');
+    expect(result.routerOutput.intent).toBe('algorithm');
+    expect(result.run.intent).toBe('algorithm');
+    expect(respond).not.toHaveBeenCalled();
+  });
+
+  it('lets an explicit mode win over comparison-shaped text', async () => {
+    const respond = vi.fn();
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const runsRepository = fakeRunsRepository();
+
+    const result = await createRun(
+      { freeText: 'Compara estudios de expresión génica bajo hipoxia', userId: null, mode: 'mechanism' },
+      baseDeps(metaClient, runsRepository),
+    );
+
+    expect(result.status).toBe('routed');
+    if (result.status !== 'routed') throw new Error('unreachable');
+    expect(result.routerOutput.intent).toBe('mechanism');
+    expect(result.run.intent).toBe('mechanism');
+  });
+
+  it('mode "auto" (or omitted) still goes through the router exactly as before', async () => {
+    const respond = vi.fn().mockResolvedValue(fakeRespondResult({ intent: 'evidence_map', confidence: 'high' }));
+    const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const runsRepository = fakeRunsRepository();
+
+    const result = await createRun(
+      { freeText: 'some ambiguous research text', userId: null, mode: 'auto' },
+      baseDeps(metaClient, runsRepository),
+    );
+
+    expect(result.status).toBe('routed');
+    if (result.status !== 'routed') throw new Error('unreachable');
+    expect(result.routerOutput.intent).toBe('evidence_map');
+    expect(respond).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('getRunForViewer', () => {

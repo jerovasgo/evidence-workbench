@@ -9,7 +9,7 @@ import type { Mode } from '@/lib/modes';
 import type { ResearchDepth } from '@/lib/research-depth';
 
 export function DashboardView({ initialQuery, initialMode, initialDepth }: { initialQuery?: string; initialMode?: Mode; initialDepth?: ResearchDepth }) {
-  const { turns, sending, sendMessage, retryTurn, newResearch, updateTurnMemory, loadPrecomputedTurn } = useConversations(initialQuery, initialMode, initialDepth);
+  const { turns, sending, sendMessage, retryTurn, newResearch, updateTurnMemory, loadPrecomputedTurn, mode, depth, setMode, setDepth } = useConversations(initialQuery, initialMode, initialDepth);
 
   const hasActiveThread = turns.length > 0;
 
@@ -23,10 +23,10 @@ export function DashboardView({ initialQuery, initialMode, initialDepth }: { ini
             <div className="flex-1 overflow-y-auto">
               <ConversationThread turns={turns} onRetryTurn={retryTurn} onMemoryUpdate={updateTurnMemory} />
             </div>
-            <Composer onSend={(text, mode, depth) => void sendMessage(text, mode, depth)} sending={sending} />
+            <Composer onSend={(text, mode, depth) => void sendMessage(text, mode, depth)} sending={sending} mode={mode} depth={depth} onModeChange={setMode} onDepthChange={setDepth} />
           </>
         ) : (
-          <EmptyState onSend={(text, mode, depth) => void sendMessage(text, mode, depth)} onSelectPrecomputed={loadPrecomputedTurn} />
+          <EmptyState onSend={(text, mode, depth) => void sendMessage(text, mode, depth)} onSelectPrecomputed={loadPrecomputedTurn} mode={mode} depth={depth} onModeChange={setMode} onDepthChange={setDepth} />
         )}
       </div>
     </div>

@@ -17,16 +17,18 @@ import { ConversationContextSchema } from '@/shared/domain';
 // of the pipeline and streams progress as it happens — see that route's own comment
 // for why a two-step POST-then-stream flow, not one call.
 //
-// `mode` is the dashboard's (module 11) own field, layered on top of `createRun`'s
-// request shape rather than inside it — createRun's own contract stays
-// routing-only. No conversation turn is persisted here (2026-10-31, docs/DECISIONS.md):
+// `mode` (2026-11-02, docs/DECISIONS.md): an explicit, non-'auto' mode is now part
+// of `createRun`'s own request contract — it determines `run.intent` directly,
+// skipping the router call, rather than being a dashboard-only hint layered on top
+// (that was the bug: mode used to be validated here and then silently dropped
+// before reaching `createRun` at all). No conversation turn is persisted here
+// (2026-10-31, docs/DECISIONS.md):
 // no real login exists yet, so there is no one to own a saved thread for — every
 // request today is anonymous, and CLAUDE.md rule 3's default (scenario text is not
 // persisted) applies. `conversationsRepository` stays wired in `ServerRuntime` for
 // when real auth exists, just unused by this handler until then.
 
 const RequestWithConversationSchema = CreateRunRequestSchema.extend({
-  mode: z.enum(['auto', 'algorithm', 'mechanism', 'evidence_map']).optional(),
   depth: z.enum(['quick', 'balanced', 'deep']).optional(),
   conversation: ConversationContextSchema.optional(),
 });
@@ -54,7 +56,7 @@ export async function POST(request: Request): Promise<Response> {
   const clarification = comparisonClarification(effectiveFreeText);
   if (clarification) return NextResponse.json({ status: 'clarification_required', clarification });
 
-  const outcome = await createRun({ freeText: effectiveFreeText, userId: parsed.data.userId }, runtime);
+  const outcome = await createRun({ freeText: effectiveFreeText, userId: parsed.data.userId, mode: parsed.data.mode }, runtime);
 
   switch (outcome.status) {
     case 'rejected_identifiers':

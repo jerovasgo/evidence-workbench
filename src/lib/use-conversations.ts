@@ -50,6 +50,18 @@ export interface UseConversationsResult {
   newResearch: () => void;
   updateTurnMemory: (turnId: string, snapshot: TurnMemorySnapshot) => void;
   /**
+   * 2026-11-02 (docs/DECISIONS.md): the conversation's current mode/depth selection,
+   * seeded from the landing page's `initialMode`/`initialDepth` and kept in sync on
+   * every `sendMessage` call — lifted here so `Composer`/`EmptyState` can become
+   * controlled components instead of each owning independent local state that reset
+   * to the defaults the moment the dashboard swapped from one to the other (the bug:
+   * a landing-page selection was silently lost on the very first follow-up turn).
+   */
+  mode: Mode;
+  depth: ResearchDepth;
+  setMode: (mode: Mode) => void;
+  setDepth: (depth: ResearchDepth) => void;
+  /**
    * 2026-11-01 (docs/DECISIONS.md): the hackathon-scoped precomputed-demo-runs
    * shortcut — appends a turn with its `runId`/`intent` already known and skips
    * `POST /api/runs` entirely, so `RunResult`'s `useRunStream` connects straight to
@@ -73,6 +85,8 @@ export interface UseConversationsResult {
 export function useConversations(initialQuery?: string, initialMode?: Mode, initialDepth?: ResearchDepth): UseConversationsResult {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [sending, setSending] = useState(false);
+  const [mode, setMode] = useState<Mode>(initialMode ?? 'auto');
+  const [depth, setDepth] = useState<ResearchDepth>(initialDepth ?? DEFAULT_RESEARCH_DEPTH);
   const autoSubmitted = useRef(false);
   const conversationId = useRef(crypto.randomUUID());
   const lastActivityAt = useRef(Date.now());
@@ -134,8 +148,12 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
   }, [contextFromTurns]);
 
   const sendMessage = useCallback(
-    async (freeText: string, mode: Mode, depth: ResearchDepth = DEFAULT_RESEARCH_DEPTH) => {
+    async (freeText: string, sentMode: Mode, sentDepth: ResearchDepth = DEFAULT_RESEARCH_DEPTH) => {
       if (!freeText.trim()) return;
+      setMode(sentMode);
+      setDepth(sentDepth);
+      const mode = sentMode;
+      const depth = sentDepth;
       const now = Date.now();
       const expired = now - lastActivityAt.current >= CONVERSATION_MEMORY_TTL_MS;
       if (expired) {
@@ -208,5 +226,5 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
     setTurns((prev) => [...prev, { id: runId, createdAt: Date.now(), freeText, mode, runId, intent }]);
   }, []);
 
-  return { turns, sending, sendMessage, retryTurn, newResearch, updateTurnMemory, loadPrecomputedTurn };
+  return { turns, sending, sendMessage, retryTurn, newResearch, updateTurnMemory, loadPrecomputedTurn, mode, depth, setMode, setDepth };
 }

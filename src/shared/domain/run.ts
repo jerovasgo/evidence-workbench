@@ -84,7 +84,7 @@ export const RunEventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('relations_ready'), runId: z.string(), questions: z.array(z.string()), relations: z.array(RelationSchema), status: z.enum(['ok', 'partial', 'failed']) }),
   z.object({ type: z.literal('receipt_ready'), runId: z.string(), receipt: ReceiptSchema }),
   z.object({ type: z.literal('error'), runId: z.string(), message: z.string() }),
-  z.object({ type: z.literal('done'), runId: z.string(), status: z.enum(['done', 'partial', 'abstained', 'failed']) }),
+  z.object({ type: z.literal('done'), runId: z.string(), status: z.enum(['done', 'partial', 'abstained', 'failed', 'cancelled']) }),
 ]);
 export type RunEvent = z.infer<typeof RunEventSchema>;
 

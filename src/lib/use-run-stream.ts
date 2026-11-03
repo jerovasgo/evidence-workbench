@@ -48,7 +48,7 @@ export interface RunStreamState {
   relations: Relation[];
   questions: string[];
   relationStatus: 'pending' | 'ok' | 'partial' | 'failed';
-  status: 'streaming' | 'done' | 'partial' | 'abstained' | 'failed';
+  status: 'streaming' | 'done' | 'partial' | 'abstained' | 'failed' | 'cancelled';
   errorMessage: string | null;
 }
 
@@ -83,9 +83,21 @@ export function initialState(): RunStreamState {
   };
 }
 
-export function useRunStream(streamUrl: string | null): RunStreamState {
+export interface RunStreamApi extends RunStreamState {
+  /** Explicit Stop: tells the server to actually abort the run, then stops listening. */
+  cancel: () => void;
+}
+
+function cancelUrlFor(streamUrl: string): string {
+  return streamUrl.replace(/\/stream$/, '/cancel');
+}
+
+export function useRunStream(streamUrl: string | null): RunStreamApi {
   const [state, setState] = useState<RunStreamState>(initialState);
   const streamUrlRef = useRef(streamUrl);
+  const sourceRef = useRef<EventSource | null>(null);
+  const statusRef = useRef(state.status);
+  statusRef.current = state.status;
 
   useEffect(() => {
     if (!streamUrl) return;
@@ -93,6 +105,7 @@ export function useRunStream(streamUrl: string | null): RunStreamState {
     streamUrlRef.current = streamUrl;
 
     const source = new EventSource(streamUrl);
+    sourceRef.current = source;
 
     source.onmessage = (event) => {
       const parsed: RunEvent = JSON.parse(event.data);
@@ -105,10 +118,38 @@ export function useRunStream(streamUrl: string | null): RunStreamState {
       source.close();
     };
 
-    return () => source.close();
+    return () => {
+      source.close();
+      // 2026-11-02 (docs/DECISIONS.md): a refresh, tab close, or "New research" unmount
+      // while still streaming must actually stop the server-side run, not just drop the
+      // client's own EventSource — sendBeacon survives the page/component going away,
+      // unlike a normal fetch, and only ever sends POST (hence the cancel route accepts
+      // both POST and DELETE). Deferred one tick: this project runs with React
+      // `reactStrictMode: true` (next.config.mjs), which synchronously double-invokes
+      // every effect in dev (mount -> synthetic cleanup -> remount) to catch exactly
+      // this class of bug. An undeferred cancel fired on that synthetic phantom
+      // unmount too, aborting every run before it could start (confirmed live:
+      // `POST /cancel` racing the very first `GET /stream`). By the time this timeout
+      // fires, a StrictMode remount has already replaced `sourceRef.current` with its
+      // own new EventSource (synchronously, same tick) — so the check below only
+      // fires the beacon for a real, lasting unmount.
+      if (statusRef.current === 'streaming') {
+        setTimeout(() => {
+          if (sourceRef.current === source) navigator.sendBeacon(cancelUrlFor(streamUrl));
+        }, 0);
+      }
+    };
   }, [streamUrl]);
 
-  return state;
+  function cancel() {
+    const url = streamUrlRef.current;
+    if (!url) return;
+    fetch(cancelUrlFor(url), { method: 'DELETE' }).catch(() => {});
+    sourceRef.current?.close();
+    setState((prev) => (prev.status === 'streaming' ? { ...prev, status: 'cancelled' } : prev));
+  }
+
+  return { ...state, cancel };
 }
 
 export function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamState {

@@ -39,6 +39,14 @@ export interface BudgetGuard {
    * run with no reserve set behaves exactly as before.
    */
   setIntentReserve?(runId: string, amountUsd: number): void;
+  /**
+   * Clears this run's held/reserved amounts (2026-11-02, docs/DECISIONS.md: added
+   * alongside real cancellation). Any call already in flight still releases its own
+   * hold normally when it resolves/rejects — this is for the reserve a cancelled run
+   * will now never spend (e.g. `setIntentReserve`'s algorithm/mechanism reserve).
+   * Never throws on an unknown/already-clean runId.
+   */
+  cancelRun?(runId: string): void;
 }
 
 /**
@@ -86,6 +94,11 @@ export function createInMemoryBudgetGuard(config: BudgetGuardConfig): BudgetGuar
     },
     setIntentReserve(runId, amountUsd) {
       intentReserve.set(runId, amountUsd);
+    },
+    cancelRun(runId) {
+      const stillHeld = held.get(runId) ?? 0;
+      if (stillHeld > 0) { held.delete(runId); heldToday -= stillHeld; }
+      intentReserve.delete(runId);
     },
   };
   return guard;

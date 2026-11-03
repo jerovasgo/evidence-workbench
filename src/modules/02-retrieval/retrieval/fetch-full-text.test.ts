@@ -26,21 +26,21 @@ describe('fetchFullTextForCandidate', () => {
   it('fetches by the (source, id) pair recovered from an europe_pmc tempId', async () => {
     const europePmc = fakeEuropePmc({ fetchFullText: vi.fn().mockResolvedValue('full text here') });
     const result = await fetchFullTextForCandidate(baseEuropePmcCandidate, europePmc);
-    expect(europePmc.fetchFullText).toHaveBeenCalledWith('PMC', 'PMC123');
+    expect(europePmc.fetchFullText).toHaveBeenCalledWith('PMC', 'PMC123', { signal: undefined });
     expect(result).toBe('full text here');
   });
 
   it("tries europe_pmc with source 'MED' for a pubmed-family candidate", async () => {
     const europePmc = fakeEuropePmc({ fetchFullText: vi.fn().mockResolvedValue(null) });
     const result = await fetchFullTextForCandidate(basePubmedCandidate, europePmc);
-    expect(europePmc.fetchFullText).toHaveBeenCalledWith('MED', '111');
+    expect(europePmc.fetchFullText).toHaveBeenCalledWith('MED', '111', { signal: undefined });
     expect(result).toBeNull();
   });
 
   it('uses the actual indexed abstract when open full text is unavailable', async () => {
     const europePmc = fakeEuropePmc({ fetchAbstract: vi.fn().mockResolvedValue('Abstract\n\nHNF1A altered expression.') });
     expect(await fetchFullTextForCandidate(basePubmedCandidate, europePmc)).toBe('Abstract\n\nHNF1A altered expression.');
-    expect(europePmc.fetchAbstract).toHaveBeenCalledWith('MED', '111');
+    expect(europePmc.fetchAbstract).toHaveBeenCalledWith('MED', '111', { signal: undefined });
   });
 
   it('returns null without calling the client for a pubmed candidate with no pmid', async () => {

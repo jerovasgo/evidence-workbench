@@ -103,7 +103,7 @@ function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefin
 }
 
 export function RunResult({ runId, mode, intent, query, onMemoryUpdate }: { runId: string; mode?: Mode; intent?: Intent | null; query?: string; onMemoryUpdate?: (snapshot: TurnMemorySnapshot) => void }) {
-  const { opening, provisionalOpening, openingSections, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, algorithm, algorithmStatus, algorithmAbstainReason, mechanism, mechanismStatus, mechanismAbstainReason, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
+  const { opening, provisionalOpening, openingSections, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, algorithm, algorithmStatus, algorithmAbstainReason, mechanism, mechanismStatus, mechanismAbstainReason, receipt, relations, questions, relationStatus, status, errorMessage, cancel } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const isStreaming = status === 'streaming';
@@ -214,7 +214,21 @@ export function RunResult({ runId, mode, intent, query, onMemoryUpdate }: { runI
         <StageProgress stages={stages} sourceProgress={sourceProgress} sourceCatalog={sourceCatalog} isStreaming={isStreaming} />
       )}
 
-      {errorMessage && (
+      {isStreaming && (
+        <button
+          type="button"
+          onClick={cancel}
+          className="w-fit rounded-[var(--radius-pill)] border border-border px-3 py-1.5 text-xs uppercase tracking-[0.08em] text-muted hover:border-conflict hover:text-conflict"
+        >
+          Stop
+        </button>
+      )}
+
+      {status === 'cancelled' ? (
+        <div role="status" className="rounded-[var(--radius-card)] border border-border bg-black/40 p-4 text-sm text-muted">
+          Research stopped.
+        </div>
+      ) : errorMessage && (
         <div role="alert" className="rounded-[var(--radius-card)] border border-conflict/40 bg-black/40 p-4 text-sm text-conflict">
           {errorMessage}
         </div>

@@ -45,6 +45,9 @@ export interface ExecutePlanDeps {
   maxConcurrency?: number;
   perQueryTimeoutMs?: number;
   webSearch?: WebSearchDeps;
+  /** 2026-11-02 (docs/DECISIONS.md): threaded into the PubMed/Europe PMC fetch calls
+   *  so a cancelled run actually interrupts in-flight queries, not just stops new ones. */
+  signal?: AbortSignal;
 }
 
 export interface SkippedQuery {
@@ -93,14 +96,14 @@ function pubmedSummaryToCandidate(summary: PubmedSummary): CandidateSource {
 }
 
 async function runPubmedQuery(query: SearchQuery, deps: ExecutePlanDeps): Promise<CandidateSource[]> {
-  const { pmids } = await deps.pubmed.search(query.text, { retmax: PUBMED_RETMAX });
+  const { pmids } = await deps.pubmed.search(query.text, { retmax: PUBMED_RETMAX, signal: deps.signal });
   if (pmids.length === 0) return [];
-  const summaries = await deps.pubmed.fetchSummaries(pmids);
+  const summaries = await deps.pubmed.fetchSummaries(pmids, { signal: deps.signal });
   return summaries.map(pubmedSummaryToCandidate);
 }
 
 async function runEuropePmcQuery(query: SearchQuery, deps: ExecutePlanDeps): Promise<CandidateSource[]> {
-  const results = await deps.europePmc.search(query.text, { pageSize: EUROPE_PMC_PAGE_SIZE });
+  const results = await deps.europePmc.search(query.text, { pageSize: EUROPE_PMC_PAGE_SIZE, signal: deps.signal });
   return results.map((item) =>
     CandidateSourceSchema.parse({
       tempId: `europe_pmc:${item.source}:${item.id}`,

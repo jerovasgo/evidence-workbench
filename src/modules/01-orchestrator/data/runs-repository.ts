@@ -9,7 +9,7 @@ export interface RunRecord {
   userId: string | null;
   isPrecomputed: boolean;
   intent: string;
-  status: 'queued' | 'routing' | 'running' | 'partial' | 'done' | 'abstained' | 'failed';
+  status: 'queued' | 'routing' | 'running' | 'partial' | 'done' | 'abstained' | 'failed' | 'cancelled';
   createdAt: string;
 }
 

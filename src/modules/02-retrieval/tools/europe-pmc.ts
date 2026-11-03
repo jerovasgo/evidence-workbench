@@ -20,11 +20,11 @@ export interface EuropePmcResultItem {
 }
 
 export interface EuropePmcClient {
-  search(query: string, options?: { pageSize?: number }): Promise<EuropePmcResultItem[]>;
+  search(query: string, options?: { pageSize?: number; signal?: AbortSignal }): Promise<EuropePmcResultItem[]>;
   /** Returns null (not an error) when the article has no full text available (e.g. HTTP 404). */
-  fetchFullText(source: string, id: string): Promise<string | null>;
+  fetchFullText(source: string, id: string, options?: { signal?: AbortSignal }): Promise<string | null>;
   /** A source-grounded fallback when open full text is unavailable. */
-  fetchAbstract?(source: string, id: string): Promise<string | null>;
+  fetchAbstract?(source: string, id: string, options?: { signal?: AbortSignal }): Promise<string | null>;
 }
 
 export interface CreateEuropePmcClientOptions {
@@ -61,9 +61,12 @@ function parsePubTypes(item: RawResultItem): string[] {
 export function createEuropePmcClient(options: CreateEuropePmcClientOptions = {}): EuropePmcClient {
   const fetchImpl = options.fetchImpl ?? fetch;
 
-  async function search(query: string, { pageSize = 20 }: { pageSize?: number } = {}): Promise<EuropePmcResultItem[]> {
+  async function search(
+    query: string,
+    { pageSize = 20, signal }: { pageSize?: number; signal?: AbortSignal } = {},
+  ): Promise<EuropePmcResultItem[]> {
     const params = new URLSearchParams({ query, format: 'json', pageSize: String(pageSize) });
-    const res = await fetchImpl(`${EUROPE_PMC_BASE}/search?${params.toString()}`);
+    const res = await fetchImpl(`${EUROPE_PMC_BASE}/search?${params.toString()}`, { signal });
     if (!res.ok) {
       throw new Error(`Europe PMC search failed: HTTP ${res.status}`);
     }
@@ -83,30 +86,32 @@ export function createEuropePmcClient(options: CreateEuropePmcClientOptions = {}
     }));
   }
 
-  async function fetchFullText(source: string, id: string): Promise<string | null> {
+  async function fetchFullText(source: string, id: string, { signal }: { signal?: AbortSignal } = {}): Promise<string | null> {
     let pmcid = source === 'PMC' ? id : undefined;
     if (!pmcid) {
       const params = new URLSearchParams({ query: `EXT_ID:${id} AND SRC:${source}`, format: 'json' });
-      const lookup = await fetchImpl(`${EUROPE_PMC_BASE}/search?${params}`);
+      const lookup = await fetchImpl(`${EUROPE_PMC_BASE}/search?${params}`, { signal });
       if (!lookup.ok) return null;
       const record = await lookup.json() as { resultList?: { result?: { pmcid?: string }[] } };
       pmcid = record.resultList?.result?.[0]?.pmcid;
     }
     if (!pmcid || !/^PMC\d+$/.test(pmcid)) return null;
     try {
-      const res = await fetchImpl(`${EUROPE_PMC_BASE}/${pmcid}/fullTextXML`);
+      const res = await fetchImpl(`${EUROPE_PMC_BASE}/${pmcid}/fullTextXML`, { signal });
       if (res.ok) {
         const xml = await res.text();
         return extractReadableText(xml, 'application/xml');
       }
-    } catch {
+    } catch (err) {
+      if (signal?.aborted) throw err;
       // The NCBI BioC endpoint below is a separate source for the same PMC record.
     }
+    if (signal?.aborted) return null;
     // Europe PMC occasionally returns 5xx for a PMC record that NCBI can serve.
     // BioC is limited to the OA/manuscript subset; failure remains null, not a
     // fabricated full text. Section labels and paragraph breaks remain visible.
     try {
-      const res = await fetchImpl(`https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/bioc_json/${pmcid}/unicode`);
+      const res = await fetchImpl(`https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/bioc_json/${pmcid}/unicode`, { signal });
       if (!res.ok) return null;
       const body = await res.json() as { documents?: { passages?: { infons?: { section_type?: string }; text?: string }[] }[] }[];
       const passages = Array.isArray(body) ? body[0]?.documents?.[0]?.passages : undefined;
@@ -126,9 +131,9 @@ export function createEuropePmcClient(options: CreateEuropePmcClientOptions = {}
     }
   }
 
-  async function fetchAbstractUncached(source: string, id: string): Promise<string | null> {
+  async function fetchAbstractUncached(source: string, id: string, signal?: AbortSignal): Promise<string | null> {
     const params = new URLSearchParams({ query: `EXT_ID:${id} AND SRC:${source}`, format: 'json', resultType: 'core', pageSize: '1' });
-    const res = await fetchImpl(`${EUROPE_PMC_BASE}/search?${params}`);
+    const res = await fetchImpl(`${EUROPE_PMC_BASE}/search?${params}`, { signal });
     if (!res.ok) return null;
     const response = await res.json() as { resultList?: { result?: { abstractText?: string }[] } };
     const record = response.resultList?.result?.[0];
@@ -138,12 +143,12 @@ export function createEuropePmcClient(options: CreateEuropePmcClientOptions = {}
   }
 
   const abstractCache = new Map<string, { expires: number; value: Promise<string | null> }>();
-  function fetchAbstract(source: string, id: string): Promise<string | null> {
+  function fetchAbstract(source: string, id: string, { signal }: { signal?: AbortSignal } = {}): Promise<string | null> {
     const key = `${source}:${id}`;
     const cached = abstractCache.get(key);
     if (cached && cached.expires > Date.now()) return cached.value;
     if (abstractCache.size >= 100) abstractCache.delete(abstractCache.keys().next().value!);
-    const value = fetchAbstractUncached(source, id).catch((error) => { abstractCache.delete(key); throw error; });
+    const value = fetchAbstractUncached(source, id, signal).catch((error) => { abstractCache.delete(key); throw error; });
     abstractCache.set(key, { expires: Date.now() + 60_000, value });
     return value;
   }

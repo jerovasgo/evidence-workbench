@@ -40,12 +40,12 @@ export function Hero() {
   return (
     <section className="landing-hero relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-6 pt-28 pb-20">
       <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center text-center">
-        <p className="editorial-kicker mb-8">GENEBARK / GENETIC EVIDENCE</p>
+        <p className="editorial-kicker mb-8">AGENTIC GENETICS RESEARCH</p>
         <h1 className="text-4xl font-light tracking-[-0.055em] text-fg sm:text-5xl md:text-6xl">
-          Follow the evidence.<br /><span className="text-[#b9b9b9]">Understand the biology.</span>
+          Agentic genetics research.<br /><span className="text-[#b9b9b9]">Every claim, verified.</span>
         </h1>
         <p className="mt-5 max-w-lg text-balance text-base text-muted sm:text-lg">
-          Investigate genetic research with Genebark—built to trace claims to their sources, reveal context, and surface uncertainty.
+          Genebark&rsquo;s research agents search the literature, verify every claim against its source, and turn the evidence into algorithms, mechanisms and maps you can inspect.
         </p>
 
         <div className="hero-search mt-10 w-full">

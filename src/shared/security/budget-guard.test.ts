@@ -75,3 +75,30 @@ describe('setIntentReserve (2026-11-02, docs/DECISIONS.md)', () => {
     expect(guard.reserveCall!('r', 0.39, false)).toBeTypeOf('function');
   });
 });
+
+describe('cancelRun (2026-11-02, docs/DECISIONS.md: real cancellation)', () => {
+  it('clears a held reservation for that run only', () => {
+    const guard = createInMemoryBudgetGuard({ runCostCapUsd: 0.4, dailyBudgetUsd: 20 });
+    guard.reserveCall!('run_1', 0.3, false);
+    guard.reserveCall!('run_2', 0.3, false);
+    // room on run_1 is exhausted by its own hold before cancelling.
+    expect(guard.reserveCall!('run_1', 0.2, false)).toBeNull();
+    guard.cancelRun!('run_1');
+    expect(guard.reserveCall!('run_1', 0.2, false)).toBeTypeOf('function');
+    // run_2's hold is untouched.
+    expect(guard.reserveCall!('run_2', 0.2, false)).toBeNull();
+  });
+
+  it('clears an intent reserve for that run', () => {
+    const guard = createInMemoryBudgetGuard({ runCostCapUsd: 0.4, dailyBudgetUsd: 20 });
+    guard.setIntentReserve!('run_1', 0.25);
+    expect(guard.reserveCall!('run_1', 0.2, false)).toBeNull(); // blocked by the reserve
+    guard.cancelRun!('run_1');
+    expect(guard.reserveCall!('run_1', 0.2, false)).toBeTypeOf('function');
+  });
+
+  it('never throws for an unknown or already-clean runId', () => {
+    const guard = createInMemoryBudgetGuard({ runCostCapUsd: 0.4, dailyBudgetUsd: 20 });
+    expect(() => guard.cancelRun!('never_seen')).not.toThrow();
+  });
+});

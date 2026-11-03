@@ -29,15 +29,24 @@ export async function fetchFullTextForCandidate(
   candidate: CandidateSource,
   europePmc: EuropePmcClient,
   webFetch?: WebFetchOptions,
+  signal?: AbortSignal,
 ): Promise<string | null> {
   if (candidate.family === 'europe_pmc') {
     const [, source, id] = candidate.tempId.split(':');
     if (!source || !id) return null;
-    return (await europePmc.fetchFullText(source, id).catch(() => null)) ?? (await europePmc.fetchAbstract?.(source, id).catch(() => null)) ?? null;
+    return (
+      (await europePmc.fetchFullText(source, id, { signal }).catch(() => null)) ??
+      (await europePmc.fetchAbstract?.(source, id, { signal }).catch(() => null)) ??
+      null
+    );
   }
 
   if (candidate.family === 'pubmed' && candidate.pmid) {
-    return (await europePmc.fetchFullText('MED', candidate.pmid).catch(() => null)) ?? (await europePmc.fetchAbstract?.('MED', candidate.pmid).catch(() => null)) ?? null;
+    return (
+      (await europePmc.fetchFullText('MED', candidate.pmid, { signal }).catch(() => null)) ??
+      (await europePmc.fetchAbstract?.('MED', candidate.pmid, { signal }).catch(() => null)) ??
+      null
+    );
   }
 
   if ((candidate.family === 'web' || candidate.family === 'standards_body') && webFetch) {

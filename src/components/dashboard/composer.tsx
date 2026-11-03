@@ -2,13 +2,29 @@
 
 import { useState } from 'react';
 import { SearchBar } from '@/components/search-bar';
-import { DEFAULT_MODE, type Mode } from '@/lib/modes';
-import { DEFAULT_RESEARCH_DEPTH, type ResearchDepth } from '@/lib/research-depth';
+import type { Mode } from '@/lib/modes';
+import type { ResearchDepth } from '@/lib/research-depth';
 
-export function Composer({ onSend, sending }: { onSend: (text: string, mode: Mode, depth: ResearchDepth) => void; sending: boolean }) {
+// 2026-11-02 (docs/DECISIONS.md): mode/depth are controlled from `useConversations`'s
+// lifted state, not owned locally — this component previously reset to the defaults
+// every time the dashboard swapped from `EmptyState` to `Composer` (a fresh mount),
+// silently discarding whatever the user picked on the landing page or a prior turn.
+export function Composer({
+  onSend,
+  sending,
+  mode,
+  depth,
+  onModeChange,
+  onDepthChange,
+}: {
+  onSend: (text: string, mode: Mode, depth: ResearchDepth) => void;
+  sending: boolean;
+  mode: Mode;
+  depth: ResearchDepth;
+  onModeChange: (mode: Mode) => void;
+  onDepthChange: (depth: ResearchDepth) => void;
+}) {
   const [value, setValue] = useState('');
-  const [mode, setMode] = useState<Mode>(DEFAULT_MODE);
-  const [depth, setDepth] = useState<ResearchDepth>(DEFAULT_RESEARCH_DEPTH);
 
   function submit() {
     if (!value.trim() || sending) return;
@@ -22,9 +38,9 @@ export function Composer({ onSend, sending }: { onSend: (text: string, mode: Mod
         value={value}
         onChange={setValue}
         mode={mode}
-        onModeChange={setMode}
+        onModeChange={onModeChange}
         depth={depth}
-        onDepthChange={setDepth}
+        onDepthChange={onDepthChange}
         onSubmit={submit}
         loading={sending}
         placeholder="Ask a follow-up…"

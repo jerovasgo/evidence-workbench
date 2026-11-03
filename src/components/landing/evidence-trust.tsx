@@ -25,10 +25,11 @@ const POINTS = [
 export function EvidenceTrust() {
   return (
     <section className="mx-auto max-w-4xl px-6 py-28">
-      <h2 className="text-center text-3xl font-semibold tracking-tight text-fg sm:text-4xl">Evidence you can inspect.</h2>
-      <p className="mx-auto mt-4 max-w-xl text-center text-base text-muted">
-        Move beyond a generated answer. Follow the evidence, examine its context, and see what remains uncertain.
-      </p>
+      <div className="section-heading">
+        <span className="section-kicker">THE PROOF</span>
+        <h2>Evidence <span className="neon-text">you can inspect.</span></h2>
+        <p>Move beyond a generated answer. Follow the evidence, examine its context, and see what remains uncertain.</p>
+      </div>
 
       <div className="mt-16 grid grid-cols-1 gap-10 sm:grid-cols-3">
         {POINTS.map((point) => (
