@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Modular-monolith boundary check (CLAUDE.md-adjacent convention; see
+// Modular-monolith boundary check (AGENTS.md-adjacent convention; see
 // docs/architecture/00-overview.md "Module boundaries"). A package under src/shared/*
 // or src/modules/*/ may only be reached by other code through its bare specifier
 // (@/shared/<pkg> or @/modules/<name>, hitting that package's index.ts) — reaching

@@ -14,7 +14,7 @@ export type AgentTier = 'T0' | 'T1' | 'T2';
 /**
  * T0/T1/T2 differ only by reasoning.effort; single-model decision (docs/DAY0-VERIFICATION.md).
  * T0 uses 'minimal', not 'low': a live smoke test (router/P1 with 'low') timed out
- * against a 4s limit; CLAUDE.md lists 'minimal' first for cheap steps, and it is
+ * against a 4s limit; AGENTS.md lists 'minimal' first for cheap steps, and it is
  * the faster of the two documented T0 options.
  */
 export function tierToReasoningEffort(tier: AgentTier): ReasoningEffort {

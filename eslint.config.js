@@ -6,7 +6,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ['node_modules/**', '.next/**', 'coverage/**'],
+    ignores: ['node_modules/**', '.next/**', '.next-stale-*/**', 'coverage/**'],
   },
   {
     rules: {

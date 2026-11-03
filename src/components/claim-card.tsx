@@ -5,7 +5,7 @@ import { CertaintyPips, Chip } from '@/components/ui/chip';
 import { NOT_GRADED_TOOLTIP } from '@/lib/i18n/grade-labels';
 
 // `verification.support` now reflects a real support-judge (P10, module 03) verdict.
-// Only 'supports' gets a non-caveated chip — CLAUDE.md rule 5 ("no unverified but
+// Only 'supports' gets a non-caveated chip — AGENTS.md rule 5 ("no unverified but
 // shown" state) and docs/architecture/03's own rule mean 'partial' always shows its
 // caveat and 'unknown' still reads as "Not confirmed" (the judge couldn't decide, or
 // its call failed/timed out — both honest, not a hidden failure).

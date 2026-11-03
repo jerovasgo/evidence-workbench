@@ -1,8 +1,6 @@
-// Module 04 public API (docs/architecture/04-grading-and-scoring.md). Part A
-// (grading): deterministic grade-maps + gradeClaim. Part B (source-score wiring):
-// quality/applicability factors + buildSourceScore, reusing module 02's already-built
-// level/currency math. The grade-estimator agent (P6, AI-estimated GRADE domains) is
-// not built — see docs/DECISIONS.md.
+// Module 04 public API (docs/architecture/04-grading-and-scoring.md).
+// Native source language may be mapped deterministically; Genebark does not infer
+// a certainty grade. Source ranking is a separate, explainable heuristic.
 export * from './scoring/grade-maps';
 export * from './pipeline/grade-claim';
 export * from './schemas/score-breakdown';

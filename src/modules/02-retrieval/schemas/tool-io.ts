@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Zod contracts for the module 02 retrieval tools' inputs/outputs (module 10: "tool
-// arguments are validated (zod)"). Kept here, not in src/lib/tools, per CLAUDE.md's
+// arguments are validated (zod)"). Kept here, not in src/lib/tools, per AGENTS.md's
 // "schemas first" rule — one place for every zod schema in the project.
 
 export const PubmedSearchInputSchema = z.object({

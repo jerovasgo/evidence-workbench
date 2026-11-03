@@ -5,7 +5,7 @@ import type { Claim, Receipt } from '@/shared/domain';
 // This is a deterministic, template-built summary from the run's own Receipt/Claim[]
 // — every sentence is a count the pipeline actually produced, never a model's prose.
 // It is NOT SPEC §7's "answer card" (P12) — that agent isn't built and is explicitly
-// in CLAUDE.md's "cut order" list; this exists so the result never opens on silence,
+// in AGENTS.md's "cut order" list; this exists so the result never opens on silence,
 // without adding a model call, latency or fabrication risk.
 
 type RunStatus = 'streaming' | 'done' | 'partial' | 'abstained' | 'failed' | 'cancelled';

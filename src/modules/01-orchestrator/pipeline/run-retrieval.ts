@@ -365,8 +365,16 @@ export async function runRetrievalPipeline(input: RunRetrievalInput, deps: RunRe
   // every classified source regardless of whether extraction ever reaches it, so the
   // UI can show "why ranked here" for any source a claim cites.
   const sourceScores: Record<string, ScoreBreakdown> = {};
+  const candidatesById = new Map((retrieval.value ?? []).map((candidate) => [candidate.tempId, candidate] as const));
   for (const c of classification.value ?? []) {
-    sourceScores[c.sourceId] = buildSourceScore(c, structure.value?.context ?? 'unknown');
+    const candidate = candidatesById.get(c.sourceId);
+    sourceScores[c.sourceId] = buildSourceScore(c, structure.value?.context ?? 'unknown', {
+      query: input.freeText,
+      subQuestions: structure.value?.subQuestions,
+      title: candidate?.title ?? '',
+      snippet: candidate?.snippet,
+      retrievalRelevance: candidate?.relevance,
+    });
   }
 
   // --- extract + verify (P5 + deterministic checks, module 03) --- only runs if

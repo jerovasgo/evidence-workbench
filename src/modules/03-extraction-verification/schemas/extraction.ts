@@ -4,7 +4,7 @@ import { ActionTypeSchema, ConditionSchema, GeneticContextSchema } from '@/share
 // Module 03 `claim-extractor` agent (P5) contracts
 // (docs/architecture/03-claim-extraction-and-verification.md). Output omits
 // `id`/`sourceId`/`grade`/`verification` — code fills those (`verify-claim.ts`
-// constructs the real `Claim`; grading is module 04's job, not built yet).
+// constructs the real `Claim`; module 04 preserves only explicit native grades).
 
 export const PassageInputSchema = z.object({
   passageId: z.string(),

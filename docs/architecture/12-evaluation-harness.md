@@ -16,7 +16,7 @@ prompts are iterated against it.
 ## Datasets (`/evals/`, `/data/synthetic/`)
 | Set | Content | Size | Built by |
 | --- | --- | --- | --- |
-| `topics.json` | 15 evaluation topics across fields (10 tuning, 5 held-out) | 15 | you + subject-matter-expert reviewer |
+| `topics.json` | Genetics evaluation topics split between tuning and held-out sets | Current set in `evals/genetics/` | maintainer + subject-matter reviewer |
 | `gold-sources/` | Must-find sources per topic (ids/DOIs) | ≥3 each | you |
 | `gold-claims/` | Hand-annotated findings from 3 standards-body publications | ~60 | you + reviewer |
 | `mutations/` | Programmatic corruptions of verified claims | ~200 generated | code |
@@ -41,7 +41,7 @@ prompts are iterated against it.
 | Verification | Mutation catch rate by type | Mutation suite | code-detectable 100%; judge-detectable ≥90% |
 | Support | Judge vs human κ on 60 claims | Human review | ≥0.6 |
 | Extraction | Recall/precision vs gold claims | Annotated set | ≥70% / ≥90% |
-| Grading | Mapping exactness; estimator within-one-level | Fixtures; Cochrane SoF | 100%; ≥70% (else disable) |
+| Source ranking | Relevance ranking and must-find recall | Genetics fixtures; reviewer | report nDCG and recall at selection boundary |
 | Governance | Planted divergence classification; silent overrides | Planted protocol | ≥4/5; 0 |
 | Algorithm | Invariants; unsupported numbers; node recall vs published flowchart | Code; reviewer | 100%; 0; report |
 | Algorithm | Stability (Jaccard over 3 runs) | Re-run | ≥0.8 |
@@ -73,7 +73,7 @@ prompts are iterated against it.
   exist vs the pipeline's verified one) and the aggregate table.
 
 ## Human review protocol
-- Reviewer: a clinically trained person (name and role in README; if the founder is also the reviewer,
+- Reviewer: a genetics-domain reviewer (name and role in the evaluation report; if the founder is also the reviewer,
   say so and note the limitation). Blind to which output came from which system where possible.
 - Reviewer forms: claim support (supports/partial/no), divergence classification, algorithm node
   coverage, mechanism edge correctness; each with a short guide and examples.

@@ -11,7 +11,7 @@ import { labelRelations } from './relation-labeller';
 // pairs into fixed-size batches (<=10/call, the architecture doc's limit) and
 // runs them with bounded concurrency. Always runs after the SSE `done` event
 // for the Evidence view, so there is no TTFT to protect here — concurrency is
-// still bounded to respect the per-run cost/rate budget (CLAUDE.md rule 11).
+// still bounded to respect the per-run cost/rate budget (AGENTS.md rule 11).
 
 const DEFAULT_BATCH_SIZE = 10;
 const DEFAULT_MAX_CONCURRENCY = 4;

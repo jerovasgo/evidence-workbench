@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { buildAad, decryptField, encryptField, type EncryptedBlob, type EncryptionKeyring } from '@/shared/security';
 
-// Module 11 dashboard: conversation history. CLAUDE.md rule 3 scoped exception
+// Module 11 dashboard: conversation history. AGENTS.md rule 3 scoped exception
 // (2026-10-28, see docs/DECISIONS.md) — the one place scenario text is persisted,
 // field-encrypted at rest (module 10). AAD binds each turn's ciphertext to its own
 // session id + turn id, the same "never decrypts under the wrong owner/row" pattern
@@ -61,7 +61,7 @@ export interface ConversationsRepository {
    * on Vercel, the POST that creates a run and the very next GET that streams it
    * are not guaranteed to land on the same serverless instance, so that in-memory
    * map can miss even on a genuine first connection, not just a real reconnect.
-   * Reads the free text back from the one place CLAUDE.md rule 3's scoped
+   * Reads the free text back from the one place AGENTS.md rule 3's scoped
    * exception already persists it (field-encrypted) — no new storage location.
    * Returns null if no turn references this run, or it belongs to a different session.
    */

@@ -53,7 +53,7 @@ export function verifyClaim(input: VerifyClaimInput, passages: Passage[]): Verif
     return { outcome: 'dropped', reason: 'source is retracted or withdrawn' };
   }
 
-  // Dose rule (CLAUDE.md rule 6) first: an unverified dose is softened to "per local
+  // Dose rule (AGENTS.md rule 6) first: an unverified dose is softened to "per local
   // protocol" rather than dropping the whole claim. Any OTHER number that still
   // doesn't match after that drops the claim (architecture doc step 5: "drop the
   // number or the claim" — this module takes the stricter branch rather than

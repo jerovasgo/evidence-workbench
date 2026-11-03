@@ -101,7 +101,7 @@ mode; exactly one manual invariant-repair call, then abstain (never a partially-
 `contradicts` data runs after `done`, too late for this).
 Also: this module's prompt and worked examples are genetics-specific, not generic "any science" — the
 product's actual current domain, per the user's 2026-10-30 correction, even though the rest of this
-file and CLAUDE.md/SPEC.md still use the broader framing from the 2026-10-29 pivot.
+file and AGENTS.md/SPEC.md still use the broader framing from the 2026-10-29 pivot.
 
 ## V1.1 built (2026-10-31): real flowchart canvas
 V1's renderer was a deterministic indented step list (`pipeline/flatten-algorithm.ts`, DFS order) —

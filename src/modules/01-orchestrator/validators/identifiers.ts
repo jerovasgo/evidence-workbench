@@ -1,4 +1,4 @@
-// CLAUDE.md non-negotiable rule 3: "Reject identifiers of a specific, real,
+// AGENTS.md non-negotiable rule 3: "Reject identifiers of a specific, real,
 // identifiable person." Module 01: "Pre-filter (code, before the model): regex/
 // NER-lite for identifiers (national ID patterns, phone, email, names after a
 // person-reference cue) -> reject with warning. The model is second line of

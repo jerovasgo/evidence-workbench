@@ -11,7 +11,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // the value inline is the honest Day-1 choice; no such blob store exists yet. This
 // is structured, derived output (a `ScenarioStructure`, a `SearchPlan`, verified
 // `Claim`s with their short quotes) — never the raw scenario free text or full
-// fetched document text, which CLAUDE.md rule 3 says must never be persisted; that
+// fetched document text, which AGENTS.md rule 3 says must never be persisted; that
 // rule is about raw input/document text, not the product's own verified-claim
 // output, which SPEC §8 already designs as persisted data (`Run`, `Claim`).
 //

@@ -3,9 +3,9 @@
 Companion to `docs/SPEC.md`. SPEC says *what* and *why*; these files say *how*, module by module.
 If a file here contradicts SPEC, stop and log it in `docs/DECISIONS.md`.
 
-## Reading order for Claude Code
+## Reading order for contributors and coding agents
 
-1. `CLAUDE.md`, `docs/SPEC.md` (§3, §4, §8, §9, §10).
+1. `AGENTS.md`, `docs/SPEC.md` (§3, §4, §8, §9, §10).
 2. This file.
 3. The module file for the task at hand. Every module file has the same sections:
    Purpose · Position in the pipeline · Agents · Tools · Deterministic code · Contracts ·
@@ -46,7 +46,7 @@ If a file here contradicts SPEC, stop and log it in `docs/DECISIONS.md`.
 
 | Tier | Typical model (verify ids on Day 1) | Used for |
 | --- | --- | --- |
-| T0 cheap | Open-weights Muse model via Baseten, low reasoning | route, structure (PICO), search plan, source classification, NL→JobSpec parse |
+| T0 fast | Muse Spark 1.3 through the Meta Model API, low reasoning | route, structure, search plan and source classification |
 | T1 standard | Muse Spark, medium reasoning | claim extraction, grading features, relation labelling, mechanism extraction |
 | T2 careful | Muse Spark, high reasoning | synthesis, support judge, adversary, coherence judge, divergence rationale |
 
@@ -62,13 +62,12 @@ Agents (names used in code, logs, and traces):
 | `claim-extractor` | extract | T1 | 03 |
 | `support-judge` | verify | T2 | 03 |
 | `adversary` | verify | T2 | 03 |
-| `grade-estimator` | grade | T1 | 04 |
 | `relation-labeller` | relate | T1 | 05 |
 | `divergence-analyst` | govern | T2 | 05 |
 | `algorithm-synthesizer` | synthesize | T2 | 06 |
 | `map-labeller` (labels only) | synthesize | T0 | 07 |
 | `mechanism-scoper`, `mechanism-extractor`, `coherence-judge` | mechanism | T0/T1/T2 | 08 |
-| `watch-parser`, `digest-writer` | watches | T0/T1 | 09 |
+| `watch-parser`, `digest-writer` | watches (deferred) | T0/T1 | 09 |
 
 ## Shared agent harness (`src/lib/agents/run-agent.ts`)
 
@@ -140,10 +139,10 @@ Receipt. Traces store ids and hashes, never content. A dev-only `/runs/[id]` pag
 
 1. Schemas, `runAgent`, Meta client, tool registry skeleton, validators (tests first).
 2. Retrieval + curation (02), then extraction + verification (03).
-3. Grading (04), relations/governance (05).
+3. Deterministic source scoring (04), relations/governance (05).
 4. Algorithm synthesis (06), then map/matrix (07) — both are projections of the same verified graph.
 5. Orchestrator streaming (01) and UI (11) grow alongside; do not leave UI to the last day.
-6. Watches (09), mechanism (08), evaluation (12) run in parallel with polish.
+6. Mechanism views (08) and evaluation (12) run alongside product polish. Watches (09) remain deferred.
 
 ## Non-goals
 
@@ -198,11 +197,10 @@ schemas as in SPEC §8). P16–P18 are written on Day 1.
 | P13 | Natural language → JobSpec | `watch-parser` (09) |
 | P14 | Change analysis between versions | watches diff (09) |
 | P15 | Watch digest (verified data only) | `digest-writer` (09) |
-| P16 | Mechanism scoper | `mechanism-scoper` (08) — to write |
-| P17 | Mechanism extractor | `mechanism-extractor` (08) — to write |
-| P18 | Coherence judge | `coherence-judge` (08) — to write |
-| (none) | Map labeller | `map-labeller` (07) — small prompt, to write |
+| P16 | Mechanism scoper and synthesis | `mechanism-scoper`, `mechanism-synthesizer` (08) |
+| P17 | Mechanism extractor | `mechanism-extractor` (08) |
+| P18 | Coherence judge | `coherence-judge` (08) |
+| (deterministic) | Evidence map labels | module 07 derives labels from verified claim data |
 
-Note: P0–P15 drafts predate the architecture files. Where they differ (e.g., Responses API, flat
-schemas, `reasoning.effort` tiers), the architecture files and `docs/DAY0-VERIFICATION.md` win; adapt
-the prompt text and bump its version.
+The executable prompt files under `prompts/` are authoritative. When a prompt or schema changes,
+bump its version and record any material product decision in `docs/DECISIONS.md`.

@@ -66,9 +66,9 @@ export async function findWebSources(
   }
 
   const prompt =
-    `Search the web for pages that answer this clinical evidence query: "${input.query}". ` +
+    `Search the web for authoritative pages that answer this genetics research query: "${input.query}". ` +
     `Strongly prefer official sources on these domains when relevant results exist: ${input.preferredDomains.join(', ')}. ` +
-    'Do not answer the question yourself; only search and let the results speak.';
+    'Prioritize primary literature, scientific databases and official gene/protein records. Do not answer the question yourself; only search and let the results speak.';
 
   try {
     const result = await withTimeout(

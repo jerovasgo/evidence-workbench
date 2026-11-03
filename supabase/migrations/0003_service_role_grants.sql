@@ -4,7 +4,7 @@
 -- anon/authenticated/service_role TRUNCATE/REFERENCES/TRIGGER — no SELECT/INSERT/
 -- UPDATE/DELETE — which is why 0002_grants.sql had to grant anon/authenticated
 -- explicitly, and why service_role needs the same treatment here. Without this,
--- every server-side write (CLAUDE.md: "service role key only in server code") fails
+-- every server-side write (AGENTS.md: "service role key only in server code") fails
 -- with "permission denied for table ..." even though RLS itself is bypassed.
 
 grant select, insert, update, delete on

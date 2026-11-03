@@ -109,7 +109,7 @@ export function EvidenceDrawer({
                   <p className="text-xs uppercase tracking-wide text-muted">Source score — why ranked here</p>
                   <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
                     <dt className="text-muted">Relevance</dt>
-                    <dd className="text-fg">{sourceScore.relevance.toFixed(2)} (not yet modeled — placeholder)</dd>
+                    <dd className="text-fg">{sourceScore.relevance.toFixed(2)} <span className="block text-muted">{sourceScore.relevanceReason}</span></dd>
                     <dt className="text-muted">Evidence level</dt>
                     <dd className="text-fg">{sourceScore.level.toFixed(2)}</dd>
                     <dt className="text-muted">Quality</dt>

@@ -1,7 +1,7 @@
 import { estimateCostUsd } from './prices';
 
 // Wraps the Meta Model API Responses endpoint (docs/DAY0-VERIFICATION.md). This is the
-// ONLY place in the codebase allowed to call api.meta.ai — CLAUDE.md §"Stack (decided)".
+// ONLY place in the codebase allowed to call api.meta.ai — AGENTS.md §"Stack (decided)".
 
 export type ReasoningEffort = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
 export type InputRole = 'system' | 'user' | 'assistant';
@@ -71,10 +71,10 @@ export class MetaApiError extends Error {
   }
 }
 
-/** CLAUDE.md: never use "Contributor" model variants (their content may train Meta models). */
+/** AGENTS.md: never use "Contributor" model variants (their content may train Meta models). */
 export function assertNotContributorModel(model: string): void {
   if (model.endsWith('-contributor')) {
-    throw new Error(`Refusing to call contributor model variant "${model}" (CLAUDE.md non-negotiable rule)`);
+    throw new Error(`Refusing to call contributor model variant "${model}" (AGENTS.md non-negotiable rule)`);
   }
 }
 

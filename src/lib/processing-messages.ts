@@ -5,7 +5,7 @@ import type { Mode } from '@/lib/modes';
 // contextual ligera, sin necesitar una llamada adicional a un modelo de lenguaje."
 // A plain template keyed by `mode` alone — known instantly, client-side, the moment
 // a turn is sent, no round trip. Never claims a source was verified or a task
-// finished (that would be the kind of premature-completion claim CLAUDE.md rule 5
+// finished (that would be the kind of premature-completion claim AGENTS.md rule 5
 // forbids) — only describes what is about to happen.
 //
 // 2026-11-01: algorithm/mechanism/evidence_map all ship real views now (modules

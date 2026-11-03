@@ -7,7 +7,7 @@ import type { Intent } from '@/modules/01-orchestrator';
 // invalidation: if a landing-page suggestion's text changes
 // (`src/components/dashboard/empty-state.tsx`'s `SUGGESTIONS`), the corresponding
 // entry below silently stops matching and that suggestion just falls back to a
-// normal live run — never a stale "verified" answer shown as current (CLAUDE.md rule
+// normal live run — never a stale "verified" answer shown as current (AGENTS.md rule
 // 5), just a slower one.
 //
 // Every run is publicly viewable by id today regardless of who created it

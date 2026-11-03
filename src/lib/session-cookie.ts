@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 // (SECURITY.md: no auth flow exists yet). httpOnly so it's never readable/forgeable
 // from client-side JS; scopes every conversations-repository call. Next.js-specific
 // (`next/headers`), so this lives under src/lib, not inside module 01 — modules stay
-// framework-agnostic and testable without Next (CLAUDE.md module boundary rule).
+// framework-agnostic and testable without Next (AGENTS.md module boundary rule).
 
 const COOKIE_NAME = 'ewb_session';
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 365;

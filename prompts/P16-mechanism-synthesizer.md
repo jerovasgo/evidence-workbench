@@ -12,7 +12,7 @@ pathway) → `mechanism-extractor` (P17, extracts entities/interactions from raw
 passages) → `coherence-judge` (P18, a second pass that can only remove edges or
 flag warnings). V1 does the scoping and extraction in one call, over claims the
 main pipeline has **already verified** (not raw passages — passage text isn't
-retained after extraction, CLAUDE.md rule 3; a verified claim's own `quote` field
+retained after extraction, AGENTS.md rule 3; a verified claim's own `quote` field
 already carries real, grounded source text). `coherence-judge` is deferred for
 V1 — its job is covered here by strict anti-invention rules plus the same
 invariant-repair-then-abstain safety net P9 uses (`validateMechanismGraph`,

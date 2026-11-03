@@ -97,8 +97,8 @@ Rules:
   a deterministic paragraph-based chunker, not the model.
 - This agent's output is *proposed* claims only; `verify-claim.ts` is what actually
   decides whether each claim's quote is found, numbers match, the source isn't
-  retracted, etc. (CLAUDE.md rule 5: "verified by code, not by the model"). `grade`
-  and `verification` are not requested here — code fills `verification`, and module
-  04 (grading, not built yet) will fill `grade`.
+  retracted, etc. (AGENTS.md rule 5: "verified by code, not by the model"). `grade`
+  and `verification` are not requested here — code fills `verification`; module 04
+  preserves an explicit native grade when present and otherwise leaves it ungraded.
 - A live smoke test against the real Meta API should confirm the token/timeout
   budget above, the same discipline used for every other agent in this project.

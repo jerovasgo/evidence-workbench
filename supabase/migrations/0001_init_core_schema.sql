@@ -1,5 +1,5 @@
 -- Day 1 core schema (SPEC §8 data model, module 10 security/privacy classification).
--- Every table has RLS enabled with no exceptions (CLAUDE.md rule 10, SPEC §10):
+-- Every table has RLS enabled with no exceptions (AGENTS.md rule 10, SPEC §10):
 -- "Public" tables (sources, passages, claims, relations) get an explicit public-read
 -- policy; "Private" tables (documents, watch_definitions) are owner-scoped; "Secret"
 -- operational tables (budget_ledger) get RLS enabled with NO policies at all, so only

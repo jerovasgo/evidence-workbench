@@ -1,7 +1,7 @@
 import type { Receipt } from '@/shared/domain';
 import type { RunRetrievalResult } from './run-retrieval';
 
-// Module 01 `Receipt` (SPEC §8) — CLAUDE.md: never cut. Built from a finished
+// Module 01 `Receipt` (SPEC §8) — AGENTS.md: never cut. Built from a finished
 // `RunRetrievalResult`. Honest about what this slice can and can't know yet:
 // - `supported` counts claims the support-judge (P10) marked `support: 'supports'`
 //   (module 03, T2) — the only verdict that satisfies `VerifiedClaimSchema`.

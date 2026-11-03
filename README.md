@@ -1,131 +1,163 @@
 # Genebark
 
-A workbench for researchers, engineers and students that navigates, compares, audits and verifies
-scientific evidence — any field of science, explicitly excluding clinical medicine — with a current
-focus on genetics: every claim is tied to a code-verified verbatim quote, graded for certainty, and
-shown as an algorithm, evidence map, concordance matrix or mechanism diagram. It does not give
-instructions to act on a specific real-world case.
+![Genebark](public/brand/genebark-lockup-white.png)
 
-Built for the Meta Global AI Developer Hackathon (Indie track). Design planning (`docs/`) was
-written before the building period (Oct 27 – Nov 4, 2026); all application code is written during it.
+**An agent harness for evidence-grounded genetics research.**
 
-This README is the human-facing setup guide. `CLAUDE.md` and `docs/` describe the architecture and
-the rules the code follows; start there once the app is running.
+[Live demo](https://evidence-workbench-xi.vercel.app) · [Architecture](docs/architecture/00-overview.md) · [Evaluation evidence](evals/genetics/) · [Security](SECURITY.md)
 
-## Running it locally
+Genebark turns an open-ended genetics question into a concise, traceable answer and an appropriate scientific visualization. It retrieves literature, reads the relevant sections, extracts atomic findings, checks those findings against verbatim source text, compares experimental context and progressively renders the result while research continues.
 
-The project needs three things: Node/pnpm, a Postgres database (via the Supabase CLI — no cloud
-account required), and a Meta API key.
+It is designed for researchers, laboratory teams and technically trained students who need to understand what the evidence actually supports without manually reconciling dozens of papers. Genebark is a research tool—not a clinical decision system and not medical advice.
 
-### 1. Prerequisites
+## Why it is different
 
-- **Node.js 20+** and **pnpm** (`corepack enable` will give you `pnpm` via Node's built-in Corepack;
-  if `pnpm` isn't directly on your PATH, use `corepack pnpm <command>` in place of `pnpm <command>`
-  everywhere below).
-- **Docker Desktop** (or Podman) — running and on your `PATH`. The Supabase CLI uses it to run a
-  real local Postgres instance; you do **not** need a Supabase cloud account.
-- **Supabase CLI** — `npx supabase --version` works without a separate install (npx fetches it on
-  first use); a global install (`npm i -g supabase`) is optional.
-- **A Meta API key** for the Meta Model API this project calls at runtime
-  (`src/shared/meta/client.ts`) — obtained from the hackathon's Meta API access, per the hackathon's
-  own onboarding instructions (not part of this repo).
+A conventional chatbot usually retrieves passages and writes an answer. Genebark provides a controlled execution environment around the model:
 
-### 2. Clone and install
+- **Progressive research:** an immediate contextual acknowledgement is followed by an explicitly provisional abstract-grounded overview, then an immutable synthesis grounded in verified findings.
+- **Evidence verification:** claims retain their source, locator and verbatim quote; deterministic checks validate existence, quotation, numbers, retraction signals and scope before verification.
+- **Context-aware comparison:** agreement or contradiction is assessed only after considering organism, model, intervention, assay and experimental conditions.
+- **Intent-driven visuals:** the same evidence can become an evidence map, comparison matrix, mechanism diagram or decision algorithm instead of a wall of text.
+- **Transparent ranking:** every source receives an explainable score based on deterministic relevance, evidence level, explicit quality signals, currency and applicability.
+- **Temporary conversational memory:** follow-up questions can refer to earlier genes, studies and findings inside the active anonymous chat without permanent conversation storage.
+
+## How Meta powers Genebark
+
+Genebark uses **Muse Spark 1.3 through the Meta Model API** for the semantic work that deterministic code cannot reliably perform:
+
+- structuring complex genetics questions;
+- reformulating thin or ambiguous literature searches;
+- extracting atomic findings from scientific passages;
+- judging semantic support and experimental scope;
+- synthesizing provisional and verified overviews;
+- labelling cross-study concordance and contradiction;
+- transforming verified evidence into mechanism and algorithm structures.
+
+Every call is bounded by a Zod output schema, timeout, token/cost budget and tool allow-list. The model proposes structured interpretations; code controls execution and verifies the evidence. Removing the model would remove the semantic bridge between heterogeneous scientific language. Removing the deterministic harness would remove the traceability and reliability that distinguish Genebark from a chatbot.
+
+## Progressive execution
+
+```text
+User question
+   │
+   ├─ deterministic intent + search seeds ───────────────┐
+   │                                                     │
+   ├─ trusted-index retrieval (PubMed / Europe PMC) ─────┤
+   │       └─ provisional abstract-grounded overview     │
+   │                                                     ▼
+   └─ structure → selective full text → section ranking → extraction
+                                                        │
+                         deterministic verification ◀───┘
+                                                        │
+             source score → synthesis → relations → visualization
+```
+
+SSE events update the interface as real stages finish. Complex work runs concurrently where dependencies allow it; the UI never fabricates activity or exposes private chain-of-thought.
+
+## Evidence contract
+
+A verified claim must satisfy the checks that apply to its source and content:
+
+1. the source identifier resolves;
+2. the cited passage exists;
+3. the quote is present verbatim or within the bounded OCR tolerance;
+4. measurements and numbers are preserved;
+5. no known retraction/withdrawal signal invalidates the source;
+6. the claim is semantically supported within its surrounding context;
+7. scope limitations are retained rather than generalized away.
+
+Partially supported findings remain qualified. Failed findings are withdrawn and recorded in the audit metadata.
+
+## Source score
+
+Genebark computes, rather than asks a model for, the source score:
+
+```text
+relevance × evidence level × quality × currency × applicability
+```
+
+- **Relevance:** weighted overlap between the query/subquestions and title/snippet; named genes, proteins and variants receive extra weight, with small intent-specific signals for association, mechanism and comparison questions.
+- **Evidence level:** publication/study type.
+- **Quality:** explicit methods and conflict-of-interest metadata when available; unknown metadata is not silently treated as negative.
+- **Currency:** publication age with a bounded floor; an explicit supersession signal can be handled separately once direction is unambiguous.
+- **Applicability:** match between requested and reported experimental context.
+
+The Evidence & Sources drawer exposes the factors and the relevance rationale.
+
+## Research modes
+
+- **Quick:** short exploration window and fast synthesis.
+- **Balanced:** default depth for most genetics questions.
+- **Deep:** longer exploration window for broader recovery and comparison.
+
+Depth controls time and work attempted, not a promise to review a fixed number of papers.
+
+## Technology
+
+- Next.js 16, React 19 and strict TypeScript
+- Meta Model API (`muse-spark-1.3`)
+- Supabase/Postgres with Row-Level Security
+- PubMed, Europe PMC, Crossref, NCBI Gene, HGNC, Ensembl and UniProt
+- React Flow, ELK and SVG scientific visualizations
+- SSE progressive streaming
+- Vitest, ESLint and module-boundary validation
+
+## Run locally
+
+### Requirements
+
+- Node.js 20+
+- pnpm (`corepack enable`)
+- Docker and the Supabase CLI, or an existing Supabase project
+- Meta Model API credentials
 
 ```bash
 pnpm install
-```
-
-### 3. Start a local Supabase instance
-
-```bash
 npx supabase start
-```
-
-This downloads and starts a local Postgres + Supabase stack in Docker (first run takes a few
-minutes), applies every migration in `supabase/migrations/` automatically, and prints a block like:
-
-```text
-         API URL: http://127.0.0.1:54321
-     Studio URL: http://127.0.0.1:54323
-         DB URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
-     anon key: eyJ...
-service_role key: eyJ...
-```
-
-Keep this terminal's output around — you need the **API URL**, **anon key** and **service_role
-key** in the next step. (`http://127.0.0.1:54323` is Supabase Studio, a local web UI for browsing
-the database if you want to inspect tables directly.)
-
-If you'd rather point at a Supabase **cloud** project instead of running one locally (e.g. you
-already have one from earlier development), skip this step and use that project's own API URL and
-keys in step 4 — `supabase/migrations/` applies the same way via `npx supabase db push` once linked
-with `npx supabase link`. The local path above is simpler and is what this guide assumes.
-
-### 4. Configure environment variables
-
-```bash
 cp .env.example .env.local
-```
-
-Fill in `.env.local`:
-
-| Variable | Where it comes from |
-| --- | --- |
-| `META_API_KEY` | Your Meta API key (step 1). |
-| `META_API_BASE_URL` | The Meta Model API base URL (`.env.example` has the real value). |
-| `SUPABASE_URL` | The **API URL** `supabase start` printed (`http://127.0.0.1:54321` by default). |
-| `SUPABASE_ANON_KEY` | The **anon key** `supabase start` printed. |
-| `SUPABASE_SERVICE_ROLE_KEY` | The **service_role key** `supabase start` printed. |
-| `APP_ENCRYPTION_KEY` | A 32-byte key, base64-encoded, for AES-256-GCM field encryption (uploaded documents, watch definitions, the ephemeral run-context handoff). Generate one: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
-| `NCBI_API_KEY` | Optional. Without it, PubMed lookups are limited to 3 requests/second (still works, just slower under load). Free from [NCBI](https://www.ncbi.nlm.nih.gov/account/). |
-| `DAILY_BUDGET_USD` | A global daily spend ceiling across every run on this process. `.env.example` has a reasonable default. |
-| `RUN_COST_CAP_USD` | A per-run spend ceiling. `.env.example` has a reasonable default (raise it if you see "Insufficient unreserved budget" on Algorithm/Mechanism questions — see `docs/DECISIONS.md`, 2026-11-02). |
-
-Never commit `.env.local` — it's already gitignored.
-
-### 5. Run the app
-
-```bash
 pnpm dev
 ```
 
-Open `http://localhost:3000`. The home page and `/dashboard` both work without signing in — there
-is no real login flow yet (every run is anonymous today, see `docs/DECISIONS.md`, 2026-10-31).
+Open `http://localhost:3000`.
 
-### 6. Verify it's working end to end
-
-Ask it something — e.g. one of the landing page's own suggested questions, or "How does CRISPR-Cas9
-cleave double-stranded DNA?" with the mode selector set to **Mechanism**. You should see research
-stages stream in (`Agent activity`), then a verified overview with clickable citations. If you only
-see `Could not reach the server` or every claim fails verification, double check `SUPABASE_URL`/
-`SUPABASE_SERVICE_ROLE_KEY` match what `supabase start` printed, and that `META_API_KEY` is valid.
-
-## Commands
-
-```text
-pnpm install   # install dependencies
-pnpm dev       # next dev — run the app locally
-pnpm build     # next build — production build
-pnpm test      # vitest run — unit tests (a handful of live-model tests are skipped by default)
-pnpm lint      # eslint . + module boundary check
-pnpm typecheck # tsc --noEmit
-```
-
-(`pnpm` not on `PATH`? use `corepack pnpm <command>` instead, as noted above.)
-
-## Stopping / resetting the local database
+Required environment variables are documented in `.env.example`. Generate the 32-byte encryption key with:
 
 ```bash
-npx supabase stop          # stop the local Postgres/Supabase containers
-npx supabase db reset      # drop and re-apply every migration from scratch
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-## Project structure
+Apply migrations to a linked cloud project with `npx supabase db push`.
 
-- `docs/SPEC.md` — the product spec (source of truth for behavior).
-- `docs/architecture/` — one file per module (`01-orchestrator` … `12-evaluation`).
-- `docs/DECISIONS.md` — a dated log of real decisions, bugs found, and why, in the order they
-  happened — the most direct way to see how and why the system got to its current shape.
-- `CLAUDE.md` — the rules this codebase is built against (architecture, security, non-negotiables).
-- `prompts/` — every model prompt used at runtime, each with its own version.
+## Validation
+
+```bash
+pnpm test
+pnpm lint
+pnpm typecheck
+pnpm build
+```
+
+Live-model evaluations are opt-in because they consume external APIs. Reproducible fixtures and recorded results live under `evals/genetics/`.
+
+## Current scope
+
+- No authentication or permanent chat history; active-chat memory expires with the anonymous session.
+- Scientific research only. Genebark does not diagnose, prescribe or provide patient-specific advice.
+- Open/full-text availability varies by source; the source registry distinguishes reviewed, unavailable, excluded and pending material.
+- This is a hackathon research prototype, not a systematic review or regulatory/compliance certification.
+
+## Repository map
+
+- `src/modules/01-orchestrator/` — run lifecycle and progressive orchestration
+- `src/modules/02-retrieval/` — retrieval and source curation
+- `src/modules/03-extraction-verification/` — evidence extraction and verification
+- `src/modules/04-grading-scoring/` — grading and source scoring
+- `src/modules/05-governance/` — concordance and contradiction
+- `src/modules/06-algorithm/`, `07-map-matrix/`, `08-mechanism/` — scientific visuals
+- `src/modules/12-evaluation/` and `evals/genetics/` — evaluation harness
+- `prompts/` — versioned runtime prompt specifications
+- `docs/DECISIONS.md` — chronological engineering record
+
+## License
+
+Released under the [MIT License](LICENSE).

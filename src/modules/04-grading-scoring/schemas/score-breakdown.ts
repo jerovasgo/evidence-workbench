@@ -8,6 +8,7 @@ import { z } from 'zod';
 
 export const ScoreBreakdownSchema = z.object({
   relevance: z.number().min(0).max(1),
+  relevanceReason: z.string().min(1).max(240),
   level: z.number().min(0).max(1),
   quality: z.number().min(0).max(1),
   currency: z.number().min(0).max(1),

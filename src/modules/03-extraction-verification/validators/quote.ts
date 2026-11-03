@@ -1,7 +1,7 @@
 import { levenshteinDistance } from './levenshtein';
 
 // Module 03 deterministic verification, step 2 ("Quote found") and step 5 ("Numbers").
-// CLAUDE.md non-negotiable rule: "A claim is displayed only if ... the quote appears
+// AGENTS.md non-negotiable rule: "A claim is displayed only if ... the quote appears
 // verbatim in the fetched text". This is the only place that decides quoteFound.
 
 const MAX_FUZZY_DISTANCE = 2;
@@ -123,7 +123,7 @@ export function checkNumbersPreserved(claimText: string, quote: string): Numbers
 const DOSE_PATTERN = /\b\d+(?:[.,]\d+)?\s?(?:mg|mcg|µg|g|kg|mL|ml|L|units?|iu|mEq)\b/gi;
 
 /**
- * Module 03 step 6 / CLAUDE.md rule 6: a dose in `text` must appear in `quote`, or it
+ * Module 03 step 6 / AGENTS.md rule 6: a dose in `text` must appear in `quote`, or it
  * is replaced with "per local protocol". Thresholds that are not doses (e.g. "SBP <
  * 90 mmHg") are left to the caller's own threshold-specific check if needed; this
  * function only targets dose-unit patterns (mg, mL, units, etc.).

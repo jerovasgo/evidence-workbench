@@ -32,7 +32,7 @@ export function gradeCertaintyLabel(grade: Grade): string {
  * attribute (no native grade text was ever found). A recognized grade reads
  * "From source: Class I, LOE A"; text that was found but didn't map to a known scheme
  * still shows — "Not graded" is about this project's own certainty scale, not a
- * claim that the source said nothing (CLAUDE.md rule 10's traceability requirement).
+ * claim that the source said nothing (AGENTS.md rule 10's traceability requirement).
  */
 export function gradeProvenanceLabel(grade: Grade): string | undefined {
   if (grade.origin !== 'source' || !grade.nativeGrade) return undefined;

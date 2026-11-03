@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-// CLAUDE.md / module 10: "service role key server-only ... Meta API key only in route
+// AGENTS.md / module 10: "service role key server-only ... Meta API key only in route
 // handlers". This module must never end up in a client bundle. There is no build-time
 // enforcement yet (module 10's own build note calls for a client-bundle grep in CI,
 // not built today) — this is a runtime guard as defense in depth.

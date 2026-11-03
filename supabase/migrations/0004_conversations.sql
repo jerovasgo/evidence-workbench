@@ -1,4 +1,4 @@
--- Module 11 dashboard: conversation history. CLAUDE.md rule 3 scoped exception
+-- Module 11 dashboard: conversation history. AGENTS.md rule 3 scoped exception
 -- (2026-10-28, explicit user decision, see docs/DECISIONS.md) -- this is the one
 -- place scenario text is persisted, and it is field-encrypted (AES-256-GCM,
 -- module 10) at rest, same mechanism as documents/watch_definitions.
@@ -38,7 +38,7 @@ create table if not exists public.conversation_turns (
 alter table public.conversation_turns enable row level security;
 
 comment on table public.conversation_turns is
-  'Scenario text persisted here ONLY, field-encrypted (AES-256-GCM) -- CLAUDE.md rule 3 scoped exception, 2026-10-28. RLS enabled, no policies -- service-role only.';
+  'Scenario text persisted here ONLY, field-encrypted (AES-256-GCM) -- AGENTS.md rule 3 scoped exception, 2026-10-28. RLS enabled, no policies -- service-role only.';
 
 create index if not exists conversation_turns_conversation_id_idx on public.conversation_turns (conversation_id);
 

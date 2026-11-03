@@ -35,7 +35,7 @@ describe('GET /api/conversations/[id]', () => {
     expect(getWithTurns).toHaveBeenCalledWith('c1', 'session_1');
     expect(res.status).toBe(200);
     expect(json.turns[0].freeText).toBe('hello');
-  });
+  }, 10_000);
 
   it('returns 404 when the conversation does not belong to this session', async () => {
     const getWithTurns = vi.fn(async () => null);

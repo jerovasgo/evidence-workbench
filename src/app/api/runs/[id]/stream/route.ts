@@ -31,7 +31,7 @@ export const maxDuration = 300;
 // call in the pipeline, but nothing ever consumed it; every run's real per-agent
 // timing was silently discarded. These two loggers are the "quick win" fix: one
 // structured JSON line per agent call and one per finished run, both ids/timings/
-// costs only (CLAUDE.md rule 3 — never prompt or scenario text), so real p50/p95
+// costs only (AGENTS.md rule 3 — never prompt or scenario text), so real p50/p95
 // latency can finally be computed from server logs instead of guessed.
 function logAgentTrace(runId: string, event: AgentTraceEvent): void {
   if (event.type === 'agent_result') {
@@ -64,12 +64,9 @@ function logAgentTrace(runId: string, event: AgentTraceEvent): void {
 // output exists yet) and already lost its one-time pending context truly has
 // nothing to resume — that case alone gets the `error` event below.
 //
-// `band_ready`'s "red-flag/first-action claims first" ordering (module 01) is
-// approximated here, not implemented in full: nothing tags claims as red-flag/
-// first-action yet (that needs the algorithm graph, module 06, not built), so
-// ordering is only by evidence kind (`extract-and-verify-pool.ts`'s guideline >
-// systematic_review > RCT ordering) — an honest, documented simplification of the
-// real design, not the real thing.
+// `band_ready` streams evidence as sources finish. The final algorithm, mechanism
+// or map projection is built afterward from the same verified claims; it does not
+// block the first useful evidence band.
 //
 // 2026-10-28 latency audit: `band_ready` now sends MULTIPLE times, not once.
 // `extract-and-verify-pool.ts` already runs sources with bounded concurrency and

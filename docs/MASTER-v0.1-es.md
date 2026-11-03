@@ -1,10 +1,14 @@
 # Genebark — Documento madre v0.1
 
+> **Archivo histórico.** Este documento conserva el plan inicial y las decisiones abiertas del
+> prototipo. No describe el producto actual. Para la especificación vigente consulta
+> `docs/SPEC.md`, `AGENTS.md` y `docs/architecture/00-overview.md`.
+
 Oct 26, 2026 · @Jerome
 
 ## 0. Estado y cómo usar este documento
 
-Este documento es la fuente única para la herramienta de código: fija el producto, las reglas y los prompts, y deja cinco decisiones abiertas que hay que cerrar entre el 26 y el 28 de octubre de 2026.
+Este documento fue la fuente inicial de planificación y se conserva únicamente como registro histórico.
 
 | Decisión abierta | Estado | Cómo se cierra |
 | --- | --- | --- |

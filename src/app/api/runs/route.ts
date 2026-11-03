@@ -24,7 +24,7 @@ import { ConversationContextSchema } from '@/shared/domain';
 // before reaching `createRun` at all). No conversation turn is persisted here
 // (2026-10-31, docs/DECISIONS.md):
 // no real login exists yet, so there is no one to own a saved thread for — every
-// request today is anonymous, and CLAUDE.md rule 3's default (scenario text is not
+// request today is anonymous, and AGENTS.md rule 3's default (scenario text is not
 // persisted) applies. `conversationsRepository` stays wired in `ServerRuntime` for
 // when real auth exists, just unused by this handler until then.
 

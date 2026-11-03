@@ -1,4 +1,4 @@
-// Module 01: scenario text is never persisted by default (CLAUDE.md rule 3), so the
+// Module 01: scenario text is never persisted by default (AGENTS.md rule 3), so the
 // SSE endpoint (`GET /api/runs/:id/stream`) that actually runs structure/plan/
 // retrieve/extract/verify can't recover the free text from the `runs` table alone.
 // POST /api/runs stashes it here, keyed by the new run's id, for the stream to pick

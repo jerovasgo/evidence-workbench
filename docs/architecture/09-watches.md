@@ -1,5 +1,8 @@
 # 09 — Watches (scheduled searches and digests)
 
+> **Deferred module.** Watches are not part of the current hackathon submission or
+> interactive runtime. This file records a possible extension, not a shipped claim.
+
 ## Purpose
 Let the user say, in natural language or with blocks, "watch this topic and tell me when something
 that matters changes", and deliver a digest built only from verified data. Cost must be near zero when

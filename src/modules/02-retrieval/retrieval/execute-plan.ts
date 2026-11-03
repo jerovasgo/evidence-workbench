@@ -10,7 +10,7 @@ import { CandidateSourceSchema, type CandidateSource, type SearchPlan, type Sear
 // Module 01/02 request lifecycle step "retrieve": executes a `SearchPlan` (proposed
 // by the `search-planner` agent, P3) against the real connectors. This is
 // deterministic code, not an agent — "model proposes [what to search], code
-// verifies/executes [how]" (CLAUDE.md rule 5's principle applied to retrieval).
+// verifies/executes [how]" (AGENTS.md rule 5's principle applied to retrieval).
 //
 // 'pubmed'/'europe_pmc' always run. 'web'/'standards_body' run too when `deps.webSearch`
 // is provided: `findWebSources` (web_search grounding) proposes candidate URLs,
@@ -21,7 +21,7 @@ import { CandidateSourceSchema, type CandidateSource, type SearchPlan, type Sear
 // snippet, so quote verification always runs against real fetched text. Omitting
 // `webSearch` keeps the old behavior (skip, not fake) for callers/tests that don't
 // wire it. 'local' has no connector yet (module 10/documents feature, not built) and
-// is always skipped. A per-query failure never aborts the whole plan — CLAUDE.md
+// is always skipped. A per-query failure never aborts the whole plan — AGENTS.md
 // rule 12 / module 01's failure table: "one source times out -> continue without it."
 
 const DEFAULT_MAX_CONCURRENCY = 4;

@@ -1,5 +1,8 @@
 # Day-0 verification (2026-10-26)
 
+> Historical provider and licensing audit. The current product contract lives in
+> `docs/SPEC.md`; re-check external APIs and prices before relying on this snapshot.
+
 Checked against official pages on 2026-10-26. Re-check anything marked ⚠ on Day 1 before relying on it.
 Sources: dev.meta.ai/docs (overview, quickstart, models, pricing-rate-limits, structured-output,
 tool-calling, search-grounding, reasoning, muse-spark-open/deploy); reactome.org/license;
