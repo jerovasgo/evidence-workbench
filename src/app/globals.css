@@ -111,6 +111,31 @@ body {
   border-radius: 4px;
 }
 
+/* Controls use their own shape, contrast and state changes. Remove the browser's
+   default white focus rectangle from chat composers and buttons without adding a
+   replacement border or glow. Text links retain the global keyboard indicator. */
+button:focus,
+button:focus-visible,
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+summary:focus,
+summary:focus-visible,
+[role='button']:focus,
+[role='button']:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+button:focus-visible,
+summary:focus-visible,
+[role='button']:focus-visible {
+  filter: brightness(1.12);
+}
+
 ::selection {
   background: rgba(255, 255, 255, 0.2);
 }

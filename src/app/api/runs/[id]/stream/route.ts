@@ -35,7 +35,7 @@ export const maxDuration = 300;
 // latency can finally be computed from server logs instead of guessed.
 function logAgentTrace(runId: string, event: AgentTraceEvent): void {
   if (event.type === 'agent_result') {
-    console.log(JSON.stringify({ type: 'agent_latency', runId, name: event.name, ok: event.ok, ms: event.ms, costUsd: event.costUsd, tokens: event.tokens }));
+    console.log(JSON.stringify({ type: 'agent_latency', runId, name: event.name, provider: event.provider, model: event.model, ok: event.ok, ms: event.ms, costUsd: event.costUsd, tokens: event.tokens }));
   } else if (event.type === 'agent_abstain') {
     console.log(JSON.stringify({ type: 'agent_abstain', runId, name: event.name, reason: event.reason }));
   }
@@ -98,7 +98,7 @@ function isLegacyProvisionalOverview(text: string): boolean {
 // long enough to finish safely before the handler returns and the instance can be
 // torn down. Never sends an SSE frame of its own; failures are logged, not surfaced
 // to a client that has already moved on.
-async function labelRelationsAfterDone(runId: string, claims: Claim[], runtime: ServerRuntime): Promise<{ relations: import('@/shared/domain').Relation[]; status: 'ok' | 'partial' }> {
+async function labelRelationsAfterDone(runId: string, claims: Claim[], runtime: ServerRuntime, onTrace: (event: AgentTraceEvent) => void = (event) => logAgentTrace(runId, event)): Promise<{ relations: import('@/shared/domain').Relation[]; status: 'ok' | 'partial' }> {
   const pairs = pairClaimsForRelations(claims);
   if (pairs.length === 0) return { relations: [], status: 'ok' };
 
@@ -108,7 +108,7 @@ async function labelRelationsAfterDone(runId: string, claims: Claim[], runtime: 
     budgetGuard: runtime.budgetGuard,
     p0Preamble: runtime.p0Preamble,
     p7PromptTemplate: runtime.p7PromptTemplate,
-    onTrace: (event) => logAgentTrace(runId, event),
+    onTrace,
   });
   const ms = Date.now() - started;
 
@@ -142,6 +142,7 @@ async function synthesizeAlgorithmForRun(
   subQuestions: string[],
   claims: Claim[],
   runtime: ServerRuntime,
+  onTrace: (event: AgentTraceEvent) => void = (event) => logAgentTrace(run.id, event),
 ): Promise<z.infer<typeof AlgorithmReadyPayloadSchema> | null> {
   if (run.intent !== 'algorithm') return null;
   const verified = claims.filter(isVerifiedClaim);
@@ -163,7 +164,7 @@ async function synthesizeAlgorithmForRun(
     budgetGuard: runtime.budgetGuard,
     p0Preamble: runtime.p0Preamble,
     p9PromptTemplate: runtime.p9PromptTemplate,
-    onTrace: (event) => logAgentTrace(run.id, event),
+    onTrace,
   });
   const ms = Date.now() - started;
 
@@ -195,6 +196,7 @@ async function synthesizeMechanismForRun(
   subQuestions: string[],
   claims: Claim[],
   runtime: ServerRuntime,
+  onTrace: (event: AgentTraceEvent) => void = (event) => logAgentTrace(run.id, event),
 ): Promise<z.infer<typeof MechanismReadyPayloadSchema> | null> {
   if (run.intent !== 'mechanism') return null;
   const verified = claims.filter(isVerifiedClaim);
@@ -215,7 +217,7 @@ async function synthesizeMechanismForRun(
     budgetGuard: runtime.budgetGuard,
     p0Preamble: runtime.p0Preamble,
     p16PromptTemplate: runtime.p16PromptTemplate,
-    onTrace: (event) => logAgentTrace(run.id, event),
+    onTrace,
   });
   const ms = Date.now() - started;
 
@@ -273,6 +275,16 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     async start(controller) {
       let closed = false;
       const send = (event: RunEvent) => controller.enqueue(encoder.encode(sseFrame(event)));
+      const emitAgentTrace = (event: AgentTraceEvent) => {
+        logAgentTrace(run.id, event);
+        if (event.type === 'agent_call') {
+          send({ type: 'agent_activity', runId: run.id, callId: event.callId, name: event.name, provider: event.provider, model: event.model, tier: event.tier, status: 'running', attempt: event.attempt });
+        } else if (event.type === 'agent_result') {
+          send({ type: 'agent_activity', runId: run.id, callId: event.callId, name: event.name, provider: event.provider, model: event.model, tier: event.tier, status: event.ok ? 'completed' : 'failed', ms: event.ms, tokens: event.tokens, costUsd: event.costUsd });
+        } else {
+          send({ type: 'agent_activity', runId: run.id, callId: event.callId, name: event.name, provider: event.provider, model: event.model, status: 'abstained', reason: event.reason });
+        }
+      };
       // Claims accumulated so far across already-finished sources, sent as a
       // cumulative `band_ready` each time a new one arrives — see the latency-audit
       // comment above. `sourceScores` only rides the final, authoritative send.
@@ -367,7 +379,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         // the end of the pipeline bypass this and always finalize on whatever
         // claims exist by then (including a genuinely single-source run).
         if (!final && new Set(claims.map((claim) => claim.sourceId)).size < 2) return;
-        overviewPromise = synthesizeEvidenceOverview(run.id, pending?.freeText ?? '', claims, runtime).then(async (overviewResult) => {
+        overviewPromise = synthesizeEvidenceOverview(run.id, pending?.freeText ?? '', claims, { ...runtime, onTrace: emitAgentTrace }).then(async (overviewResult) => {
           const text = overviewResult?.text ?? `${claims[0]!.text} ${new Set(claims.map((claim) => claim.sourceId)).size < 2 ? 'Only one study currently has verified findings; a cross-study conclusion is not supported yet.' : 'Experimental context must be considered before comparing these findings.'}`;
           const sections = overviewResult?.sections ?? [];
           finalOverviewSent = true;
@@ -397,7 +409,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
             maxExtractSources: RESEARCH_DEPTH_MAX_SOURCES[pending?.depth ?? 'balanced'],
             maxRescueAttempts: RESEARCH_DEPTH_RESCUE_ATTEMPTS[pending?.depth ?? 'balanced'],
             signal: abortController.signal,
-            onTrace: (event) => logAgentTrace(run.id, event),
+            onTrace: emitAgentTrace,
             onStageEvent: (event) => {
               if (event.type === 'stage_started') {
                 send({ type: 'stage_started', runId: run.id, stage: event.stage });
@@ -422,7 +434,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
                       ]);
                       return abstract ? { id: source.tempId, title: source.title, abstract: abstract.slice(0, 6000) } : null;
                     }));
-                    const text = await synthesizeRetrievedOverview(run.id, pending?.freeText ?? '', abstracts.filter((source) => source !== null), runtime);
+                    const text = await synthesizeRetrievedOverview(run.id, pending?.freeText ?? '', abstracts.filter((source) => source !== null), { ...runtime, onTrace: emitAgentTrace });
                     if (!text || finalOverviewSent || closed) return;
                     provisionalOverviewSent = true;
                     send({ type: 'opening_ready', runId: run.id, text, final: false });
@@ -487,6 +499,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
           result.structure.value?.subQuestions ?? [],
           result.extraction.value ?? [],
           runtime,
+          emitAgentTrace,
         );
         if (algorithmResult) send({ type: 'algorithm_ready', runId: run.id, payload: algorithmResult });
 
@@ -497,6 +510,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
           result.structure.value?.subQuestions ?? [],
           result.extraction.value ?? [],
           runtime,
+          emitAgentTrace,
         );
         if (mechanismResult) send({ type: 'mechanism_ready', runId: run.id, payload: mechanismResult });
 
@@ -521,7 +535,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         // Strictly after `done` — see labelRelationsAfterDone's own comment. Never
         // lets a relation-labelling failure surface as a stream `error` event.
         try {
-          const related = await labelRelationsAfterDone(run.id, result.extraction.value ?? [], runtime);
+          const related = await labelRelationsAfterDone(run.id, result.extraction.value ?? [], runtime, emitAgentTrace);
           send({ type: 'relations_ready', runId: run.id, questions: result.structure.value?.subQuestions ?? [], ...related });
         } catch (err) {
           console.log(JSON.stringify({ type: 'relate_error', runId: run.id, message: err instanceof Error ? err.message : 'Unknown error' }));

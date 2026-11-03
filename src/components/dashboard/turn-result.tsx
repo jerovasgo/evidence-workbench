@@ -10,7 +10,7 @@ import { useCallback } from 'react';
 // off to RunResult, which owns everything from there: its own streaming phase,
 // using the same processing message so it doesn't flicker on the runId handoff).
 
-export function TurnResult({ turn, onRetry, onMemoryUpdate }: { turn: Turn; onRetry: (turnId: string) => void; onMemoryUpdate: (turnId: string, snapshot: TurnMemorySnapshot) => void }) {
+export function TurnResult({ turn, onRetry, onMemoryUpdate, onStatusChange }: { turn: Turn; onRetry: (turnId: string) => void; onMemoryUpdate: (turnId: string, snapshot: TurnMemorySnapshot) => void; onStatusChange?: (runId: string, status: 'streaming' | 'done' | 'partial' | 'abstained' | 'failed' | 'cancelled') => void }) {
   const updateMemory = useCallback((snapshot: TurnMemorySnapshot) => onMemoryUpdate(turn.id, snapshot), [onMemoryUpdate, turn.id]);
   if (turn.status === 'answered') return <p className="text-sm leading-7">{turn.answer}</p>;
   if (turn.status === 'clarifying') return <p className="text-sm leading-7">{turn.clarification}</p>;
@@ -33,5 +33,5 @@ export function TurnResult({ turn, onRetry, onMemoryUpdate }: { turn: Turn; onRe
     return <InitialResearchStatus query={turn.freeText} mode={turn.mode} />;
   }
 
-  return <RunResult runId={turn.runId} mode={turn.mode} intent={turn.intent} query={turn.freeText} onMemoryUpdate={updateMemory} />;
+  return <RunResult runId={turn.runId} mode={turn.mode} intent={turn.intent} query={turn.freeText} onMemoryUpdate={updateMemory} onStatusChange={onStatusChange} />;
 }

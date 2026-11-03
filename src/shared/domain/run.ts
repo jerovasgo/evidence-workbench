@@ -42,6 +42,21 @@ export type Run = z.infer<typeof RunSchema>;
 export const RunEventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('stage_started'), runId: z.string(), stage: z.string() }),
   z.object({
+    type: z.literal('agent_activity'),
+    runId: z.string(),
+    callId: z.string(),
+    name: z.string(),
+    provider: z.literal('Meta Model API'),
+    model: z.string(),
+    tier: z.enum(['T0', 'T1', 'T2']).optional(),
+    status: z.enum(['running', 'completed', 'failed', 'abstained']),
+    attempt: z.union([z.literal(1), z.literal(2)]).optional(),
+    ms: z.number().nonnegative().optional(),
+    tokens: z.number().int().nonnegative().optional(),
+    costUsd: z.number().nonnegative().optional(),
+    reason: z.string().optional(),
+  }),
+  z.object({
     type: z.literal('opening_ready'),
     runId: z.string(),
     text: z.string(),

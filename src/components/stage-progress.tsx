@@ -1,8 +1,9 @@
 'use client';
 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { Info } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import type { StageName, StageState } from '@/lib/use-run-stream';
+import type { AgentActivity, StageName, StageState } from '@/lib/use-run-stream';
 import { narrateStageResult, narrateSourceProgress } from '@/lib/i18n/stage-narration';
 
 // 2026-10-28 conversational-flow brief, Etapa C: "Agent activity"-style collapsed
@@ -33,6 +34,38 @@ const STATUS_DOT: Record<StageState['status'], string> = {
   failed: 'bg-conflict',
 };
 
+const ACTIVITY_GROUPS = [
+  { key: 'planning', label: 'Question & search planning', matches: ['scenario-structurer', 'search-planner'] },
+  { key: 'sources', label: 'Source review', matches: ['web-source-finder', 'source-classifier'] },
+  { key: 'extraction', label: 'Evidence extraction', matches: ['claim-extractor'] },
+  { key: 'verification', label: 'Claim verification', matches: ['support-judge'] },
+  { key: 'synthesis', label: 'Answer & visual synthesis', matches: ['retrieved-overview', 'evidence-overview', 'algorithm-synthesizer', 'mechanism-synthesizer', 'relation-labeller'] },
+] as const;
+
+function summarizeAgentActivities(activities: AgentActivity[]) {
+  return ACTIVITY_GROUPS.flatMap((group) => {
+    const items = activities.filter((item) => group.matches.some((name) => item.name === name));
+    if (!items.length) return [];
+    const status = items.some((item) => item.status === 'running')
+      ? 'running'
+      : items.some((item) => item.status === 'completed')
+        ? 'completed'
+        : items.some((item) => item.status === 'failed')
+          ? 'failed'
+          : 'abstained';
+    return [{
+      key: group.key,
+      label: group.label,
+      agents: [...new Set(items.map((item) => item.name.replaceAll('-', ' ')))],
+      provider: items[0]!.provider,
+      model: items[0]!.model,
+      status,
+      ms: items.reduce((sum, item) => sum + (item.ms ?? 0), 0),
+      tokens: items.reduce((sum, item) => sum + (item.tokens ?? 0), 0),
+    }];
+  });
+}
+
 export function currentActivityMessage(
   stages: Record<StageName, StageState>,
   sourceProgress: string[],
@@ -51,22 +84,25 @@ export function currentActivityMessage(
 export function StageProgress({
   stages,
   sourceProgress,
+  agentActivities,
   sourceCatalog,
   isStreaming,
 }: {
   stages: Record<StageName, StageState>;
   sourceProgress: string[];
+  agentActivities: AgentActivity[];
   sourceCatalog: Record<string, { title: string }>;
   isStreaming: boolean;
 }) {
   const reducedMotion = useReducedMotion();
   const activity = currentActivityMessage(stages, sourceProgress, sourceCatalog);
+  const summarizedActivities = summarizeAgentActivities(agentActivities);
 
   return (
     <details className="glass rounded-[var(--radius-card)] p-4">
       <summary className="cursor-pointer select-none text-sm text-fg">
         <span className="inline-flex max-w-[calc(100%-1rem)] items-center gap-2 align-middle">
-          <span className="shrink-0">Agent activity</span>
+          <span className="inline-flex shrink-0 items-center gap-1.5">Agent activity <Info className="size-3.5 text-muted" aria-hidden="true" /></span>
           <span aria-hidden="true" className="text-muted">—</span>
           <span className="relative block h-5 min-w-0 flex-1 overflow-hidden text-muted" aria-live="polite" aria-atomic="true">
             <AnimatePresence initial={false} mode="wait">
@@ -85,6 +121,34 @@ export function StageProgress({
           {isStreaming && <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-fg" aria-hidden="true" />}
         </span>
       </summary>
+      <div className="mt-4 rounded-[var(--radius-chip)] border border-border bg-black/35 p-3" aria-label="Meta model activity">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium text-fg">Meta model activity</p>
+            <p className="mt-0.5 text-[11px] text-muted">Live telemetry emitted by the server for this response.</p>
+          </div>
+          {summarizedActivities.some((item) => item.status === 'running') && <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.12em] text-muted"><span className="size-1.5 animate-pulse rounded-full bg-fg" />Live</span>}
+        </div>
+        {summarizedActivities.length > 0 ? (
+          <ul className="mt-3 space-y-2">
+            {summarizedActivities.map((item) => (
+              <li key={item.key} className="grid gap-1 border-t border-border pt-2 first:border-0 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-xs text-fg">{item.label}</p>
+                  <p className="truncate text-[11px] text-muted">{item.provider} · {item.model} · {item.agents.join(', ')}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted">
+                  <span className={cn(item.status === 'running' && 'text-fg', item.status === 'failed' && 'text-conflict')}>{item.status}</span>
+                  {item.ms > 0 && <span>{(item.ms / 1000).toFixed(1)} s</span>}
+                  {item.tokens > 0 && <span>{item.tokens.toLocaleString()} tokens</span>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 text-xs text-muted">No live Meta model call has been emitted for this playback.</p>
+        )}
+      </div>
       <ol className="mt-3 flex flex-col gap-2">
         {STAGE_ORDER.map((stage) => {
           const state = stages[stage];

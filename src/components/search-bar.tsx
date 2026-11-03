@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, type KeyboardEvent } from 'react';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, Square } from 'lucide-react';
 import { ModeSelector } from '@/components/mode-selector';
 import { cn } from '@/lib/cn';
 import type { Mode } from '@/lib/modes';
@@ -21,6 +21,8 @@ export interface SearchBarProps {
   onSubmit: () => void;
   placeholder?: string;
   loading?: boolean;
+  active?: boolean;
+  onStop?: () => void;
   disabled?: boolean;
   autoFocus?: boolean;
   size?: 'hero' | 'compact';
@@ -36,6 +38,8 @@ export function SearchBar({
   onSubmit,
   placeholder = 'Ask anything. Explore the connections.',
   loading = false,
+  active = false,
+  onStop,
   disabled = false,
   autoFocus = false,
   size = 'hero',
@@ -75,12 +79,12 @@ export function SearchBar({
         </div>
         <button
           type="button"
-          onClick={onSubmit}
-          disabled={!canSubmit}
-          aria-label="Submit"
+          onClick={active ? onStop : onSubmit}
+          disabled={active ? !onStop : !canSubmit}
+          aria-label={active ? 'Stop research' : 'Submit'}
           className="flex h-8 w-8 items-center justify-center rounded-full bg-fg text-bg transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
         >
-          <ArrowUp className="h-4 w-4" aria-hidden="true" />
+          {active ? <Square className="h-3.5 w-3.5 fill-current" aria-hidden="true" /> : <ArrowUp className="h-4 w-4" aria-hidden="true" />}
         </button>
       </div>
     </div>

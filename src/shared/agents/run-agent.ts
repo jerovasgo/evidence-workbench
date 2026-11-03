@@ -64,9 +64,9 @@ export interface RunAgentContext {
 }
 
 export type AgentTraceEvent =
-  | { type: 'agent_call'; name: string; promptVersion: string; tier: AgentTier; attempt: 1 | 2 }
-  | { type: 'agent_result'; name: string; ok: boolean; ms: number; costUsd: number; tokens: number }
-  | { type: 'agent_abstain'; name: string; reason: AgentFailureReason };
+  | { type: 'agent_call'; callId: string; name: string; promptVersion: string; tier: AgentTier; provider: 'Meta Model API'; model: string; attempt: 1 | 2 }
+  | { type: 'agent_result'; callId: string; name: string; tier: AgentTier; provider: 'Meta Model API'; model: string; ok: boolean; ms: number; costUsd: number; tokens: number }
+  | { type: 'agent_abstain'; callId: string; name: string; provider: 'Meta Model API'; model: string; reason: AgentFailureReason };
 
 /**
  * 'abstain' is reserved for the calling stage, which may turn a model-reported
@@ -101,6 +101,7 @@ export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<Agen
   const { ctx, limits } = params;
   if (ctx.signal?.aborted) return { ok: false, reason: 'api_error', detail: 'Run was cancelled' };
   const started = Date.now();
+  const callId = crypto.randomUUID();
   const reasoningEffort = tierToReasoningEffort(params.tier);
   const outputFormat = toStructuredOutputFormat(params.name, params.outputSchema);
 
@@ -125,7 +126,7 @@ export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<Agen
   ];
 
   const call = (messages: typeof baseMessages, attempt: 1 | 2, signal: AbortSignal) => {
-    ctx.onTrace?.({ type: 'agent_call', name: params.name, promptVersion: params.promptVersion, tier: params.tier, attempt });
+    ctx.onTrace?.({ type: 'agent_call', callId, name: params.name, promptVersion: params.promptVersion, tier: params.tier, provider: 'Meta Model API', model: DEFAULT_AGENT_MODEL, attempt });
     return ctx.metaClient.respond({
       model: DEFAULT_AGENT_MODEL,
       reasoningEffort,
@@ -206,9 +207,9 @@ export async function runAgent<TOut>(params: RunAgentParams<TOut>): Promise<Agen
     releaseBudget?.();
     if (costUsd > 0) ctx.budgetGuard.record(ctx.runId, costUsd);
     const tokens = result.ok ? result.tokens : 0;
-    ctx.onTrace?.({ type: 'agent_result', name: params.name, ok: result.ok, ms, costUsd, tokens });
+    ctx.onTrace?.({ type: 'agent_result', callId, name: params.name, tier: params.tier, provider: 'Meta Model API', model: DEFAULT_AGENT_MODEL, ok: result.ok, ms, costUsd, tokens });
     if (!result.ok) {
-      ctx.onTrace?.({ type: 'agent_abstain', name: params.name, reason: result.reason });
+      ctx.onTrace?.({ type: 'agent_abstain', callId, name: params.name, provider: 'Meta Model API', model: DEFAULT_AGENT_MODEL, reason: result.reason });
       return { ok: false, reason: result.reason, detail: result.detail };
     }
     return { ok: true, value: result.value, usage: { tokens, costUsd, ms } };

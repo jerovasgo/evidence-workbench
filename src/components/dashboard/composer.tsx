@@ -12,6 +12,8 @@ import type { ResearchDepth } from '@/lib/research-depth';
 export function Composer({
   onSend,
   sending,
+  researching,
+  onStop,
   mode,
   depth,
   onModeChange,
@@ -19,6 +21,8 @@ export function Composer({
 }: {
   onSend: (text: string, mode: Mode, depth: ResearchDepth) => void;
   sending: boolean;
+  researching: boolean;
+  onStop: () => void;
   mode: Mode;
   depth: ResearchDepth;
   onModeChange: (mode: Mode) => void;
@@ -27,7 +31,7 @@ export function Composer({
   const [value, setValue] = useState('');
 
   function submit() {
-    if (!value.trim() || sending) return;
+    if (!value.trim() || sending || researching) return;
     onSend(value, mode, depth);
     setValue('');
   }
@@ -43,6 +47,8 @@ export function Composer({
         onDepthChange={onDepthChange}
         onSubmit={submit}
         loading={sending}
+        active={sending || researching}
+        onStop={onStop}
         placeholder="Ask a follow-up…"
         size="compact"
       />

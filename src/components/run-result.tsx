@@ -102,8 +102,8 @@ function unbuiltViewNote(mode: Mode | undefined, intent: Intent | null | undefin
   return null;
 }
 
-export function RunResult({ runId, mode, intent, query, onMemoryUpdate }: { runId: string; mode?: Mode; intent?: Intent | null; query?: string; onMemoryUpdate?: (snapshot: TurnMemorySnapshot) => void }) {
-  const { opening, provisionalOpening, openingSections, geneContext, stages, sourceProgress, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, algorithm, algorithmStatus, algorithmAbstainReason, mechanism, mechanismStatus, mechanismAbstainReason, receipt, relations, questions, relationStatus, status, errorMessage, cancel } = useRunStream(`/api/runs/${runId}/stream`);
+export function RunResult({ runId, mode, intent, query, onMemoryUpdate, onStatusChange }: { runId: string; mode?: Mode; intent?: Intent | null; query?: string; onMemoryUpdate?: (snapshot: TurnMemorySnapshot) => void; onStatusChange?: (runId: string, status: 'streaming' | 'done' | 'partial' | 'abstained' | 'failed' | 'cancelled') => void }) {
+  const { opening, provisionalOpening, openingSections, geneContext, stages, sourceProgress, agentActivities, sourceCatalog, provisionalBySource, qualifiedBySource, withdrawals, claims, sourceScores, algorithm, algorithmStatus, algorithmAbstainReason, mechanism, mechanismStatus, mechanismAbstainReason, receipt, relations, questions, relationStatus, status, errorMessage } = useRunStream(`/api/runs/${runId}/stream`);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const isStreaming = status === 'streaming';
@@ -142,6 +142,8 @@ export function RunResult({ runId, mode, intent, query, onMemoryUpdate }: { runI
     ...(openingSections ?? []).map((section, index) => ({ id: `section-${index}`, text: section.body })),
   ], geneContext);
 
+  useEffect(() => onStatusChange?.(runId, status), [onStatusChange, runId, status]);
+
   useEffect(() => {
     if (!onMemoryUpdate || (!opening && !claims?.length)) return;
     const selectedClaims = selectDiverseFindings(claims ?? [], 4);
@@ -167,8 +169,8 @@ export function RunResult({ runId, mode, intent, query, onMemoryUpdate }: { runI
   return (
     <Tabs.Root defaultValue="main" className="flex flex-col gap-5">
       <Tabs.List aria-label="Research results" className="flex gap-4 border-b border-border pb-3">
-        <Tabs.Trigger value="main" className="text-sm text-muted data-[state=active]:text-fg focus-visible:outline focus-visible:outline-2">Main Answer</Tabs.Trigger>
-        <Tabs.Trigger value="evidence" className="text-sm text-muted data-[state=active]:text-fg focus-visible:outline focus-visible:outline-2">Evidence &amp; Sources</Tabs.Trigger>
+        <Tabs.Trigger value="main" className="text-sm text-muted data-[state=active]:text-fg">Main Answer</Tabs.Trigger>
+        <Tabs.Trigger value="evidence" className="text-sm text-muted data-[state=active]:text-fg">Evidence &amp; Sources</Tabs.Trigger>
       </Tabs.List>
       <Tabs.Content value="main" className="space-y-5">
       {substantiveOpening ? <motion.div key={isProvisionalOpening ? 'overview-provisional' : 'overview-final'} initial={reveal} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
@@ -210,19 +212,7 @@ export function RunResult({ runId, mode, intent, query, onMemoryUpdate }: { runI
         {geneContext.map((gene) => <span key={gene.symbol}>{gene.symbol}{gene.name ? ` · ${gene.name}` : ''} <span className="mx-1">·</span>{gene.links.map((link, index) => <span key={link.label}>{index > 0 ? ' / ' : ''}<a className="underline underline-offset-4 hover:text-fg" href={link.url} target="_blank" rel="noopener noreferrer">{link.label}</a></span>)}</span>)}
       </div>}
 
-      {(isStreaming || relationStatus === 'pending') && (
-        <StageProgress stages={stages} sourceProgress={sourceProgress} sourceCatalog={sourceCatalog} isStreaming={isStreaming} />
-      )}
-
-      {isStreaming && (
-        <button
-          type="button"
-          onClick={cancel}
-          className="w-fit rounded-[var(--radius-pill)] border border-border px-3 py-1.5 text-xs uppercase tracking-[0.08em] text-muted hover:border-conflict hover:text-conflict"
-        >
-          Stop
-        </button>
-      )}
+      <StageProgress stages={stages} sourceProgress={sourceProgress} agentActivities={agentActivities} sourceCatalog={sourceCatalog} isStreaming={isStreaming} />
 
       {status === 'cancelled' ? (
         <div role="status" className="rounded-[var(--radius-card)] border border-border bg-black/40 p-4 text-sm text-muted">

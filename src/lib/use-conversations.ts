@@ -47,6 +47,7 @@ export interface UseConversationsResult {
   sending: boolean;
   sendMessage: (freeText: string, mode: Mode, depth?: ResearchDepth) => Promise<void>;
   retryTurn: (turnId: string) => void;
+  cancelPendingSubmission: () => void;
   newResearch: () => void;
   updateTurnMemory: (turnId: string, snapshot: TurnMemorySnapshot) => void;
   /**
@@ -88,6 +89,7 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
   const [mode, setMode] = useState<Mode>(initialMode ?? 'auto');
   const [depth, setDepth] = useState<ResearchDepth>(initialDepth ?? DEFAULT_RESEARCH_DEPTH);
   const autoSubmitted = useRef(false);
+  const activePostAbort = useRef<AbortController | null>(null);
   const conversationId = useRef(crypto.randomUUID());
   const lastActivityAt = useRef(Date.now());
 
@@ -107,12 +109,15 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
   /** POSTs one turn (fresh or retried) and reconciles the optimistic `turnId` entry with the result — never removes it, win or lose. */
   const submitTurn = useCallback(async (turnId: string, freeText: string, mode: Mode, depth: ResearchDepth, contextTurns: Turn[]) => {
     setSending(true);
+    const controller = new AbortController();
+    activePostAbort.current = controller;
 
     try {
       const res = await fetch('/api/runs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ freeText, userId: null, mode, depth, conversation: contextFromTurns(contextTurns) }),
+        signal: controller.signal,
       });
       const body = await res.json();
 
@@ -140,12 +145,22 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
       setTurns((prev) =>
           prev.map((t) => (t.id === turnId ? { ...t, id: body.runId, freeText, mode, depth, runId: body.runId, intent: body.intent ?? null, status: undefined } : t)),
       );
-    } catch {
-      setTurns((prev) => prev.map((t) => (t.id === turnId ? { ...t, status: 'error', errorMessage: 'Could not reach the server. Please try again.' } : t)));
+    } catch (error) {
+      const stopped = error instanceof DOMException && error.name === 'AbortError';
+      setTurns((prev) => prev.map((t) => (t.id === turnId ? stopped
+        ? { ...t, status: 'answered', answer: 'Research stopped.' }
+        : { ...t, status: 'error', errorMessage: 'Could not reach the server. Please try again.' } : t)));
     } finally {
+      if (activePostAbort.current === controller) activePostAbort.current = null;
       setSending(false);
     }
   }, [contextFromTurns]);
+
+  const cancelPendingSubmission = useCallback(() => {
+    activePostAbort.current?.abort();
+    activePostAbort.current = null;
+    setSending(false);
+  }, []);
 
   const sendMessage = useCallback(
     async (freeText: string, sentMode: Mode, sentDepth: ResearchDepth = DEFAULT_RESEARCH_DEPTH) => {
@@ -226,5 +241,5 @@ export function useConversations(initialQuery?: string, initialMode?: Mode, init
     setTurns((prev) => [...prev, { id: runId, createdAt: Date.now(), freeText, mode, runId, intent }]);
   }, []);
 
-  return { turns, sending, sendMessage, retryTurn, newResearch, updateTurnMemory, loadPrecomputedTurn, mode, depth, setMode, setDepth };
+  return { turns, sending, sendMessage, retryTurn, cancelPendingSubmission, newResearch, updateTurnMemory, loadPrecomputedTurn, mode, depth, setMode, setDepth };
 }

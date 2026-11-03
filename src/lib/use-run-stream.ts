@@ -18,6 +18,20 @@ export interface StageState {
   detail?: string;
 }
 
+export interface AgentActivity {
+  callId: string;
+  name: string;
+  provider: 'Meta Model API';
+  model: string;
+  tier?: 'T0' | 'T1' | 'T2';
+  status: 'running' | 'completed' | 'failed' | 'abstained';
+  attempt?: 1 | 2;
+  ms?: number;
+  tokens?: number;
+  costUsd?: number;
+  reason?: string;
+}
+
 export interface RunStreamState {
   opening: string | null;
   // A provisional abstract synthesis is retained separately so it can inform
@@ -33,6 +47,7 @@ export interface RunStreamState {
   sourceCatalog: Record<string, { id: string; status: 'candidate'; title: string; url: string; doi?: string; pmid?: string; year?: number; issuer?: string; firstAuthor?: string }>;
   stages: Record<StageName, StageState>;
   sourceProgress: string[];
+  agentActivities: AgentActivity[];
   claims: Claim[] | null;
   provisionalBySource: Record<string, Claim[]>;
   qualifiedBySource: Record<string, Claim[]>;
@@ -65,6 +80,7 @@ export function initialState(): RunStreamState {
     sourceCatalog: {},
     stages: Object.fromEntries(STAGE_ORDER.map((s) => [s, { status: 'pending' }])) as Record<StageName, StageState>,
     sourceProgress: [],
+    agentActivities: [],
     claims: null,
     provisionalBySource: {},
     qualifiedBySource: {},
@@ -154,6 +170,33 @@ export function useRunStream(streamUrl: string | null): RunStreamApi {
 
 export function applyEvent(prev: RunStreamState, event: RunEvent): RunStreamState {
   switch (event.type) {
+    case 'agent_activity': {
+      const activity: AgentActivity = {
+        callId: event.callId,
+        name: event.name,
+        provider: event.provider,
+        model: event.model,
+        tier: event.tier,
+        status: event.status,
+        attempt: event.attempt,
+        ms: event.ms,
+        tokens: event.tokens,
+        costUsd: event.costUsd,
+        reason: event.reason,
+      };
+      const previous = prev.agentActivities.find((item) => item.callId === event.callId);
+      const merged = previous ? {
+        ...previous,
+        ...activity,
+        tier: event.tier ?? previous.tier,
+        attempt: event.attempt ?? previous.attempt,
+        ms: event.ms ?? previous.ms,
+        tokens: event.tokens ?? previous.tokens,
+        costUsd: event.costUsd ?? previous.costUsd,
+        reason: event.reason ?? previous.reason,
+      } : activity;
+      return { ...prev, agentActivities: [...prev.agentActivities.filter((item) => item.callId !== event.callId), merged].slice(-40) };
+    }
     case 'opening_ready':
       if (!event.final) {
         return prev.openingFinal || prev.provisionalOpening

@@ -31,6 +31,7 @@ describe('runAgent', () => {
   it('returns ok:true when the first attempt already matches the schema', async () => {
     const respond = vi.fn().mockResolvedValue(fakeRespondResult({ sentiment: 'positive' }));
     const metaClient: MetaClient = { respond, listModels: vi.fn() };
+    const onTrace = vi.fn();
 
     const result = await runAgent({
       name: 'sentiment-agent',
@@ -40,7 +41,7 @@ describe('runAgent', () => {
       prompt: 'classify',
       outputSchema: SentimentSchema,
       limits: { maxOutputTokens: 100, timeoutMs: 1000, maxCostUsd: 0.1 },
-      ctx: baseCtx(metaClient),
+      ctx: { ...baseCtx(metaClient), onTrace },
     });
 
     expect(result).toEqual({
@@ -49,6 +50,8 @@ describe('runAgent', () => {
       usage: { tokens: 20, costUsd: 0.001, ms: expect.any(Number) },
     });
     expect(respond).toHaveBeenCalledTimes(1);
+    expect(onTrace).toHaveBeenCalledWith(expect.objectContaining({ type: 'agent_call', provider: 'Meta Model API', model: 'muse-spark-1.3', name: 'sentiment-agent' }));
+    expect(onTrace).toHaveBeenCalledWith(expect.objectContaining({ type: 'agent_result', provider: 'Meta Model API', model: 'muse-spark-1.3', ok: true, tokens: 20 }));
   });
 
   it('retries once with the validation error, then succeeds', async () => {

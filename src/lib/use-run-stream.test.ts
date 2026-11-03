@@ -39,6 +39,15 @@ describe('provisional SSE claim lifecycle', () => {
   });
 });
 
+describe('agent_activity telemetry', () => {
+  it('updates one real Meta call from running to completed without duplicating it', () => {
+    let state = applyEvent(initialState(), { type: 'agent_activity', runId: 'r1', callId: 'call-1', name: 'claim-extractor', provider: 'Meta Model API', model: 'muse-spark-1.3', tier: 'T1', status: 'running', attempt: 1 });
+    state = applyEvent(state, { type: 'agent_activity', runId: 'r1', callId: 'call-1', name: 'claim-extractor', provider: 'Meta Model API', model: 'muse-spark-1.3', tier: 'T1', status: 'completed', ms: 2400, tokens: 812, costUsd: 0.004 });
+
+    expect(state.agentActivities).toEqual([{ callId: 'call-1', name: 'claim-extractor', provider: 'Meta Model API', model: 'muse-spark-1.3', tier: 'T1', status: 'completed', attempt: 1, ms: 2400, tokens: 812, costUsd: 0.004, reason: undefined }]);
+  });
+});
+
 describe('opening_ready immutable publication', () => {
   it('retains provisional synthesis separately for an explicitly labelled early overview', () => {
     const state = applyEvent(initialState(), { type: 'opening_ready', runId: 'r1', text: 'Initial abstracts-only overview', final: false });

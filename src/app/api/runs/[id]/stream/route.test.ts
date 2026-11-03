@@ -185,6 +185,7 @@ describe('GET /api/runs/[id]/stream', () => {
 
     expect(events[0]).toMatchObject({ type: 'stage_started', runId: 'run_1' });
     expect(events.some((e) => e.type === 'stage_started' && e.stage === 'plan')).toBe(true);
+    expect(events.some((e) => e.type === 'agent_activity' && e.provider === 'Meta Model API' && e.model === 'muse-spark-1.3')).toBe(true);
     expect(events.some((e) => e.type === 'band_ready')).toBe(true);
     expect(events.some((e) => e.type === 'receipt_ready')).toBe(true);
     expect(events.some((event) => event.type === 'done')).toBe(true);
