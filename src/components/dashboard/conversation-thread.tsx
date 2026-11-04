@@ -1,5 +1,6 @@
 import { TurnResult } from '@/components/dashboard/turn-result';
 import type { Turn, TurnMemorySnapshot } from '@/lib/use-conversations';
+import Image from 'next/image';
 
 export function ConversationThread({ turns, onRetryTurn, onMemoryUpdate, onRunStatusChange }: { turns: Turn[]; onRetryTurn: (turnId: string) => void; onMemoryUpdate: (turnId: string, snapshot: TurnMemorySnapshot) => void; onRunStatusChange: (runId: string, status: 'streaming' | 'done' | 'partial' | 'abstained' | 'failed' | 'cancelled') => void }) {
   return (
@@ -12,7 +13,9 @@ export function ConversationThread({ turns, onRetryTurn, onMemoryUpdate, onRunSt
             <p className="message-enter research-surface max-w-[85%] rounded-2xl rounded-br-sm px-4 py-3 text-sm font-light leading-relaxed text-fg sm:max-w-[72%]">{turn.freeText}</p>
           </div>
           <div className="message-enter flex min-w-0 items-start gap-3">
-            <span aria-hidden="true" className="mt-1 grid size-7 shrink-0 place-items-center rounded-full border border-border bg-[#121212] text-[10px] font-medium text-fg">F</span>
+            <span aria-hidden="true" className="mt-1 grid size-7 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-[#121212] p-1">
+              <Image src="/brand/genebark-mark-white.png" alt="" width={22} height={22} className="size-full object-contain" />
+            </span>
             {/* 2026-11-02 (docs/DECISIONS.md): the response used to sit inside a
                 research-surface card; the content now renders directly on the
                 black background, matching the user-message bubble's own
